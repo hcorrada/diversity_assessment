@@ -1,0 +1,21 @@
+---
+title: "Introduction"
+author: "Nate Olson"
+date: "`r Sys.Date()`"
+output:
+  bookdown::pdf_document2:
+    toc: FALSE
+bibliography: ../bibliography.bib
+---
+
+- 16S metagenomics and ecological diversity analysis  
+- sequence data characteristics
+- Bioinformatic pipelines  
+    - differentiating sequencing errors from biological variation  
+    - grouping sequences into biologically informative units  
+- Normalization methods 
+    - rarefaction  
+    - numeric methods  
+        - microarray  
+        - marker-gene survey
+- Diversity metrics  
