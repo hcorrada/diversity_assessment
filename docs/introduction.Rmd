@@ -9,13 +9,30 @@ bibliography: ../bibliography.bib
 ---
 
 - 16S metagenomics and ecological diversity analysis  
-- sequence data characteristics
+
+- sequence data characteristics  
+    - differences in library size  
+    - error rate  
+
 - Bioinformatic pipelines  
     - differentiating sequencing errors from biological variation  
     - grouping sequences into biologically informative units  
-- Normalization methods 
+
+- Normalization methods  
     - rarefaction  
     - numeric methods  
         - microarray  
-        - marker-gene survey
+        - marker-gene survey  
+
 - Diversity metrics  
+    - phylogenetic v. taxonomic  
+    - weighted v. unweighted metrics  
+    - metric interpretation   
+
+- Previous diversity assessments   
+    - MBQC  
+    - McMurdie and Holmes 2013  
+    - Weiss et al. 2017  
+
+
+
