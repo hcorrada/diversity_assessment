@@ -1,0 +1,27 @@
+## Primary Analysis
+- create new dada2 phyloseq object - waiting on final tree
+- rerun munging scripts
+- save phyloseq objects to rds rather than RData in cache, only cache data needed for analysis - Need to run code to check
+- code to generate data frame with diversity metric results
+- data for seq characterization  
+- data for pipe characterization  
+
+## Coding
+- evaluate munge results for failed runs
+- check for normalization and diversity estimate errors
+
+## Seq and Pipe QA
+- move PhiX to munge  
+- move read_count to munge  
+- pipe characterization info  
+- species abundance curves   
+- rarefaction curves  
+- dada2 seq quality plots  
+
+## Beta diversity assessement
+- bio v. tech 
+    - Statistical test
+- comparison to expectation
+    - rerun with pipeline results
+    - results analysis and presentation
+- technical artifacts
