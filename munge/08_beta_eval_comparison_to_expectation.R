@@ -84,22 +84,25 @@ get_cluster_eval_df <- function(dist_obj, full_comp_df) {
 }
 
 ## Safe eval version - need to check error after updating source data
-safe_get_cluster <- safely(get_cluster_eval_df)
+safe_get_cluster_eval_df <- safely(get_cluster_eval_df)
 
 
-perform_cluster_eval <- function(beta_df){
+perform_cluster_eval <- function(dist_methods, full_comp_df){  
+    ## Get dist data frame  
+    beta_df <- make_beta_div_df(dist_methods)
+    
     ## Perform evaluation
     cluster_eval_df <- beta_df %>%
-        gather("metric", "dist_output", -pipe, -method) %>%
-        mutate(dist_obj = map(dist_output, pluck, "result")) %>%
+        mutate(dist_obj = map(dist_results, pluck, "result")) %>%
         filter(!is.null(dist_obj)) %>%
-        mutate(eval_results = map(dist_obj, get_cluster_eval_df, full_comp_df)) 
+        mutate(eval_output = map(dist_obj, safe_get_cluster_eval_df, full_comp_df))
     
     ## Tidy cluster evaluation results
-    full_cluster_eval_df %>%
-        mutate(eval_error = map_lgl(eval_results, is.null)) %>%
+    cluster_eval_df %>%
+        mutate(eval_result = map(eval_output, pluck, "result")) %>%
+        mutate(eval_error = map_lgl(eval_result, is.null)) %>%
         filter(!eval_error) %>%
-        select(-dist_obj, -dist_output, -eval_output) %>%
+        select(pipe, method, dist_method, eval_result) %>%
         unnest() %>%
         select(-comp_df, -cluster_assignments)
 }
@@ -123,24 +126,46 @@ full_comp_df <- comparison_meta %>%
     mutate(comp_df = map2(data, t_comp, ~ filter(.x, t_fctr %in% c(.y, 20)))) %>%
     select(-data)
 
-######################## Unweighted Metric Evaluation ##########################
+######################## Bray Curtis Evaluation ################################
 ## Execute evaluation and cache results 
 
 ProjectTemplate::cache(
-    "beta_cluster_eval_unweighted_df",
+    "beta_cluster_eval_bray_df",
     {
-        perform_cluster_eval(unweighted_beta_df)
+        perform_cluster_eval("bray", full_comp_df)
     },
-    depends = c("mgtstMetadata", "unweighted_beta_df")
+    depends = c("mgtstMetadata")
 )
 
-######################## Weighted Metric Evaluation ##########################
+######################## Weighted UniFrac Evaluation ###########################
 ## Execute evaluation and cache results 
 
 ProjectTemplate::cache(
-    "beta_cluster_eval_weighted_df", 
+    "beta_cluster_eval_wunifrac_df",
     {
-       perform_cluster_eval(weighted_beta_df)
+        perform_cluster_eval("wunifrac", full_comp_df)
+    },
+    depends = c("mgtstMetadata")
+)
+
+######################## Jaccard Evaluation ####################################
+## Execute evaluation and cache results 
+
+ProjectTemplate::cache(
+    "beta_cluster_eval_jaccard_df",
+    {
+        perform_cluster_eval("jaccard", full_comp_df)
+    },
+    depends = c("mgtstMetadata")
+)
+
+######################## Unifrac Metric Evaluation #############################
+## Execute evaluation and cache results 
+
+ProjectTemplate::cache(
+    "beta_cluster_eval_unifrac_df", 
+    {
+       perform_cluster_eval("unifrac", full_comp_df)
     }, 
-    depends = c("mgtstMetadata", "weighted_beta_df")
+    depends = c("mgtstMetadata")
 )
