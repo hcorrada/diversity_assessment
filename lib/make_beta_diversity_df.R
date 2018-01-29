@@ -19,6 +19,8 @@ make_beta_div_df <- function(dist_methods, div_rds_path = "data/diversity_data")
         separate(div_info, c("pipe","method","dist_method")) %>% 
         mutate(dist_method = paste0(dist_method, "_dist"))
     
+    dist_methods <- paste0(dist_methods, "_dist") 
+    
     diversity_df %>%
             filter(dist_method %in% dist_methods) %>%
             mutate(dist_results = map(rds_file, readRDS)) %>% 
