@@ -130,7 +130,7 @@ ps_list <- ps_files %>% set_names(ps_names) %>% map(readRDS)
 ps_no_ntc_list <- ps_list %>% map(remove_ntc) %>% map(remove_no_read_samples)
 
 ## Creating a list with pipeline name and phyloseq objects
-pipe_names <- as.list(names(ps_no_ntc_list)) %>% set_names(.)
+pipe_names <- as.list(names(ps_no_ntc_list)) %>% {set_names(.,.)}
 ps_no_ntc_list <- list(pipe = pipe_names, ps = ps_no_ntc_list) %>% transpose()
 
 ####################### Saving Normalized Count Data ###########################
