@@ -7,7 +7,7 @@
 ## McMurdie and Holmes 2014 used the 15th percentile library size
 rarefy_counts <- function(rare_level, ps, pipe){
 
-    rare_file <- file.path("munge", "norm_data", paste0(pipe,"_rare", rare_level, ".rds"))
+    rare_file <- file.path("data", "norm_data", paste0(pipe,"_rare", rare_level, ".rds"))
     ## Skipping if phyloseq object already rarified
     if (file.exists(rare_file)) return("")
 
@@ -44,7 +44,7 @@ normalize_counts <- function(method, ps, pipe) {
         stop("ps not a phyloseq object")
     }
 
-    norm_file <- file.path("munge", "norm_data", paste0(pipe,"_",method, ".rds"))
+    norm_file <- file.path("data", "norm_data", paste0(pipe,"_",method, ".rds"))
     if (file.exists(norm_file)) return(readRDS(norm_file))
 
     print(paste("Normalizing count using method", method))
@@ -122,15 +122,15 @@ remove_ntc <- function(ps){
 remove_no_read_samples <- function(ps) prune_samples(sample_sums(ps) > 0,  ps)
 
 ## List of phyoseq objects from different pipelines being evaluated
-ps_files <- list.file("data/phyloseq_objects")
-ps_names <- basenames(ps_files) %>% str_replace("_ps.rds","")
+ps_files <- list.files("data/phyloseq_objects", full.names = TRUE)
+ps_names <- basename(ps_files) %>% str_replace("_ps.rds","")
 ps_list <- ps_files %>% set_names(ps_names) %>% map(readRDS)
 
 ## Removing NTC and samples with no counts
 ps_no_ntc_list <- ps_list %>% map(remove_ntc) %>% map(remove_no_read_samples)
 
 ## Creating a list with pipeline name and phyloseq objects
-pipe_names <- as.list(names(ps_no_ntc_list)) %>% set_names()
+pipe_names <- as.list(names(ps_no_ntc_list)) %>% set_names(.)
 ps_no_ntc_list <- list(pipe = pipe_names, ps = ps_no_ntc_list) %>% transpose()
 
 ####################### Saving Normalized Count Data ###########################
