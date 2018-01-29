@@ -1,34 +1,32 @@
 ## Primary Analysis
-- data for pipe characterization   
-    - sparsity calculation  
-    - drop out rate calculation 
 
-## Coding
+## Coding  
 - evaluate munge results for failed runs
 - check for normalization and diversity estimate errors
+- debug make_beta_df and beta eval
 - clean up make ps munge code formatting
 
 ## Seq and Pipe QA
-- move PhiX to munge  
-- move read_count to munge  
-- pipe characterization info  
 - species abundance curves   
 - rarefaction curves  
 - dada2 seq quality plots  
+
+## Sample characterization  
+- beta diversity - unmixed samples  
 
 ## bio v. tech 
 - Statistical test, PERMANOVA??
 
 ## comparison to expectation
-- rerun with pipeline results
 - results analysis and presentation
 
 ## technical artifacts
+- figure out what quality score to use for analysis
 - correlate B-div with difference in seq number and quality
 
 ## Issues 
 - Error in DADA2 tree build - optim.ml matrix too large.... 
     - use NJ tree  
     - email phangorn developer about issue  
-- NTC read counts NIST consistent with sample counts  
-    - compare feature count information to see if consistent with read count info. 
+- Check out NTC 1-H12 has a high read count, pass_rate, and total abundance  
+- Normalize phyloseq seq is slow due to loading all pipeline RDS...
