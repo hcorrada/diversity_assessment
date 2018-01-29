@@ -1,150 +1,23 @@
 ---
-title: "Sequence data and pipeline characterization"
+title: "Sequence Data and Pipeline Characterization"
 author: "Nate Olson"
 date: "12/19/2017"
 output: pdf_document
 ---
 
 ```{r seqPipeCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
-#library(ProjectTemplate)
-#load.project()
-library(tidyverse)
-library(savR)
-library(Rqc)
+library(ProjectTemplate)
+load.project()
 library(ggpubr)
-load("../cache/mgtstMetadata.RData")
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-```{r savError}
-## Move to munge - cache error_df
-sav_dir <- "../data/sav"
-sav_list <- list(
-    jhu1 = file.path(sav_dir,"run_18071097_sav"),
-    jhu2 = file.path(sav_dir,"run_18527531_sav"),
-    nist1 = file.path(sav_dir, "run_170209_sav"),
-    nist2 = file.path(sav_dir, "run_170216_sav")
-)
-
-error_df <- sav_list %>% map(savR) %>%
-    map_df(errorMetrics,.id = "ds") %>%
-    mutate(read = if_else(cycle < 301, "R1","R2")) %>% 
-    mutate(error_df, base_position = if_else(cycle < 301, cycle, (450 - cycle) + 300)) 
-
-qa_file <- "~/Projects/mgtst_pipelines/rqcQA_list.rds"
-## Read count info 
-
-qa_file_info <- readRDS(qa_file) %>%
-    perFileInformation() %>%
-    select(-format, -path) %>%
-    mutate(filename = as.character(filename))
-```
-
-```{r}
-qa_file_info <- qa_file_info %>% select(-pair, -group)
-
-if (all(qa_file_info$reads == qa_file_info$total.reads)) {
-    qa_file_info$total.reads <- NULL
-}
-
-qa_file_info <- qa_file_info %>% mutate(filename = paste0("jhu_run2_", filename))
-
-read_count_df <- qa_file_info %>% 
-    mutate(sample_id = str_extract(filename, ".*(?=_S)"),
-           read_dir = str_extract(filename, "(?<=L001_)..(?=_001)")) %>% 
-    select(-filename)
-``` 
-
-```{r pipeMunge, echo = FALSE}
-## study metadata
-meta_df <- mgtstMetadata %>% 
-      left_join(read_count_df) 
-
-##### Count table characteristics
-## number of OTUs
-ps_objects <-  
-
-features <- mrexp %>% map_dbl(NROW)
-
-## spareseness
-extract_samples <- function(mrobj){
-      sam_names <- pData(mrobj) %>% rownames_to_column() %>% 
-            filter(biosample_id != "NTC") %>% .$rowname
-      mrobj[,colnames(mrobj) %in% sam_names]
-}
-
-calc_sparsity <- function(mat){
-      nentry <- length(mat)
-      nzero <- sum(mat == 0)
-      ## calculate sparsity 
-      nzero/nentry
-}
-
-sparsity <- mrexp %>% map(extract_samples) %>% map(MRcounts, sl = 1) %>% map_dbl(calc_sparsity)   
-
-## Read loss / Filter rate 
-count_df <- mrexp %>% map(extract_samples) %>% 
-      map(MRcounts,sl = 1) %>% 
-      map(colSums) %>% map(as.data.frame) %>% 
-      map_df(rownames_to_column, var = "id", .id = "pipe") %>% 
-      dplyr::rename(counts = `.x[[i]]`)
-
-count_summary <- count_df %>% group_by(pipe) %>% 
-      summarise(count_med = median(counts) %>% round(0),
-                count_min = min(counts) %>% round(0),
-                count_max = max(counts) %>% round(0)) %>% 
-      mutate(`Sample Coverage` = paste0(count_med, " (", count_min, "-", count_max,")")) %>% 
-      select(pipe, `Sample Coverage`)
-
-reads_df <- meta_df %>% filter(Read == "R1") %>% 
-      select(ill_id, reads, group) %>% dplyr::rename(id = ill_id) 
-
-filter_rate_df <- count_df %>% left_join(reads_df) %>%
-      mutate(filter_rate = 1 - counts/reads) 
-
-filter_rate_summary <- filter_rate_df %>% group_by(pipe) %>% 
-      summarise(filt_med = median(filter_rate) %>% round(2),
-                filt_min = min(filter_rate) %>% round(2),
-                filt_max = max(filter_rate) %>% round(2)) %>% 
-      mutate(`Filter Rate` = paste0(filt_med, " (", filt_min, "-", filt_max,")")) %>% 
-      select(pipe, `Filter Rate`)
-
-### Total feature counts by sample
-raw_feat_count_df <- meta_df %>% 
-      filter(Read == "R1", biosample_id != "NTC") %>%
-      dplyr::rename(id = ill_id, counts = reads) %>% 
-      mutate(pipe = "Reads") %>% 
-      select(pipe, id, counts) %>% 
-      bind_rows(count_df)
-
-
-## Observed Features per sample
-feature_counts <- mrexp %>% map(extract_samples) %>% 
-      map(MRcounts,sl = 1) %>% 
-      map(as.data.frame) %>% 
-      map(rownames_to_column, var = "feature_id") %>% 
-      map_df(gather, "id","counts", -feature_id, .id = "pipe") 
-
-obs_feat_df <- feature_counts %>% filter(counts != 0) %>% 
-      group_by(pipe, id) %>% 
-      summarise(obs_feat = n())
-
-obs_feat_df <- meta_df %>% filter(Read == "R1") %>% 
-      select(biosample_id, t_fctr, ill_id) %>% 
-      dplyr::rename(id = ill_id) %>% 
-      right_join(obs_feat_df)
-```
-
-
-
 
 ## Dataset Characterization - Figure 1
-
 * Figure 1A: Sequence quality - highlighting sequencing run differences   
 
 ```{r phix_error_fig, fig.cap = "PhiX error rate relative to 16S rRNA amplicon base position for initial and the four sequencing runs."}
-error_df <- mutate(error_df, base_position = if_else(cycle < 301, cycle, (450 - cycle) + 300))
-ggplot(error_df) +
+ggplot(phix_error_df) +
     geom_point(aes(x = base_position, y = errorrate, color = ds), alpha = 0.01) +
     geom_smooth(aes(x = base_position, y = errorrate, color = ds, linetype = read)) +
     theme_bw() +
@@ -155,42 +28,114 @@ ggplot(error_df) +
 
 * Figure 1B: Reads per sample - relevant to normalization 
 
-```{r fig_count, fig.cap="Distribution in the number of reads per barcoded sample (Library Size) by sequncing laboratory and sequencing run. Negative control library size is indicated by hollow points. Negative controls were not included in the boxplots."}
-r1_meta_df <- meta_df %>% filter(read_dir == "R1") %>% mutate(seq_run = as.character(seq_run))
-r1_ntc <- r1_meta_df %>% filter(biosample_id == "NTC")
+- Good separation between sample and no template control library size for JHU but not NIST samples.  
+- Total abundance is lower for samples compared to no template controls for most sequencing runs and samples. Though a few no template controls have values within the sample range.  (see pipe characterization total abundance and pass rate plots). 
 
-r1_meta_df %>% filter(biosample_id != "NTC") %>%
+```{r fig_count, fig.cap="Distribution in the number of reads per barcoded sample (Library Size) by sequncing laboratory and sequencing run. Negative control library size is indicated by hollow points. Negative controls were not included in the boxplots."}
+r1_seq_char_df <- seq_char_df %>%
+    filter(read_dir == "R1") %>%
+    left_join(mgtstMetadata) %>%
+    mutate(seq_run = as.character(seq_run))
+r1_ntc <- r1_seq_char_df %>% filter(biosample_id == "NTC") 
+
+r1_seq_char_df %>% filter(biosample_id != "NTC") %>%
     ggplot() + 
-        geom_boxplot(aes(x = seq_lab, y = reads, color = seq_run)) + 
-        geom_point(data = r1_ntc, aes(x = seq_lab, y = reads, color = seq_run), 
+        geom_boxplot(aes(x = seq_lab, y = read, color = seq_run)) + 
+        geom_point(data = r1_ntc, aes(x = seq_lab, y = read, color = seq_run), 
                    shape = 21,
-                   position = position_jitterdodge()) + 
+                   position = position_jitterdodge(jitter.width = 0.25)) + 
         scale_y_log10() + 
         theme_bw() + labs(x = "Sequencing Lab", y = "Library Size", color = "Sequencing Run") +
         theme(legend.position = "bottom")
 ```
 
 
-## Pipeline characterization  
 
-* Table 1 (Or figure)  
-    * Number of features   
-    * Filter Rate - % of reads that fail quality control - insight into how pipelines deal with perceived PCR and sequencing artifacts    
 
-```{r pipeQA, echo = FALSE, message = FALSE, warning = FALSE}
-data_frame(pipe = names(mrexp), 
-           Features = features, 
-           Sparsity = round(sparsity,2)) %>% 
-      left_join(count_summary) %>% 
-      left_join(filter_rate_summary) %>% 
-      dplyr::rename(Pipelines = pipe, `Total Abundance` = `Sample Coverage`, `Drop-out Rate` = `Filter Rate`) %>% 
-      knitr::kable(caption = "Summary statistics for the different bioinformatic pipeliens. DADA2 is a denoising sequence inference pipeline, QIIME is a open-reference clustering pipeline, and mothur is a de-novo clustering pipeline. No template controls were excluded from summary statistics. Sparsity is the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2) in the count. Sample coverage is the median and range (minimum - maximum) per sample total feature abundance. Filter rate is the proportion of reads that were removed while processing the sequencing data for each bioinformatic pipeline.", booktabs = TRUE)
+
+
+## Pipeline characterization   
+
+- Pipelines varied in terms of the number of features, total abundance, and proportion of sequences passing quality control.  
+
+```{r pipeCharTbl, echo = FALSE, message = FALSE, warning = FALSE}
+pipe_char_summary <- pipe_info_df %>%
+    unnest() %>% 
+    left_join(mgtstMetadata) %>% 
+    filter(biosample_id != "NTC") %>% 
+    group_by(pipe, n_taxa, n_samples, sparsity) %>% 
+    summarise(total_abu_med = round(median(total_abu),0),
+              total_abu_max = round(max(total_abu),0),
+              total_abu_min = round(min(total_abu),0), 
+              pass_rate_med = round(median(pass_rate),2),
+              pass_rate_max = round(max(pass_rate),2),
+              pass_rate_min = round(min(pass_rate),2)) %>% 
+    mutate(total_abu_summary = paste0(total_abu_med, " (", total_abu_max, "-", total_abu_min,")")) %>% 
+    mutate(pass_rate_summary = paste0(pass_rate_med, " (", pass_rate_max, "-", pass_rate_min,")")) %>% 
+    mutate(sparsity = round(sparsity, 3)) %>% 
+    select(-total_abu_med, -total_abu_max, -total_abu_min,
+           -pass_rate_med, -pass_rate_max, -pass_rate_min)
+
+pipe_char_summary %>% 
+    select(pipe, n_taxa, n_samples, sparsity, total_abu_summary, pass_rate_summary) %>% 
+      dplyr::rename(Pipelines = pipe, Features = n_taxa, Samples = n_samples, 
+                    Sparsity = sparsity, 
+                    `Total Abundance` = total_abu_summary, `Pass Rate` = pass_rate_summary) %>% 
+      knitr::kable(caption = "Summary statistics for the different bioinformatic pipeliens. Four pipelines, de novo, open reference, closed reference, and deblur (sequence inference), used the sample sequence pre-processing methods. DADA2 is a denoising sequence inference pipeline and mothur is a de-novo clustering pipeline. No template controls were excluded from summary statistics. Sparsity is the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2) in the count. Sample coverage is the median and range (minimum - maximum) per sample total feature abundance. Filter rate is the proportion of reads that were removed while processing the sequencing data for each bioinformatic pipeline.", booktabs = TRUE)
 ```
-
 
 * Figure 2 
     * Species abundance curves - relate to ecology literature, the species abundance curves are fundamentally different between pipelines, indicating that the features generated using represent different biological units and therefore should be interpreted as such (Only unmixed samples same PCR replicate across sequencing runs). 
     * Rarefaction curves (Only unmixed samples same PCR replicate across sequencing runs)
     * Prevalence (all samples)
 
+```{r}
 
+```
+
+
+
+
+## No Template Control Investigation 
+```{r}
+pipe_char_meta_df <- pipe_char_df %>%
+    unnest() %>% 
+    left_join(mgtstMetadata) %>%
+    mutate(seq_run = as.character(seq_run)) 
+
+pipe_char_ntc <- pipe_char_meta_df %>% filter(biosample_id == "NTC") 
+
+pipe_char_meta_df %>% filter(biosample_id != "NTC") %>%
+    ggplot() + 
+        geom_boxplot(aes(x = seq_lab, y = total_abu + 1, color = seq_run)) + 
+        geom_point(data = pipe_char_ntc, aes(x = seq_lab, y = total_abu + 1, color = seq_run), 
+                   shape = 21,
+                   position = position_jitterdodge(jitter.width = 0.25)) + 
+        scale_y_log10() + 
+        theme_bw() + labs(x = "Sequencing Lab", y = "Total Abundance", color = "Sequencing Run") +
+        theme(legend.position = "bottom") + facet_wrap(~pipe)
+```
+
+- Pass filter rate is lower for samples compared to no template controls excluding outliers. 
+```{r}
+pipe_char_meta_df %>% 
+    mutate(biosample_id = if_else(biosample_id == "NTC", "NTC","Sample")) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = seq_run,  y = pass_rate, color = biosample_id)) + 
+    facet_wrap(pipe~seq_lab, scales = "free_y") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(x = "Sequencing Run", y = "Pass Quality Control", color = "Sample Type")
+```
+
+No template control with high pass rate - all the same sample. 
+```{r}
+pipe_char_meta_df %>% filter(biosample_id == "NTC", pass_rate > 0.2)
+```
+
+Need to figure out better way to look at samples with low pass rate.
+```{r}
+pipe_char_meta_df %>% filter(biosample_id != "NTC") %>% 
+    group_by(pipe, seq_lab, seq_run) %>% 
+    top_n(n = 1, wt = -pass_rate)
+```

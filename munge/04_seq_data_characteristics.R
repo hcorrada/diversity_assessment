@@ -1,58 +1,48 @@
 ########################## Generate data frame with seq data set characteristics 
-# columns
-# - seq run 
-# - individual  
-# - sample id  
-# - titration  
-# - number of reads  
-# - average base quality 
+# columns 
+# - `sample_id` - unique id for each sequenced sample   
+# - `reads`` - number of reads  
+# - `read_dir` - read direction   
+# - `quality` - mode quality score  
+# - `density` - proportion of reads with mode quality score 
+get_seq_info <- function(qa_file){
 
-qa_file <- "data/rqcQA_list.rds"
+    qa_list <- readRDS(qa_file)
 
-## Extract read count info from qc output and cleanup data frame
-qa_file_info <- readRDS(qa_file) %>%
-    perFileInformation() %>%
-    select(-format, -path) %>%
-    mutate(filename = as.character(filename))
+    read_count_df <- qa_list[['readCounts']] %>% 
+        select(-filter, -aligned) %>% 
+        rownames_to_column(var = "lane")
 
-qa_file_info <- qa_file_info %>% select(-pair, -group)
-if (all(qa_file_info$reads == qa_file_info$total.reads)) {
-    qa_file_info$total.reads <- NULL
+    read_qual_df <- qa_list[['readQualityScore']] %>% 
+        group_by(lane) %>% top_n(1, density) %>% 
+        select(-type) %>% 
+        ungroup()
+    
+    ## data frame with read count and quality info 
+    left_join(read_count_df, read_qual_df) %>% 
+        mutate(sample_id = str_extract(lane, ".*(?=_S)"),
+               read_dir = str_extract(lane, "(?<=L001_)..(?=_001)")) %>% 
+        select(-lane)
 }
 
-read_count_df <- qa_file_info %>% 
-    mutate(sample_id = str_extract(filename, ".*(?=_S)"),
-           read_dir = str_extract(filename, "(?<=L001_)..(?=_001)")) %>% 
-    select(-filename) %>% 
-    left_join(mgtstMetadata) 
-
-ProjectTemplate::cache("seq_char_df", 
-                       CODE = {read_count_df}, 
-                       depends = mgtstMetadata)
+ProjectTemplate::cache("seq_char_df", CODE = {get_seq_info("data/qa_list.rds")})
 
 
 ## Data frame with PhiX error Info 
-sav_dir <- "../data/sav"
-sav_list <- list(
-    jhu1 = file.path(sav_dir,"run_18071097_sav"),
-    jhu2 = file.path(sav_dir,"run_18527531_sav"),
-    nist1 = file.path(sav_dir, "run_170209_sav"),
-    nist2 = file.path(sav_dir, "run_170216_sav")
-)
+get_error_df <- function() {
+    require(savR)
+    sav_dir <- "data/sav"
+    sav_list <- list(
+        jhu1 = file.path(sav_dir, "run_18071097_sav"),
+        jhu2 = file.path(sav_dir, "run_18527531_sav"),
+        nist1 = file.path(sav_dir, "run_170209_sav"),
+        nist2 = file.path(sav_dir, "run_170216_sav")
+    )
+    
+    sav_list %>% map(savR) %>%
+        map_df(errorMetrics, .id = "ds") %>%
+        mutate(read = if_else(cycle < 301, "R1", "R2")) %>%
+        mutate(base_position = if_else(cycle < 301, cycle, (450 - cycle) + 300))
+}
 
-error_df <- sav_list %>% map(savR) %>%
-    map_df(errorMetrics,.id = "ds") %>%
-    mutate(read = if_else(cycle < 301, "R1","R2")) %>% 
-    mutate(error_df, base_position = if_else(cycle < 301, cycle, (450 - cycle) + 300)) 
-
-ProjectTemplate::cache("phix_error_df", 
-                       CODE = {error_df}, 
-                       depends = mgtstMetadata)
-
-## Pipeline characterization
-## Columns
-## - Number of features 
-## - total abundance 
-## - filter rate
-
-# cache("seq_and_pipe_info")
+ProjectTemplate::cache("phix_error_df", CODE = {get_error_df()}, depends = "mgtstMetadata")
