@@ -1,15 +1,15 @@
 version: 0.8
 data_loading: TRUE
 data_loading_header: TRUE
-data_ignore:
+data_ignore: 
 cache_loading: TRUE
 recursive_loading: FALSE
 munging: FALSE
-logging: FALSE
+logging: TRUE
 logging_level: INFO
 load_libraries: TRUE
 libraries: tidyverse, phyloseq
-as_factors: TRUE
+as_factors: FALSE
 data_tables: FALSE
 attach_internal_libraries: FALSE
 cache_loaded_data:  TRUE
