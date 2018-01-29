@@ -3,7 +3,7 @@ require(Biostrings)
 require(ape)
 
 #### QIIME Phyloseq Object
-
+make_qiime_de_novo_ref_ps <- function(ps_file){
 ## Issue loading biom file convert to json using biom convert
 ## ```
 ## biom convert -i otu_table.biom -o otu_table_json.biom --table-type "OTU table" --to-json
@@ -41,4 +41,14 @@ phy_tree(qiime_de_novo_ps) <- tree_dat
 
 
 ###################### Saving Phyloseq Object ##################################
-saveRDS(qiime_de_novo_ps, "data/phyloseq_objects/qiimeDeNovo_ps.rds")
+saveRDS(qiime_de_novo_ps, ps_file)
+
+}
+
+ps_file <- "data/phyloseq_objects/qiimeDeNovo_ps.rds"
+
+if (file.exists(ps_file)) {
+    print("QIIME DeNovo phyloseq rds file exists")
+} else {
+    make_qiime_de_novo_ps(ps_file)
+}

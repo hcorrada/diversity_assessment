@@ -3,7 +3,7 @@ require(Biostrings)
 require(ape)
 
 #### QIIME Phyloseq Object
-
+make_qiime_deblur_ps <- function(ps_file){
 ## Issue loading biom file convert to json using biom convert
 ## ```
 ## biom convert -i all.biom \
@@ -52,3 +52,13 @@ taxa_names(qiime_deblur_ps) <- paste0("SV", 1:length(taxa_names(qiime_deblur_ps)
 
 ###################### Saving Phyloseq Object ##################################
 saveRDS(qiime_deblur_ps, "data/phyloseq_objects/deblur_ps.rds")
+
+}
+
+ps_file <- "data/phyloseq_objects/deblur_ps.rds"
+
+if (file.exists(ps_file)) {
+    print("QIIME Deblur phyloseq rds file exists")
+} else {
+    make_qiime_deblur_ps(ps_file)
+}

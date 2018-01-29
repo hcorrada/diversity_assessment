@@ -4,6 +4,7 @@ require(ape)
 
 #### QIIME Phyloseq Object
 
+make_qiime_open_ref_ps <- function(){
 ## Issue loading biom file convert to json using biom convert
 ## ```
 ## biom convert -i otu_table_mc2_w_tax_no_pynast_failures.biom \
@@ -50,4 +51,14 @@ tree_dat <- read.tree(tree_file)
 phy_tree(qiime_open_ref_ps) <- tree_dat
 
 ###################### Saving Phyloseq Object ##################################
-saveRDS(qiime_open_ref_ps, "data/phyloseq_objects/qiimeOpenRef_ps.rds")
+saveRDS(qiime_open_ref_ps, ps_file)
+
+}
+
+ps_file <- "data/phyloseq_objects/qiimeOpenRef_ps.rds"
+
+if (file.exists(ps_file)) {
+    print("QIIME OpenRef phyloseq rds file exists")
+} else {
+    make_qiime_open_ref_ps()
+}

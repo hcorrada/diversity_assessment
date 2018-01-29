@@ -1,4 +1,5 @@
 ### Mothur Phyloseq Object
+make_mothur_ps <- function(ps_file){
 require(ape)
 require(Biostrings)
 
@@ -71,4 +72,14 @@ phy_tree(mothur_ps) <- tree_dat
 mothur_ps@refseq <- seq_dat
 
 ###################### Saving Phyloseq Object ##################################
-saveRDS(qiime_mothur_ps, "data/phyloseq_objects/mothur_ps.rds")
+saveRDS(mothur_ps, ps_file)
+
+}
+
+ps_file <- "data/phyloseq_objects/mothur_ps.rds" 
+
+if (file.exists(ps_file)) {
+    print("Mothur phyloseq rds file exists")
+} else {
+    make_mothur_ps(ps_file)
+}

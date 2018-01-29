@@ -3,7 +3,7 @@ require(Biostrings)
 require(ape)
 
 #### QIIME Closed Reference Phyloseq Object
-
+make_qiime_closed_ref_ps <- function(ps_file){
 ## Note no representative sequences for closed reference - can get
 ## from greengenes reference database
 qiime_dir <- "data/qiime_closed_ref"
@@ -24,4 +24,14 @@ sample_names(qiime_closed_ref_ps) <- sample_names(qiime_closed_ref_ps) %>%
 sample_data(qiime_closed_ref_ps) <- column_to_rownames(mgtstMetadata, var = "sample_id")
 
 ###################### Saving Phyloseq Object ##################################
-saveRDS(qiime_closed_ref_ps, "data/phyloseq_objects/qiimeClosedRef_ps.rds")
+saveRDS(qiime_closed_ref_ps, ps_file)
+
+}
+
+ps_file <- "data/phyloseq_objects/qiimeClosedRef_ps.rds"
+
+if (file.exists(ps_file)) {
+    print("QIIME ClosedRef phyloseq rds file exists")
+} else {
+    make_qiime_closed_ref_ps(ps_file)
+}
