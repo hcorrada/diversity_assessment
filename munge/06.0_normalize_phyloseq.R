@@ -50,8 +50,12 @@ normalize_counts <- function(method, ps, pipe) {
     print(paste("Normalizing count using method", method))
 
     require(matrixStats)
-    ## Extract count matrix from phyloseq object
-    count_mat <- as(otu_table(ps), "matrix")
+    ## Extract count matrix from phyloseq object 
+    count_mat <- as(otu_table(ps), "matrix") 
+    ## Consistent format - taxa as rows  
+    if (!taxa_are_rows(ps)) {
+        count_mat <- t(count_mat)
+    }
 
     ## extract normalizaed counts
     if (method == "RAW") {
@@ -60,10 +64,11 @@ normalize_counts <- function(method, ps, pipe) {
     } else if (method == "UQ") {
         ## Upper quartile normalization
         count_mat[count_mat == 0] <- NA
-        norm_factors <- colQuantiles(count_mat, p = 0.75 ,na.rm = TRUE)
+        norm_factors <- colQuantiles(count_mat, p = 0.75 ,na.rm = TRUE) 
+        count_mat[is.na(count_mat)] <- 0
     } else if (method == "CSS") {
         ## Cumulative sum scaling Paulson et al. 2013
-        norm_factors <- metagenomeSeq::calcNormFactors(as(count_mat, "matrix"), p = 0.75)
+        norm_factors <- metagenomeSeq::calcNormFactors(count_mat, p = 0.75)
         norm_factors <- norm_factors$normFactors
     } else if ( method == "TSS") {
         ## Total sum scaling
@@ -80,9 +85,9 @@ normalize_counts <- function(method, ps, pipe) {
 
     ## Normalizing counts
     norm_mat <- sweep(count_mat, 2, norm_factors,'/')
-    if ( sum(row.names(norm_mat) == taxa_names(ps)) == length(taxa_names(ps))) {
+    if ( all(row.names(norm_mat) == taxa_names(ps))) {
         norm_tbl <- otu_table(norm_mat, taxa_are_rows = TRUE)
-    } else if ( sum(colnames(norm_mat) == taxa_names(ps)) == length(taxa_names(ps))) {
+    } else if ( all(colnames(norm_mat) == taxa_names(ps))) {
         norm_tbl <- otu_table(norm_mat, taxa_are_rows = FALSE)
     } else {
         stop("taxa_names to not match row or column names")
@@ -93,6 +98,12 @@ normalize_counts <- function(method, ps, pipe) {
     ## Note: refseq data not included in returned phyloseq object
     norm_ps <- phyloseq(norm_tbl, sample_data(ps), tax_table(ps), phy_tree(ps))
 
+    ## Check for normalization errors  
+    tax_check <- is.na(taxa_sums(norm_ps))
+    sam_check <- is.na(sample_sums(norm_ps))
+    if ( any(tax_check, sam_check)) {
+        stop("NA values in normalized count table")
+    }
     ## Saving normalized ps as RDS to prevent having to rerun
     saveRDS(norm_ps, norm_file)
 
