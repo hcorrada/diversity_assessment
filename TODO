@@ -1,15 +1,15 @@
 ## Primary Analysis
+- restructure code for faster load.project() and updating files 
 
 ## Coding  
-- evaluate munge results for failed runs
-- check for normalization and diversity estimate errors
-- debug make_beta_df and beta eval
+- evaluate munge results for failed runs: normalization, diversity, and cluster eval
+        - pluck results and get number of failures and error messages 
+        - investigate error source  
 - clean up make ps munge code formatting
 
 ## Seq and Pipe QA
 - species abundance curves   
 - rarefaction curves  
-- dada2 seq quality plots  
 
 ## Sample characterization  
 - beta diversity - unmixed samples  
@@ -24,9 +24,8 @@
 - figure out what quality score to use for analysis
 - correlate B-div with difference in seq number and quality
 
-## Issues 
+## Issues and notes
 - Error in DADA2 tree build - optim.ml matrix too large.... 
     - use NJ tree  
     - email phangorn developer about issue  
-- Check out NTC 1-H12 has a high read count, pass_rate, and total abundance  
-- Normalize phyloseq seq is slow due to loading all pipeline RDS...
+- Check out NTC 1-H12 has a high read count, pass_rate, and total abundance   
