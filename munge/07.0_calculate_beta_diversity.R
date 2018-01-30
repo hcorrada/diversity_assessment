@@ -1,4 +1,13 @@
+
 ## Calculating Beta Diversity Metrics for Normalized count data
+require(doParallel)
+registerDoParallel(cores = 7)
+
+## Safely calculate distance metrics Instead of stopping when there is an error
+## when calculating the distance metric provides NULL results with error message
+safe_dist <- safely(phyloseq::distance)
+safe_unifrac <- safely(phyloseq::UniFrac) 
+
 calc_beta_div <- function(rds_file, div_metric){
     norm_ps <- readRDS(rds_file)
 
@@ -22,6 +31,7 @@ calc_beta_div <- function(rds_file, div_metric){
         if (n_taxa > 50000) {
             div_results <- safe_unifrac(norm_ps, weighted = TRUE)
         } else {
+            require()
             div_results <- safe_unifrac(norm_ps, weighted = TRUE, parallel = TRUE)
         }
     } else if (div_metric == "unifrac") {
@@ -62,5 +72,4 @@ norm_to_div <- function(rds_file) {
 }
 
 ## Processing normalized count data
-rds_files <- list.files("data/norm_data", full.names = TRUE) %>% 
-    walk(norm_to_div)
+rds_files <- list.files("data/norm_data", full.names = TRUE) %>% walk(norm_to_div)
