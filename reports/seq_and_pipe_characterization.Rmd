@@ -1,8 +1,10 @@
 ---
 title: "Sequence Data and Pipeline Characterization"
 author: "Nate Olson"
-date: "12/19/2017"
-output: pdf_document
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
 ---
 
 ```{r seqPipeCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
@@ -59,7 +61,7 @@ r1_seq_char_df %>% filter(biosample_id != "NTC") %>%
 - Pipelines varied in terms of the number of features, total abundance, and proportion of sequences passing quality control.  
 
 ```{r pipeCharTbl, echo = FALSE, message = FALSE, warning = FALSE}
-pipe_char_summary <- pipe_info_df %>%
+pipe_char_summary <- pipe_char_df %>%
     unnest() %>% 
     left_join(mgtstMetadata) %>% 
     filter(biosample_id != "NTC") %>% 
@@ -84,16 +86,92 @@ pipe_char_summary %>%
       knitr::kable(caption = "Summary statistics for the different bioinformatic pipeliens. Four pipelines, de novo, open reference, closed reference, and deblur (sequence inference), used the sample sequence pre-processing methods. DADA2 is a denoising sequence inference pipeline and mothur is a de-novo clustering pipeline. No template controls were excluded from summary statistics. Sparsity is the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2) in the count. Sample coverage is the median and range (minimum - maximum) per sample total feature abundance. Filter rate is the proportion of reads that were removed while processing the sequencing data for each bioinformatic pipeline.", booktabs = TRUE)
 ```
 
-* Figure 2 
-    * Species abundance curves - relate to ecology literature, the species abundance curves are fundamentally different between pipelines, indicating that the features generated using represent different biological units and therefore should be interpreted as such (Only unmixed samples same PCR replicate across sequencing runs). 
-    * Rarefaction curves (Only unmixed samples same PCR replicate across sequencing runs)
-    * Prevalence (all samples)
+## Figure 2 
+```{r}
+ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>% 
+    set_names(basename(.)) %>% 
+    map(readRDS)
+```
+
+* Species abundance curves - relate to ecology literature, the species abundance curves are fundamentally different between pipelines, indicating that the features generated using represent different biological units and therefore should be interpreted as such (Only unmixed samples same PCR replicate across sequencing runs).  
 
 ```{r}
+get_rad_df <- function(ps, sample_name) {
+    x_abu <- prune_samples(sample_name, ps) %>%
+        {prune_taxa(taxa_sums(.) > 0, .)} %>%
+        otu_table() %>%
+        as.vector() %>%
+        sort(decreasing = TRUE)
+    
+    data_frame(rank = 1:length(x_abu), abund = x_abu)
+}
 
+rad_df <- ps_list %>% map_df(get_rad_df, "nist_run1_1-A1", .id = "pipe")
+
+ggplot(rad_df) + geom_point(aes(x = rank, y = abund)) + 
+    scale_y_log10() + 
+    theme_bw() + 
+    labs(x = "Feature Rank", y = "Abundance") + 
+    facet_wrap(~pipe, scales = "free_x")
+```
+
+* Rarefaction curves (Only unmixed samples same PCR replicate across sequencing runs)
+```{r}
+ps_iNEXT <- function(ps){
+    sample_set <- c("nist_run1_2-A10","nist_run2_2-A10",
+                    "jhu_run1_2-A10","jhu_run2_2-A10")
+    # sample_set <- c("nist_run1_2-A10","nist_run2_2-A10")
+    count_tbl <- prune_samples(sample_set, ps)  %>%
+        {prune_taxa(taxa_sums(.) > 0, .)} %>%
+        otu_table() 
+    
+    if (!taxa_are_rows(ps)) {
+        count_tbl <- t(count_tbl)
+    } 
+
+    count_df <- as.data.frame(count_tbl)
+    
+    iNEXT::iNEXT(count_df)
+}
+
+ps_list %>% map(ps_iNEXT) %>% walk(~{plot(iNEXT::ggiNEXT(.) + theme_bw())})
 ```
 
 
+* Prevalence (all samples)
+```{r}
+## Code modified from Callahan F1000
+get_prevdf <- function(ps){
+    prevdf <- apply(X = otu_table(ps), 
+                MARGIN = ifelse(taxa_are_rows(ps), yes = 1, no = 2),
+                FUN = function(x){sum(x > 0)})
+
+    # Add taxonomy and total read counts to this data.frame
+    data.frame(Prevalence = prevdf, 
+               TotalAbundance = taxa_sums(ps), 
+               tax_table(ps)) %>% 
+        mutate(PrevFrac = Prevalence / nsamples(ps))
+}
+
+
+pipe_prev_df <- ps_list %>% map_df(get_prevdf, .id = "pipe")
+
+ggplot(pipe_prev_df, aes(TotalAbundance, PrevFrac)) +
+    geom_point(size = 2, alpha = 0.7) +
+    scale_x_log10() +
+    labs(x = "Total Abundance", y = "Prevalence [Frac. Samples]") +
+    facet_wrap( ~ pipe) + theme_bw()
+```
+
+
+
+
+
+## Supplemental Sequencing Data Characterization  
+```{r}
+fqs <- list.files("data/example_seq_data", full.names = TRUE)
+dada2::plotQualityProfile(fqs)
+```
 
 
 ## No Template Control Investigation 
