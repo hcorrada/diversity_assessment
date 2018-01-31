@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+data/diversity_data/*
+.DS_Store
+data/.DS_Store
