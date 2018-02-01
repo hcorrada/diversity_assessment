@@ -14,12 +14,16 @@
 #'
 #' @examples
 cluster_samples <- function(comp_df, dist_mat) {
+    ## Check number of comparisons  
+    n_comp <- row.names(dist_mat) %in% comp_df$sample_id
+    if (length(n_comp) <= 2) return(NULL)
+    
     comp_mat <- dist_mat[row.names(dist_mat) %in% comp_df$sample_id,
                          colnames(dist_mat) %in% comp_df$sample_id]
-    if (nrow(comp_mat) <= 2) {
-        return(NULL)
-    }
-    cluster::pam(comp_mat, k = 2, cluster.only = TRUE)
+    
+    safe_pam <- safely(cluster::pam)
+    
+    safe_pam(comp_mat, k = 2, cluster.only = TRUE) 
 }
 
 #' Evaluate PAM clustering results
@@ -31,14 +35,14 @@ cluster_samples <- function(comp_df, dist_mat) {
 #' @export
 #'
 #' @examples
-cluster_eval <- function(cluster_assignments, comp_df) {
-    if (is.null(cluster_assignments)) {
-        return(NA)
-    }
+cluster_eval <- function(cluster_output, comp_df) {
+    ## Accessing results from safely run
+    cluster_assignments <- cluster_output$result
+    
+    if (is.null(cluster_assignments)) return(-1)
     
     if (nrow(comp_df) != length(cluster_assignments)) {
-        comp_df <-
-            filter(comp_df, sample_id %in% names(cluster_assignments))
+        comp_df <- filter(comp_df, sample_id %in% names(cluster_assignments))
     }
     
     ## Ensuring sample_ids are in the correct order
@@ -51,10 +55,8 @@ cluster_eval <- function(cluster_assignments, comp_df) {
     samples_compared <- length(cluster_assignments)
     
     ## Evaluate comparison for either possible cluster assignment
-    cluster_eval <-
-        ifelse(results_df$t_fctr == min(results_df$t_fctr), 1, 2)
-    cluster_eval_inv <-
-        ifelse(results_df$t_fctr == max(results_df$t_fctr), 1, 2)
+    cluster_eval <- ifelse(results_df$t_fctr == min(results_df$t_fctr), 1, 2)
+    cluster_eval_inv <- ifelse(results_df$t_fctr == max(results_df$t_fctr), 1, 2)
     
     assignment_matches <-
         max(
@@ -79,8 +81,8 @@ get_cluster_eval_df <- function(dist_obj, full_comp_df) {
     dist_mat <- as.matrix(dist_obj)
     
     full_comp_df %>%
-        mutate(cluster_assignments = map(comp_df, cluster_samples, dist_mat)) %>%
-        mutate(cluster_results = map2_dbl(cluster_assignments, comp_df, cluster_eval))
+        mutate(cluster_output = map(comp_df, cluster_samples, dist_mat)) %>%
+        mutate(cluster_results = map2_dbl(cluster_output, comp_df, cluster_eval))
 }
 
 ## Safe eval version - need to check error after updating source data
@@ -97,14 +99,8 @@ perform_cluster_eval <- function(dist_methods, full_comp_df){
         filter(!is.null(dist_obj)) %>%
         mutate(eval_output = map(dist_obj, safe_get_cluster_eval_df, full_comp_df))
     
-    ## Tidy cluster evaluation results
-    cluster_eval_df %>%
-        mutate(eval_result = map(eval_output, pluck, "result")) %>%
-        mutate(eval_error = map_lgl(eval_result, is.null)) %>%
-        filter(!eval_error) %>%
-        select(pipe, method, dist_method, eval_result) %>%
-        unnest() %>%
-        select(-comp_df, -cluster_assignments)
+    ## Removing dist_obj and dist_results - memory hogs
+    cluster_eval_df %>% select(-dist_obj, -dist_results)
 }
 
 ######################## Generating Comparison Data Frame ######################
