@@ -1,0 +1,177 @@
+---
+title: "Beta Cluster Eval Error Check"
+author: "Nate Olson"
+date: "1/31/2018"
+output: html_document
+---
+
+```{r}
+library(ProjectTemplate)
+load.project()
+```
+
+```{r}
+tidy_error <- function(eval_df){
+    eval_df %>% 
+    mutate(eval_error = map(eval_output, pluck, "error")) %>%
+        mutate(failed_eval = map_lgl(eval_error, ~!is.null(.))) %>%
+        filter(failed_eval) %>% 
+    mutate(error_message = map_chr(eval_error, pluck, "message")) %>% 
+        select(pipe, method, dist_method, error_message)
+}
+
+```
+
+```{r}
+load("cache/beta_cluster_eval_unifrac_df.RData")
+load("cache/beta_cluster_eval_wunifrac_df.RData")
+load("cache/beta_cluster_eval_bray_df.RData")
+load("cache/beta_cluster_eval_jaccard_df.RData")
+```
+
+```{r}
+error_df <- list(beta_cluster_eval_bray_df, 
+     beta_cluster_eval_jaccard_df, 
+     beta_cluster_eval_wunifrac_df, 
+     beta_cluster_eval_unifrac_df) %>% 
+    map_df(tidy_error)
+```
+
+Evaluations fail for all metrics for a normalization and pipeline combination
+```{r}
+error_df %>% group_by(pipe, method) %>% summarise(count = n())
+```
+
+Error in cluster_samples function
+added safely to to function, need to parse output for test dataset
+```{r}
+test_dat <- readRDS("data/diversity_data/dada_rareq15_unifrac.rds")
+```
+
+```{r}
+#' Bicluster samples using PAM
+#'
+#' @param comp_df data frame with samples in sample_ids column
+#' @param dist_mat matrix with pairwise distances
+#'
+#' @return named vector with cluster assignments
+#' @export
+#'
+#' @examples
+cluster_samples <- function(comp_df, dist_mat) {
+    ## Check number of comparisons  
+    n_comp <- row.names(dist_mat) %in% comp_df$sample_id
+    if (length(n_comp) <= 2) return(NULL)
+    
+    comp_mat <- dist_mat[row.names(dist_mat) %in% comp_df$sample_id,
+                         colnames(dist_mat) %in% comp_df$sample_id]
+
+    safe_pam <- safely(cluster::pam)
+    
+    safe_pam(comp_mat, k = 2, cluster.only = TRUE) 
+}
+
+#' Evaluate PAM clustering results
+#'
+#' @param cluster_assignments named vector with cluster assignments
+#' @param comp_df data frame with sample_ids (samples) and t_fctr column (grouping)
+#'
+#' @return double with percent of matched samples
+#' @export
+#'
+#' @examples
+cluster_eval <- function(cluster_output, comp_df) {
+    ## Accessing results from safely run
+    cluster_assignments <- cluster_output$result
+    
+    if (is.null(cluster_assignments)) return(-1)
+    
+    if (nrow(comp_df) != length(cluster_assignments)) {
+        comp_df <- filter(comp_df, sample_id %in% names(cluster_assignments))
+    }
+    
+    ## Ensuring sample_ids are in the correct order
+    results_df <-
+        data.frame(cluster_results = cluster_assignments) %>%
+        rownames_to_column(var = "sample_id") %>%
+        left_join(comp_df)
+    
+    ## Number of samples clustered
+    samples_compared <- length(cluster_assignments)
+    
+    ## Evaluate comparison for either possible cluster assignment
+    cluster_eval <- ifelse(results_df$t_fctr == min(results_df$t_fctr), 1, 2)
+    cluster_eval_inv <- ifelse(results_df$t_fctr == max(results_df$t_fctr), 1, 2)
+    
+    assignment_matches <-
+        max(
+            sum(cluster_eval == results_df$cluster_results),
+            sum(cluster_eval_inv == results_df$cluster_results)
+        )
+    
+    ## Return the fraction of samples correctly clustered
+    assignment_matches / samples_compared
+}
+
+#' Perform PAM cluster evaluation
+#'
+#' @param dist_obj dist-class object with pairwise distances
+#' @param full_comp_df data frame with full set of comparisons
+#'
+#' @return data frame with cluster evaluation results
+#' @export
+#'
+#' @examples
+get_cluster_eval_df <- function(dist_obj, full_comp_df) {
+    dist_mat <- as.matrix(dist_obj)
+    
+    full_comp_df %>%
+        mutate(cluster_output = map(comp_df, cluster_samples, dist_mat)) %>%
+        mutate(cluster_results = map2_dbl(cluster_output, comp_df, cluster_eval))
+}
+
+## Safe eval version - need to check error after updating source data
+safe_get_cluster_eval_df <- safely(get_cluster_eval_df)
+
+
+perform_cluster_eval <- function(dist_methods, full_comp_df){  
+    ## Get dist data frame  
+    beta_df <- make_beta_div_df(dist_methods)
+    
+    ## Perform evaluation
+    cluster_eval_df <- beta_df %>%
+        mutate(dist_obj = map(dist_results, pluck, "result")) %>%
+        filter(!is.null(dist_obj)) %>%
+        mutate(eval_output = map(dist_obj, safe_get_cluster_eval_df, full_comp_df))
+    
+    ## Removing dist_obj and dist_results - memory hogs
+    cluster_eval_df %>% select(-dist_obj, -dist_results)
+    
+    ## Tidy cluster evaluation results - not returning tidy objects for debugging
+    # cluster_eval_df %>%
+    #     mutate(eval_result = map(eval_output, pluck, "result")) %>%
+    #     mutate(eval_error = map_lgl(eval_result, is.null)) %>%
+    #     filter(!eval_error) %>%
+    #     select(pipe, method, dist_method, eval_result) %>%
+    #     unnest() %>%
+    #     select(-comp_df, -cluster_assignments)
+}
+```
+
+```{r}
+dist_obj <- test_dat$result 
+test_results <- get_cluster_eval_df(dist_obj, full_comp_df)
+```
+
+```{r}
+bray_test <- perform_cluster_eval("bray", full_comp_df)
+```
+
+```{r}
+bray_test_error <- tidy_error(bray_test)
+```
+
+```{r}
+bray_test$eval_output[[1]]
+```
+
