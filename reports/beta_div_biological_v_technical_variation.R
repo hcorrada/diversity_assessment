@@ -75,8 +75,25 @@ biol_v_tech_variation_summary<-biol_v_tech_variation[[3]] %>%
     summarise(mean_value=mean(value))
 
 print(ggplot(biol_v_tech_variation_summary, 
+             aes(x=variation_label, y=normalization, fill=mean_value))+
+          geom_tile()+theme_bw()+facet_grid(metric~pipe, scales="free", space="free")+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+          scale_fill_distiller(palette = "RdBu"))
+
+biol_v_tech_variation_summary$metric<-as.character(biol_v_tech_variation_summary$metric)
+
+biol_v_tech_variation_summary[which(biol_v_tech_variation_summary$metric == "bray" & 
+           biol_v_tech_variation_summary$normalization_type=="abundance_based"), c("metric")]<-c("bray_abund")
+
+biol_v_tech_variation_summary[which(biol_v_tech_variation_summary$metric == "wunifrac" & 
+                                        biol_v_tech_variation_summary$normalization_type=="abundance_based"), c("metric")]<-c("wunifrac_abund")
+
+biol_v_tech_variation_summary$metric<-factor(biol_v_tech_variation_summary$metric, 
+                                             levels=c("jaccard","unifrac", "wunifrac", "bray", "wunifrac_abund", "bray_abund"),
+                                             ordered = T)
+print(ggplot(biol_v_tech_variation_summary, 
        aes(x=variation_label, y=normalization, fill=mean_value))+
-    geom_tile()+theme_bw()+facet_grid(metric~pipe, scales="free", space="free")+
+    geom_tile()+theme_bw()+facet_grid(metric~pipe+variation, scales="free", space="free")+
     theme(axis.text.x=element_text(angle = -45, hjust = 0))+
     scale_fill_distiller(palette = "RdBu"))
 
