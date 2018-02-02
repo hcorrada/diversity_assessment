@@ -2,15 +2,14 @@
 ## beta diversity metrics used in McMurdie and Holmes 2014 and Weiss et al 2017
 ## comparing unmixed pre-exposure samples to titration and post-exposure samples
 
-library(reshape2)
-
-##################### Functions for PAM Cluster Evaluation #####################
+##################### Functions for Biol. v. Tech. Replicate Evaluation #####################
 
 #' Evaluate biological versus technical variation
 #'
 #' @param map mapping file with sample information 
 #' @param metric diversity metric of interest (bray, jaccard, unifrac or wunifrac)
-#'
+#' @param variation_tests dataframe containing which samples should be compared for different parameters
+#' 
 #' @return data frame with diversity value for paired samples for all pipelines and normalization methods
 #' @export
 #'
@@ -29,7 +28,7 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
                                             which(colnames(beta_div) %in% as.character(map$sample_id))]
         # Melt dataframe so we can look at matched samples 
         beta_div_m$sample<-row.names(beta_div_m)
-        beta_div_m2<-reshape2::melt(beta_div_m, id.vars=c("sample"))
+        beta_div_m2<-gather(beta_div_m, sample)
         colnames(beta_div_m2)<-c("sample_a", "sample_b", "value")
         # Add additional info to melted dataframe
         beta_div_m2$pipe<-data$pipe[i]
@@ -194,7 +193,7 @@ variation_tmp<-variation_tmp[-2,]
 variation_tmp[4,5]<-"TRUE OR FALSE"
 variation_tmp<-variation_tmp[-5,]
 
-biol_v_tech_variation_comparison_map<-reshape2::melt(variation_tmp, id.vars = "variation_label")
+biol_v_tech_variation_comparison_map<-gather(variation_tmp, variation_label, variable)
 rm(variation_tmp)
 
 biol_v_tech_variation_comparison_map$value<-factor(biol_v_tech_variation_comparison_map$value, levels = c("TRUE", "TRUE OR FALSE", "FALSE"), ordered = TRUE)
