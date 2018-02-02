@@ -167,4 +167,70 @@ print(ggplot(subset(biol_v_tech_variation_summary_highlevel,
           ggtitle("Biological vs. Technical Variation")+
           xlab("Normalization Method")+ ylab("Mean Distance Value"))
 
+biol_v_tech_variation_summary_higherlevel<- biol_v_tech_variation_summary_highlevel[,1:6] %>% spread(variation, mean_value)
+
+biol_v_tech_variation_summary_higherlevel$mean_difference<-(biol_v_tech_variation_summary_higherlevel$biological - biol_v_tech_variation_summary_higherlevel$technical)
+
+print(ggplot(subset(biol_v_tech_variation_summary_higherlevel, 
+                    normalization_type %in% c("none", "abundance_based") &
+                        metric %in% c("bray", "wunifrac")), 
+             aes(x=normalization, y=mean_difference, color=pipe, group=pipe))+
+          geom_point(size=2)+geom_line()+theme_bw()+facet_grid(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Normalization Method")+ ylab("Mean Biological Distance - Mean Technical Distance"))
+
+ print(ggplot(subset(biol_v_tech_variation_summary_higherlevel, 
+                    normalization_type %in% c("none", "rarefaction")), 
+             aes(x=normalization, y=mean_difference, color=pipe, group=pipe))+
+          geom_point(size=2)+geom_line()+theme_bw()+facet_grid(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Rarefaction Level")+ ylab("Mean Biological Distance - Mean Technical Distance"))
+
+biol_v_tech_variation_overall_mean<-biol_v_tech_variation[[3]] %>% 
+    group_by(pipe, normalization, metric, normalization_type) %>%
+     summarise(overall_mean=mean(value))
+ 
+biol_v_tech_variation_ma_plot<-merge(biol_v_tech_variation_summary_higherlevel, biol_v_tech_variation_overall_mean)
+
+print(ggplot(subset(biol_v_tech_variation_ma_plot, 
+                    normalization_type %in% c("none", "rarefaction")), 
+             aes(x=overall_mean, y=mean_difference, color=pipe, shape=normalization))+
+          geom_point(size=3)+theme_bw()+facet_grid(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Overall Mean Distance")+ ylab("Mean Biological Distance - Mean Technical Distance"))
+
+print(ggplot(subset(biol_v_tech_variation_ma_plot, 
+                    normalization_type %in% c("none", "rarefaction")), 
+             aes(x=overall_mean, y=mean_difference, color=pipe, shape=normalization))+
+          geom_point(size=3)+theme_bw()+facet_grid(~metric, scales = "free")+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Overall Mean Distance")+ ylab("Mean Biological Distance - Mean Technical Distance"))
+
+print(ggplot(subset(biol_v_tech_variation_ma_plot, 
+                    normalization_type %in% c("none", "abundance_based") &
+                        metric %in% c("bray", "wunifrac")), 
+             aes(x=overall_mean, y=mean_difference, color=pipe, shape=normalization))+
+          geom_point(size=3)+theme_bw()+facet_grid(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Overall Mean Distance")+ ylab("Mean Biological Distance - Mean Technical Distance"))
+
+print(ggplot(subset(biol_v_tech_variation_ma_plot, 
+                    normalization_type %in% c("none", "abundance_based") &
+                        metric %in% c("bray", "wunifrac")), 
+             aes(x=overall_mean, y=mean_difference, color=pipe, shape=normalization))+
+          geom_point(size=3)+theme_bw()+facet_grid(~metric, scales="free")+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Overall Mean Distance")+ ylab("Mean Biological Distance - Mean Technical Distance"))
 dev.off()
