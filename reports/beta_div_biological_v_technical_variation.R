@@ -72,13 +72,13 @@ for(div_metric in unique(biol_v_tech_variation[[3]]$metric)){
 
 biol_v_tech_variation_summary<-biol_v_tech_variation[[3]] %>% 
     group_by(variation, variation_label, pipe, normalization, metric, normalization_type) %>%
-    summarise(mean_value=mean(value))
+    summarise(mean_value=mean(value), stdev=sd(value), N=length(value), se=stdev/sqrt(N))
 
 print(ggplot(biol_v_tech_variation_summary, 
              aes(x=variation_label, y=normalization, fill=mean_value))+
           geom_tile()+theme_bw()+facet_grid(metric~pipe, scales="free", space="free")+
           theme(axis.text.x=element_text(angle = -45, hjust = 0))+
-          scale_fill_distiller(palette = "RdBu"))
+          scale_fill_distiller(palette = "YlGn"))
 
 biol_v_tech_variation_summary$metric<-as.character(biol_v_tech_variation_summary$metric)
 
@@ -95,6 +95,76 @@ print(ggplot(biol_v_tech_variation_summary,
        aes(x=variation_label, y=normalization, fill=mean_value))+
     geom_tile()+theme_bw()+facet_grid(metric~pipe+variation, scales="free", space="free")+
     theme(axis.text.x=element_text(angle = -45, hjust = 0))+
-    scale_fill_distiller(palette = "RdBu"))
+    scale_fill_distiller(palette = "YlGn"))
+
+biol_v_tech_variation_summary_highlevel<-biol_v_tech_variation[[3]] %>% 
+    group_by(variation, pipe, normalization, metric, normalization_type) %>%
+    summarise(mean_value=mean(value), stdev=sd(value), N=length(value), se=stdev/sqrt(N))
+
+print(ggplot(biol_v_tech_variation_summary_highlevel, 
+             aes(x=variation, y=normalization, fill=mean_value))+
+          geom_tile()+theme_bw()+facet_grid(metric~pipe, scales="free", space="free")+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+          scale_fill_distiller(palette = "YlGn"))
+
+dev.off()
+
+pdf("./reports/biological_v_technical_variation_diversity_plots_high_level.pdf", height=5, width=8)
+
+print(ggplot(subset(biol_v_tech_variation_summary_highlevel, 
+                    normalization_type %in% c("none", "rarefaction")), 
+             aes(x=normalization, y=mean_value, color=pipe, linetype=variation, 
+                 shape=variation, group=interaction(pipe,variation)))+
+          geom_point(size=2)+geom_line()+theme_bw()+facet_grid(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          ggtitle("Biological vs. Technical Variation")+
+            xlab("Rarefaction Level")+ ylab("Mean Distance Value"))
+
+print(ggplot(subset(biol_v_tech_variation_summary_highlevel, 
+                    normalization_type %in% c("none", "rarefaction")), 
+             aes(x=normalization, y=mean_value, color=pipe, linetype=variation, 
+                 shape=variation, group=interaction(pipe,variation)))+
+          geom_point(size=2)+geom_line()+theme_bw()+facet_grid(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          geom_errorbar(aes(ymin=mean_value-se, ymax=mean_value+se, width=0.5))+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Rarefaction Level")+ ylab("Mean Distance Value"))
+
+print(ggplot(subset(biol_v_tech_variation_summary_highlevel, 
+                    normalization_type %in% c("none", "rarefaction")), 
+             aes(x=normalization, y=mean_value, color=pipe, linetype=variation, 
+                 shape=variation, group=interaction(pipe,variation)))+
+          geom_point(size=2)+geom_line()+theme_bw()+facet_wrap(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          geom_errorbar(aes(ymin=mean_value-se, ymax=mean_value+se, width=0.5))+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Rarefaction Level")+ ylab("Mean Distance Value"))
+
+print(ggplot(subset(biol_v_tech_variation_summary_highlevel, 
+                    normalization_type %in% c("none", "abundance_based") &
+                        metric %in% c("bray", "wunifrac")), 
+             aes(x=interaction(variation, normalization), y=mean_value, color=pipe, 
+                 shape=variation, group=interaction(pipe,normalization)))+
+          geom_point(size=2)+geom_line()+theme_bw()+facet_grid(~metric)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          geom_errorbar(aes(ymin=mean_value-se, ymax=mean_value+se, width=0.5))+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Normalization Method")+ ylab("Mean Distance Value"))
+
+print(ggplot(subset(biol_v_tech_variation_summary_highlevel, 
+                    normalization_type %in% c("none", "abundance_based") &
+                        metric %in% c("bray", "wunifrac")), 
+             aes(x=variation, y=mean_value, color=pipe, 
+                 shape=variation, group=interaction(pipe,normalization)))+
+          geom_point(size=2)+geom_line()+theme_bw()+facet_grid(metric~normalization)+
+          theme(axis.text.x=element_text(angle = -45, hjust = 0))+ 
+          scale_colour_brewer(palette = "Dark2")+ 
+          geom_errorbar(aes(ymin=mean_value-se, ymax=mean_value+se, width=0.5))+ 
+          ggtitle("Biological vs. Technical Variation")+
+          xlab("Normalization Method")+ ylab("Mean Distance Value"))
 
 dev.off()
