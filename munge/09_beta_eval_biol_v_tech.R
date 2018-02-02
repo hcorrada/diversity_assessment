@@ -193,7 +193,8 @@ variation_tmp<-variation_tmp[-2,]
 variation_tmp[4,5]<-"TRUE OR FALSE"
 variation_tmp<-variation_tmp[-5,]
 
-biol_v_tech_variation_comparison_map<-gather(variation_tmp, variation_label, variable)
+biol_v_tech_variation_comparison_map<-gather(data = variation_tmp, key = variation, value = variation_label)
+colnames(biol_v_tech_variation_comparison_map)<-c("variation_label", "variable", "value")
 rm(variation_tmp)
 
 biol_v_tech_variation_comparison_map$value<-factor(biol_v_tech_variation_comparison_map$value, levels = c("TRUE", "TRUE OR FALSE", "FALSE"), ordered = TRUE)
