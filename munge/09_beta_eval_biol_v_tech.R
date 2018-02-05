@@ -65,6 +65,59 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
     return(data.frame(output2))
 }
 
+#' Run stats on biological versus technical variation
+#'
+#' @param map mapping file with sample information 
+#' @param metric diversity metric of interest (bray, jaccard, unifrac or wunifrac)
+#' 
+#' @return data frame with values from adonis
+#' @export
+#'
+#' @examples
+compute_diversity_stats<-function(map, metric){
+    
+    # Generate list of diversity matrices for piplines/norm methods
+    data<-make_beta_div_df(metric)
+    map$pcr_replicate<-paste0(map$pcr_16S_plate, "_", map$pos)
+    tests<-c("seq_lab", "seq_run", "t_fctr", "biosample_id")
+    tests_strata<-c("pcr_replicate", "seq_lab", "biosample_id", NA)
+    # For each beta div matrix
+    beta_div_stats<- lapply(1:length(data$pipe), function(i){
+        # Extract matrix
+        sample_order<-row.names(as.matrix(data$dist_results[[i]][[1]]))
+        map_sub<-subset(map, sample_id %in% c(sample_order))
+        map_sub$sample_id<-factor(map_sub$sample_id, levels=sample_order, ordered=T)
+        map_sub<-map_sub[order(map_sub$sample_id),]
+        
+        output<-lapply(1:length(tests), function(j){
+            
+            if(is.na(tests_strata[j])){
+                test<-vegan::adonis(data$dist_results[[i]][[1]] ~ factor(map_sub[,c(tests[j])]), 
+                                    perm=1000)
+                
+                return(cbind("test_variable"=tests[j], strata=NA,
+                             "R2"=test$aov.tab$R2[1], "Pr(>F)"=test$aov.tab$`Pr(>F)`[1],
+                             "pipe"=data$pipe[i], "normalization"=data$method[i],
+                             "metric"=metric))
+            } else {
+                test<-vegan::adonis(data$dist_results[[i]][[1]] ~ factor(map_sub[,c(tests[j])]), 
+                                    perm=1000, strata = factor(map_sub[,c(tests_strata[j])]))
+                
+                return(cbind("test_variable"=tests[j], strata=tests_strata[j],
+                             "R2"=test$aov.tab$R2[1], "Pr(>F)"=test$aov.tab$`Pr(>F)`[1],
+                             "pipe"=data$pipe[i], "normalization"=data$method[i],
+                             "metric"=metric))
+            }
+        })
+        
+        merged_stats<-do.call("rbind", output)
+        return(merged_stats)
+    })
+    
+    stats<-do.call("rbind", beta_div_stats)
+    
+    return(stats)
+}
 
 ######## Identify paired samples demonstrating biol or tech variation ######################
 
