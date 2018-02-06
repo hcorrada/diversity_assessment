@@ -242,7 +242,7 @@ varpart_stats$normalization<-factor(varpart_stats$normalization, levels=c("CSS",
 varpart_stats$metric<-factor(varpart_stats$metric, levels=c("jaccard", "unifrac", "wunifrac", "bray"), ordered = T)
 varpart_stats$txt_label<-paste0(round(varpart_stats$Adj.R.square, 2), "\n", varpart_stats$significance)
 
-print(ggplot(varpart_stats, aes(x=pipe, y=normalization, fill=Adj.R.square))+geom_tile()+facet_grid(metric~comparison, scales="free", space="free")+
+print(ggplot(subset(varpart_stats, effect=="conditional"), aes(x=pipe, y=normalization, fill=Adj.R.square))+geom_tile()+facet_grid(metric~feature, scales="free", space="free")+
     theme_bw()+theme(axis.text.x=element_text(angle = -45, hjust = 0))+
     scale_fill_distiller(palette = "YlGn", direction = 1)+ geom_text(aes(label=txt_label))+ 
         ggtitle("Biological vs. Technical Variation varpart Stats"))

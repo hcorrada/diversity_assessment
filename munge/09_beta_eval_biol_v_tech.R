@@ -95,12 +95,35 @@ compute_diversity_stats<-function(map, metric){
         map_sub<-map_sub[order(map_sub$sample_id),]
         
         output<-varpart(Y=dist_data, ~seq_run_merged, ~biosample_id, ~t_fctr, data=map_sub)
-        tmp<-as.data.frame(output$part$fract)
-        row.names(tmp)<-c("seq_run", "biosample_id", "t_fctr", "seq_run.biosample_id", "seq_run.titration", "biosample_id.titration", "all")
+        tmp<-as.data.frame(output$part$indfract[c(1:3,7),])
+        tmp<-rbind(tmp, as.data.frame(output$part$fract))
+        
+        tmp$feature<-c("seq_run", "subject", "titration", 
+                      "shared", "seq_run", "subject",
+                      "titration", "seq_run_and_subject", "seq_run_and_titration", 
+                      "subject_and_titration", "all")
+        tmp$effect<-c("conditional", "conditional", "conditional", 
+                      NA, "marginal", "marginal",
+                      "marginal", "marginal", "marginal", 
+                      "marginal", "global")
         tmp$pipe<-data$pipe[i]
         tmp$normalization<-data$method[i]
         tmp$metric<-metric
         
+        # CONDITIONAL EFFECTS
+        # fraction [a+d+f+g] X1=seq_run:
+        run_cond <- dbrda(dist_data ~ seq_run_merged + Condition(biosample_id) + Condition(t_fctr), 
+                     data = map_sub)
+        run_cond.a<-anova(run_cond)
+        # fraction [b+d+e+g] X2=sample:
+        sample_cond <- dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr), 
+                        data = map_sub)
+        sample_cond.a<-anova(sample_cond)
+        # fractions [c+e+f+g] X3=titration:
+        titration_cond <- dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
+                           data = map_sub)
+        titration_cond.a<-anova(titration_cond)
+        # MARGINAL EFFECTS
         # fraction [a+d+f+g] X1=seq_run:
         run <- dbrda(dist_data ~ seq_run_merged, 
                             data = map_sub)
@@ -129,15 +152,17 @@ compute_diversity_stats<-function(map, metric){
         all <- dbrda(dist_data ~ seq_run_merged + biosample_id + t_fctr, data = map_sub)
         all.a<-anova(all)
         
-        p_values<-rbind(run.a$`Pr(>F)`[1], sample.a$`Pr(>F)`[1], 
+        p_values<-rbind(run_cond.a$`Pr(>F)`[1], sample_cond.a$`Pr(>F)`[1], 
+                        titration_cond.a$`Pr(>F)`[1], NA,
+                        run.a$`Pr(>F)`[1], sample.a$`Pr(>F)`[1], 
                         titration.a$`Pr(>F)`[1], run.sample.a$`Pr(>F)`[1], 
                         run.titration.a$`Pr(>F)`[1], sample.titration.a$`Pr(>F)`[1],
                         all.a$`Pr(>F)`[1])
         tmp<-cbind(tmp, p_values)
         # Create column of significance labels
         tmp$significance <- cut(tmp$p_values, breaks=c(-Inf, 0.001, 0.01, 0.05, Inf), 
-                                label=c("***", "**", "*", ""))  
-        tmp$comparison<-gsub(row.names(tmp), pattern="\\.", replacement="+")
+                                label=c("***", "**", "*", ""))
+        tmp$significance[is.na(tmp$significance)]<-""
         return(tmp)
     })
     
@@ -319,4 +344,3 @@ ProjectTemplate::cache('biol_v_tech_variation',
 
 ProjectTemplate::cache('varpart_stats', 
                        depends = c("mgtstMetadata"))
-
