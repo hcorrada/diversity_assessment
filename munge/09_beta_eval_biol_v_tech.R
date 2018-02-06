@@ -78,40 +78,67 @@ compute_diversity_stats<-function(map, metric){
     
     # Generate list of diversity matrices for piplines/norm methods
     data<-make_beta_div_df(metric)
-    map$pcr_replicate<-paste0(map$pcr_16S_plate, "_", map$pos)
-    tests<-c("seq_lab", "seq_run", "t_fctr", "biosample_id")
-    tests_strata<-c("pcr_replicate", "seq_lab", "biosample_id", NA)
+    map$seq_run_merged<-paste0(map$seq_lab,"_", map$seq_run)
     # For each beta div matrix
     beta_div_stats<- lapply(1:length(data$pipe), function(i){
-        # Extract matrix
-        sample_order<-row.names(as.matrix(data$dist_results[[i]][[1]]))
+        # Extract distance object
+        dist_data<-as.matrix(data$dist_results[[i]][[1]])
+        # Keep only pre and post titration samples
+        map_sub<-subset(map, t_fctr == 0 | t_fctr ==20)
+        map_sub$t_fctr<-factor(map_sub$t_fctr)
+        dist_data<-as.dist(dist_data[which(row.names(dist_data) %in% map_sub$sample_id),
+                                                which(colnames(dist_data) %in% map_sub$sample_id)])
+        # Order samples so they match
+        sample_order<-row.names(as.matrix(dist_data))
         map_sub<-subset(map, sample_id %in% c(sample_order))
         map_sub$sample_id<-factor(map_sub$sample_id, levels=sample_order, ordered=T)
         map_sub<-map_sub[order(map_sub$sample_id),]
         
-        output<-lapply(1:length(tests), function(j){
-            
-            if(is.na(tests_strata[j])){
-                test<-vegan::adonis(data$dist_results[[i]][[1]] ~ factor(map_sub[,c(tests[j])]), 
-                                    perm=1000)
-                
-                return(cbind("test_variable"=tests[j], strata=NA,
-                             "R2"=test$aov.tab$R2[1], "Pr(>F)"=test$aov.tab$`Pr(>F)`[1],
-                             "pipe"=data$pipe[i], "normalization"=data$method[i],
-                             "metric"=metric))
-            } else {
-                test<-vegan::adonis(data$dist_results[[i]][[1]] ~ factor(map_sub[,c(tests[j])]), 
-                                    perm=1000, strata = factor(map_sub[,c(tests_strata[j])]))
-                
-                return(cbind("test_variable"=tests[j], strata=tests_strata[j],
-                             "R2"=test$aov.tab$R2[1], "Pr(>F)"=test$aov.tab$`Pr(>F)`[1],
-                             "pipe"=data$pipe[i], "normalization"=data$method[i],
-                             "metric"=metric))
-            }
-        })
+        output<-varpart(Y=dist_data, ~seq_run_merged, ~biosample_id, ~t_fctr, data=map_sub)
+        tmp<-as.data.frame(output$part$fract)
+        row.names(tmp)<-c("seq_run", "biosample_id", "t_fctr", "seq_run.biosample_id", "seq_run.titration", "biosample_id.titration", "all")
+        tmp$pipe<-data$pipe[i]
+        tmp$normalization<-data$method[i]
+        tmp$metric<-metric
         
-        merged_stats<-do.call("rbind", output)
-        return(merged_stats)
+        # fraction [a+d+f+g] X1=seq_run:
+        run <- dbrda(dist_data ~ seq_run_merged, 
+                            data = map_sub)
+        run.a<-anova(run)
+        # fraction [b+d+e+g] X2=sample:
+        sample <- dbrda(dist_data ~ biosample_id, 
+                        data = map_sub)
+        sample.a<-anova(sample)
+        # fractions [c+e+f+g] X3=titration:
+        titration <- dbrda(dist_data ~ t_fctr, 
+                    data = map_sub)
+        titration.a<-anova(titration)
+        # fractions [a+b+d+e+f+g] X1+X2=seq_run+sample_id:
+        run.sample <- dbrda(dist_data ~ seq_run_merged + biosample_id, 
+                           data = map_sub)
+        run.sample.a<-anova(run.sample)
+        # fractions [a+b+d+e+f+g] X1+X3=seq_run+titration:
+        run.titration <- dbrda(dist_data ~ seq_run_merged + t_fctr, 
+                           data = map_sub)
+        run.titration.a<-anova(run.titration)
+        # fractions [b+c+d+e+f+g] X2+X3=sample+titration:
+        sample.titration <- dbrda(dist_data ~ biosample_id + t_fctr, 
+                               data = map_sub)
+        sample.titration.a<-anova(sample.titration)
+        # fractions [a+b+c+d+e+f+g] All:
+        all <- dbrda(dist_data ~ seq_run_merged + biosample_id + t_fctr, data = map_sub)
+        all.a<-anova(all)
+        
+        p_values<-rbind(run.a$`Pr(>F)`[1], sample.a$`Pr(>F)`[1], 
+                        titration.a$`Pr(>F)`[1], run.sample.a$`Pr(>F)`[1], 
+                        run.titration.a$`Pr(>F)`[1], sample.titration.a$`Pr(>F)`[1],
+                        all.a$`Pr(>F)`[1])
+        tmp<-cbind(tmp, p_values)
+        # Create column of significance labels
+        tmp$significance <- cut(tmp$p_values, breaks=c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                                label=c("***", "**", "*", ""))  
+        tmp$comparison<-gsub(row.names(tmp), pattern="\\.", replacement="+")
+        return(tmp)
     })
     
     stats<-do.call("rbind", beta_div_stats)
@@ -274,8 +301,22 @@ biol_v_tech_variation_comparisons<-rbind(biol_v_tech_variation_comparisons, weig
 biol_v_tech_variation=list(biol_v_tech_variation_comparison_map, 
                            biol_v_tech_variation_comparison_numbers, 
                            biol_v_tech_variation_comparisons)
+
+# Compute stats
+unifrac_stats<-compute_diversity_stats(mgtstMetadata, "unifrac")
+jaccard_stats<-compute_diversity_stats(mgtstMetadata, "jaccard")
+wunifrac_stats<-compute_diversity_stats(mgtstMetadata, "wunifrac")
+bray_stats<-compute_diversity_stats(mgtstMetadata, "bray")
+
+varpart_stats<-rbind(unifrac_stats, jaccard_stats)
+varpart_stats<-rbind(varpart_stats, wunifrac_stats)
+varpart_stats<-rbind(varpart_stats, bray_stats)
+
 ########################  Cache results ################################
 
 ProjectTemplate::cache('biol_v_tech_variation', 
+                       depends = c("mgtstMetadata"))
+
+ProjectTemplate::cache('varpart_stats', 
                        depends = c("mgtstMetadata"))
 

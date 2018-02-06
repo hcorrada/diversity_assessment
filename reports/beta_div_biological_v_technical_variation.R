@@ -234,3 +234,17 @@ print(ggplot(subset(biol_v_tech_variation_ma_plot,
           ggtitle("Biological vs. Technical Variation")+
           xlab("Overall Mean Distance")+ ylab("Mean Biological Distance - Mean Technical Distance"))
 dev.off()
+
+pdf("./reports/biological_v_technical_variation_diversity_varpart_stats.pdf", height=16, width=24)
+
+varpart_stats$normalization<-factor(varpart_stats$normalization, levels=c("CSS", "TMM", "TSS", "RLE", "UQ", "RAW", "rare10000", 
+                                                                          "rare5000", "rare2000", "rareq15"), ordered = T)
+varpart_stats$metric<-factor(varpart_stats$metric, levels=c("jaccard", "unifrac", "wunifrac", "bray"), ordered = T)
+varpart_stats$txt_label<-paste0(round(varpart_stats$Adj.R.square, 2), "\n", varpart_stats$significance)
+
+print(ggplot(varpart_stats, aes(x=pipe, y=normalization, fill=Adj.R.square))+geom_tile()+facet_grid(metric~comparison, scales="free", space="free")+
+    theme_bw()+theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+    scale_fill_distiller(palette = "YlGn", direction = 1)+ geom_text(aes(label=txt_label))+ 
+        ggtitle("Biological vs. Technical Variation varpart Stats"))
+
+dev.off()
