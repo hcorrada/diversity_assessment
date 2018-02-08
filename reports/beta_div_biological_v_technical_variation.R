@@ -258,3 +258,36 @@ print(ggplot(subset(varpart_stats, effect=="global"), aes(x=pipe, y=normalizatio
           ggtitle("Biological vs. Technical Variation varpart Stats: Global Variation"))
 
 dev.off()
+
+pdf("./reports/biological_v_technical_variation_diversity_varpart_stats2.pdf", height=8, width=12)
+
+varpart_stats_sub <- subset(varpart_stats, effect %in% c("conditional", "global")) 
+varpart_stats_sub$feature<-factor(varpart_stats_sub$feature,
+                                      levels=c("all","subject","titration","seq_run"),
+                                      ordered=T)
+varpart_stats_sub$metric<-factor(varpart_stats_sub$metric,
+                                     levels=c("jaccard","unifrac","wunifrac","bray"),
+                                     ordered=T)
+varpart_stats_sub$Type<-varpart_stats_sub$feature
+varpart_stats_sub$Type<-gsub(varpart_stats_sub$Type, pattern="subject", replacement="biological")
+varpart_stats_sub$Type<-gsub(varpart_stats_sub$Type, pattern="titration", replacement="biological")
+varpart_stats_sub$Type<-gsub(varpart_stats_sub$Type, pattern="seq_run", replacement="technical")
+varpart_stats_sub$Type<-gsub(varpart_stats_sub$Type, pattern="all", replacement=" global")
+
+varpart_stats_sub$normalization<-factor(varpart_stats_sub$normalization, 
+                                    levels=c("CSS", "TMM", "TSS", 
+                                             "RLE", "UQ", "RAW", "rare10000",
+                                             "rare5000", "rare2000", "rareq15"), 
+                                    ordered = T)
+
+for(value in levels(varpart_stats_sub$metric)){
+    print(ggplot(subset(varpart_stats_sub, metric==value), 
+                 aes(x=feature, y=Adj.R.square, fill=Type))+
+              geom_bar(stat="identity")+facet_grid(pipe~normalization)+
+              theme_bw()+theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+              ggtitle(paste0("Biological vs. Technical Variation varpart Stats: ", value))+
+              xlab("")+ylab("Adjusted R^2")+
+              scale_fill_manual(values = c("gray","#d53e4f", "#3288bd")))
+}
+
+dev.off()

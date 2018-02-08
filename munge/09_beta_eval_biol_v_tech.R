@@ -94,7 +94,7 @@ compute_diversity_stats<-function(map, metric){
         map_sub$sample_id<-factor(map_sub$sample_id, levels=sample_order, ordered=T)
         map_sub<-map_sub[order(map_sub$sample_id),]
         
-        output<-varpart(Y=dist_data, ~seq_run_merged, ~biosample_id, ~t_fctr, data=map_sub)
+        output<-vegan::varpart(Y=dist_data, ~seq_run_merged, ~biosample_id, ~t_fctr, data=map_sub)
         tmp<-as.data.frame(output$part$indfract[c(1:3,7),])
         tmp<-rbind(tmp, as.data.frame(output$part$fract))
         
@@ -112,44 +112,44 @@ compute_diversity_stats<-function(map, metric){
         
         # CONDITIONAL EFFECTS
         # fraction [a+d+f+g] X1=seq_run:
-        run_cond <- dbrda(dist_data ~ seq_run_merged + Condition(biosample_id) + Condition(t_fctr), 
+        run_cond <- vegan::dbrda(dist_data ~ seq_run_merged + Condition(biosample_id) + Condition(t_fctr), 
                      data = map_sub)
         run_cond.a<-anova(run_cond)
         # fraction [b+d+e+g] X2=sample:
-        sample_cond <- dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr), 
+        sample_cond <- vegan::dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr), 
                         data = map_sub)
         sample_cond.a<-anova(sample_cond)
         # fractions [c+e+f+g] X3=titration:
-        titration_cond <- dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
+        titration_cond <- vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
                            data = map_sub)
         titration_cond.a<-anova(titration_cond)
         # MARGINAL EFFECTS
         # fraction [a+d+f+g] X1=seq_run:
-        run <- dbrda(dist_data ~ seq_run_merged, 
+        run <- vegan::dbrda(dist_data ~ seq_run_merged, 
                             data = map_sub)
         run.a<-anova(run)
         # fraction [b+d+e+g] X2=sample:
-        sample <- dbrda(dist_data ~ biosample_id, 
+        sample <- vegan::dbrda(dist_data ~ biosample_id, 
                         data = map_sub)
         sample.a<-anova(sample)
         # fractions [c+e+f+g] X3=titration:
-        titration <- dbrda(dist_data ~ t_fctr, 
+        titration <- vegan::dbrda(dist_data ~ t_fctr, 
                     data = map_sub)
         titration.a<-anova(titration)
         # fractions [a+b+d+e+f+g] X1+X2=seq_run+sample_id:
-        run.sample <- dbrda(dist_data ~ seq_run_merged + biosample_id, 
+        run.sample <- vegan::dbrda(dist_data ~ seq_run_merged + biosample_id, 
                            data = map_sub)
         run.sample.a<-anova(run.sample)
         # fractions [a+b+d+e+f+g] X1+X3=seq_run+titration:
-        run.titration <- dbrda(dist_data ~ seq_run_merged + t_fctr, 
+        run.titration <- vegan::dbrda(dist_data ~ seq_run_merged + t_fctr, 
                            data = map_sub)
         run.titration.a<-anova(run.titration)
         # fractions [b+c+d+e+f+g] X2+X3=sample+titration:
-        sample.titration <- dbrda(dist_data ~ biosample_id + t_fctr, 
+        sample.titration <- vegan::dbrda(dist_data ~ biosample_id + t_fctr, 
                                data = map_sub)
         sample.titration.a<-anova(sample.titration)
         # fractions [a+b+c+d+e+f+g] All:
-        all <- dbrda(dist_data ~ seq_run_merged + biosample_id + t_fctr, data = map_sub)
+        all <- vegan::dbrda(dist_data ~ seq_run_merged + biosample_id + t_fctr, data = map_sub)
         all.a<-anova(all)
         
         p_values<-rbind(run_cond.a$`Pr(>F)`[1], sample_cond.a$`Pr(>F)`[1], 
