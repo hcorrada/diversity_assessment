@@ -16,14 +16,14 @@
 cluster_samples <- function(comp_df, dist_mat) {
     ## Check number of comparisons  
     n_comp <- row.names(dist_mat) %in% comp_df$sample_id
-    if (length(n_comp) <= 2) return(NULL)
+    if (sum(n_comp) <= 2) return(NULL)
     
     comp_mat <- dist_mat[row.names(dist_mat) %in% comp_df$sample_id,
                          colnames(dist_mat) %in% comp_df$sample_id]
     
     safe_pam <- safely(cluster::pam)
     
-    safe_pam(comp_mat, k = 2, cluster.only = TRUE) 
+    safe_pam(comp_mat, k = 2, cluster.only = TRUE, diss = TRUE) 
 }
 
 #' Evaluate PAM clustering results

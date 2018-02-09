@@ -172,6 +172,11 @@ bray_test_error <- tidy_error(bray_test)
 ```
 
 ```{r}
+
+
 bray_test$eval_output[[1]]
 ```
+
+
+
 

@@ -1,0 +1,399 @@
+---
+title: "Comparison to Expectation"
+author: "Nate Olson"
+date: "1/15/2018"
+output: html_document
+---
+
+```{r compToExpSetup, message = FALSE, warning = FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+library(lme4)
+library(trelliscopejs)
+
+cluster_eval_df <- list(beta_cluster_eval_bray_df, 
+     beta_cluster_eval_jaccard_df, 
+     beta_cluster_eval_unifrac_df, 
+     beta_cluster_eval_wunifrac_df) %>% 
+    map_df(tidy_cluster_eval)
+```
+
+### Evaluate with Partitioning Around Metroids 
+- Similar approach to that used by McMurdie and Holmes 2014
+- Compare titrations and unmixed post-exposure samples to unmixed pre-exposure samples 
+- Use titration as proxy for effect size 
+
+
+### Notes
+* need to consider cases when samples are filtered from analysis
+* Comparisons with correct cluster 0.625 are where only one sample is assigned to a different cluster. This is most likely due to an outlier
+
+## Example set of comparisons 
+```{r}
+cluster_eval_df %>% 
+    filter(seq_lab == "jhu", 
+           seq_run == 2, 
+           biosample_id == "E01JH0017",
+           n_samples == 8,
+           pipe %in% c("dada")) %>% 
+    mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
+                              "phylo","taxa"),
+           weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
+                            "unweighted", "weighted")) %>% 
+    ggplot() + 
+    geom_line(aes(x = 2^-t_comp, 
+                  y = cluster_results, 
+                  color = method)) + 
+    facet_grid(f_type~weight) + 
+    theme_bw() + 
+    labs(x = "Proportion Post-Exposure", 
+         y = "Fraction Correct", color = "Normalization Method") + 
+    theme(legend.position = "bottom")
+```
+
+## Global Comparison
+
+Consistently unable to distinguish groups for comparisons greater than titration 5, therefore excluding from rest of plots. 
+```{r}
+cluster_eval_df %>% filter(n_samples == 8) %>% 
+    mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
+                              "Phylogenetic","Taxonomic"),
+           weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
+                            "Unweighted", "Weighted")) %>% 
+
+ggplot() + geom_smooth(aes(x = 2^-t_comp, y = cluster_results, color = method), 
+                       method = "loess", size = 0.5, se = FALSE) + 
+    theme_bw() + 
+    facet_grid(f_type~weight) + 
+    theme(legend.position = "bottom") + 
+    labs(x = "Proporition Post-Exposure", y = "Fraction Correct", color = "Normalization Method")
+```
+
+
+Rarified counts consistently performed better than raw counts for unweighted metrics. 
+Results consistent across rarefaction levels.
+```{r message = FALSE, echo = FALSE, warning = FALSE}
+cluster_eval_df %>% filter(n_samples == 8, 
+                           dist_method %in% c("jaccard_dist", "unifrac_dist"),
+                           t_comp < 5) %>% 
+ggplot() + geom_smooth(aes(x = 2^-t_comp, y = cluster_results, color = method), 
+                       se = FALSE, size = 0.5) + 
+    facet_grid(dist_method~pipe) + 
+    theme_bw() + 
+    theme(legend.position = "bottom") + 
+    labs(x = "Proporition Post-Exposure", y = "Fraction Correct", color = "Normalization Method")
+```
+
+```{r message = FALSE, echo = FALSE, warning = FALSE}
+cluster_eval_df %>% filter(n_samples == 8, 
+                           dist_method %in% c("bray_dist", "wunifrac_dist"),
+                           t_comp < 5, method != "rare10000") %>% 
+ggplot() + 
+    geom_smooth(aes(x = 2^-t_comp, y = cluster_results, color = method), 
+                size = 0.5, se = FALSE) + 
+    facet_grid(dist_method~pipe) + 
+    theme_bw() + 
+    theme(legend.position = "bottom") + 
+    labs(x = "Proporition Post-Exposure", y = "Fraction Correct", color = "Normalization Method")
+```
+
+
+## Global comparison 
+- individual test per pipeline and beta diversity metric
+- objective provide recommendations for appropriate normalization method  
+- mixed effect model to account for individual and seq run effect
+- apply same model to all pipeline-diversity metric combinations
+- go over fit interpretation with Hector 
+- summarize results  
+- look at summary metric results - AUC??
+
+```{r}
+library(nlme)
+```
+
+```{r}
+fit_dat <- cluster_eval_df %>% 
+    mutate(seq_run_id = paste0(seq_lab, seq_run)) %>% 
+    filter(n_samples == 8, dist_method == "bray_dist", pipe == "dada") %>% 
+    mutate(t_eval = 2^-t_comp)
+fit <- lme(cluster_results ~ t_eval + method, 
+           random = ~ 1 | seq_run_id / biosample_id, fit_dat)
+```
+
+
+```{r}
+fit
+```
+
+```{r}
+plot(fit)
+```
+
+```{r}
+fitted_dat <- fit_dat %>% 
+    modelr::add_residuals(model = fit, var = "resid") %>% 
+    modelr::add_predictions(model = fit, var = "pred")
+```
+
+```{r}
+fitted_dat %>% ggplot() + 
+    geom_point(aes(x = resid, y = pred))
+```
+
+```{r}
+fitted_dat %>% ggplot() + 
+    geom_point(aes(x = resid, y = pred, color = method)) + 
+    facet_grid(seq_lab*seq_run ~ biosample_id)
+```
+
+```{r}
+fitted_dat %>% ggplot() + geom_density(aes(x = resid))
+```
+
+
+```{r}
+fitted_dat %>% ggplot() + 
+    geom_boxplot(aes(x = factor(cluster_results), y = pred))
+```
+
+exp transformation improves fit based on AIC
+```{r}
+fit <- lme(exp(cluster_results) ~ t_eval + method, 
+           random = ~  1 | biosample_id / seq_run_id, fit_dat)
+```
+```{r}
+fit <- lme4::lmer(exp(cluster_results) ~ t_eval + (1 | method) + ( 1 | biosample_id) + (1 | seq_run_id), fit_dat)
+```
+
+
+```{r}
+variancePartition::calcVarPart(fit)
+```
+
+
+```{r}
+broom::glance(fit)
+```
+
+```{r}
+anova(fit)
+```
+
+```{r}
+fitted_dat <- fit_dat %>% 
+    modelr::add_residuals(model = fit, var = "resid") %>% 
+    modelr::add_predictions(model = fit, var = "pred")
+```
+
+```{r}
+fitted_dat %>% ggplot() + geom_density(aes(x = resid))
+```
+
+```{r}
+fitted_dat %>% ggplot() + 
+    geom_smooth(aes(x = log(cluster_results), y = pred), method = "loess")
+```
+
+## Applying to pipes and dist methods
+```{r}
+eval_df <- cluster_eval_df %>% 
+    mutate(seq_run_id = paste0(seq_lab, seq_run)) %>% 
+    filter(n_samples == 8) %>% 
+    mutate(t_eval = 2^-t_comp) %>% 
+    group_by(pipe, dist_method)
+
+eval_fit_df <- eval_df %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lme(exp(cluster_results) ~ t_eval + method,
+                                random = ~  1 | biosample_id / seq_run_id , .)))
+```
+
+Fit summary table
+```{r}
+eval_fit_df %>% 
+    mutate(fit_info = map(fit, broom::glance)) %>% 
+    select(-data, -fit) %>% 
+    unnest() %>% 
+    knitr::kable(digits = 2)
+```
+
+## AUC analysis - using AUC as a summary metric
+```{r}
+test_trap_dat <- cluster_eval_df %>% 
+    filter(pipe == "dada", method == "RAW",
+           dist_method == "bray_dist", 
+           biosample_id == "E01JH0017",
+           seq_lab == "jhu", seq_run == 1)
+pracma::trapz(x = 2^-test_trap_dat$t_comp, y = test_trap_dat$cluster_results)
+```
+```{r}
+auc_summary <- cluster_eval_df %>% 
+    filter(n_samples == 8) %>% 
+    mutate(t_eval = 2^-t_comp) %>% 
+    group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>% 
+    summarise(n_t = n(), auc = -pracma::trapz(x = t_eval, y = cluster_results))
+```
+
+Most of the evaluations contain a complete comparison set
+```{r}
+ggplot(auc_summary) + geom_bar(aes(x = n_t)) + scale_y_log10()
+```
+
+AUC values should be greater than or equal to 0.5.
+```{r}
+auc_summary %>% ggplot() + geom_histogram(aes(x = auc))
+```
+
+AUC less than 0.5 only observed when number of titrations compared is less than 8
+```{r}
+auc_summary %>% ggplot() + geom_point(aes(x = n_t, y = auc))
+```
+
+```{r}
+auc_summary %>% filter(auc >= 0.5, n_t == 8) %>% 
+    ggplot() + geom_histogram(aes(x = auc)) + 
+    facet_trelliscope(~ seq_lab + seq_run + pipe + biosample_id, 
+                      nrow = 2, ncol = 4)
+```
+
+
+Excluding points with AUC < 0.5, and potentially less than 8 titrations. 
+```{r}
+ggplot(auc_summary) + 
+    geom_point(aes(x = factor(n_t), y = auc, color = paste(seq_lab, seq_run))) + 
+    facet_grid(pipe ~ method) + theme_bw()
+```
+
+```{r}
+auc_summary %>% filter(auc >= 0.5) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = method, y = auc)) + 
+    facet_grid(pipe~dist_method, scales = "free_x") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90))
+```
+
+Clear individual effect for some pipeline * metric combinations
+```{r}
+auc_summary %>% filter(auc >= 0.5) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = method, y = auc, color = biosample_id)) + 
+    facet_grid(pipe~dist_method, scales = "free_x") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+auc_dat <- auc_summary %>% filter(auc >= 0.5) %>% 
+    group_by(pipe, dist_method, method) %>% 
+    filter(!(method %in% c("rare2000","rare10000", "UQ","RLE"))) %>% 
+    summarise(med_auc = median(auc)) %>% 
+    # group_by(pipe, dist_method) %>%
+    # mutate(med_auc = med_auc - mean(med_auc)) %>% 
+    ungroup() %>%
+    mutate(pipe = factor(pipe)) %>% 
+mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
+                              "phylo","taxa"),
+           weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
+                            "unweighted", "weighted"))
+auc_dat %>% filter(method != "RAW") %>% 
+    ggplot(aes(x = pipe)) + 
+    geom_blank() +
+       geom_line(data = filter(auc_dat, method == "RAW"), 
+              aes(x = as.numeric(pipe), y = med_auc), color = "grey60") + 
+    geom_jitter(aes(x = pipe, y = med_auc, fill = method), 
+                shape = 21, width = 0.15) + 
+
+    facet_grid(f_type~weight) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(x = "Pipeline", y = "Centered Median AUC", color = "Normalization Method")
+```
+
+
+```{r}
+fit <- lme4::lmer(auc ~ method + (1 | pipe),# + ( 1 | biosample_id),
+                  filter(auc_summary,dist_method == "wunifrac_dist", 
+                         auc >= 0.5, n_t == 8, biosample_id == "E01JH0017"))
+```
+
+Check 
+```{r}
+summary(fit)
+```
+
+
+```{r}
+plot(fit)
+```
+
+```{r}
+mySumm2 <- function(.) {
+    c(beta = fixef(.), 
+      sigma = sigma(.), 
+      sig01 = sqrt(unlist(VarCorr(.))))
+}
+
+set.seed(101)
+system.time( boo01 <- bootMer(fit, mySumm2, nsim = 100, ncpus = 4))
+```
+
+```{r}
+requireNamespace("boot")
+```
+
+```{r}
+boo01
+```
+
+```{r}
+head(as.data.frame(boo01))
+```
+
+```{r}
+## Residual standard deviation - original scale:
+    (bCI.2  <- boot::boot.ci(boo01, index=2, type=c("norm", "basic", "perc")))
+```
+
+```{r}
+    ## Residual SD - transform to log scale:
+    (bCI.2L <- boot::boot.ci(boo01, index=2, type=c("norm", "basic", "perc"),
+                     h = log, hdot = function(.) 1/., hinv = exp))
+```
+
+```{r}
+    ## Among-batch variance:
+    (bCI.3 <- boot::boot.ci(boo01, index=3, type=c("norm", "basic", "perc"))) # sig01
+```
+
+```{r}
+
+    ## Copy of unexported stats:::format.perc helper function
+    format.perc <- function(probs, digits) {
+        paste(format(100 * probs, trim = TRUE,
+                     scientific = FALSE, digits = digits),
+              "%")
+    }
+
+    ## Extract all CIs (somewhat awkward)
+    bCI.tab <- function(b,ind=length(b$t0), type="perc", conf=0.95) {
+        btab0 <- t(sapply(as.list(seq(ind)),
+                          function(i)
+            boot::boot.ci(b,index = i,conf=conf, type=type)$percent))
+        btab <- btab0[,4:5]
+        rownames(btab) <- names(b$t0)
+        a <- (1 - conf)/2
+        a <- c(a, 1 - a)
+        pct <- format.perc(a, 3)
+        colnames(btab) <- pct
+        return(btab)
+    }
+    bCI.tab(boo01)
+```
+
+```{r}
+    ## Graphical examination:
+    plot(boo01,index=3)
+
+```
+

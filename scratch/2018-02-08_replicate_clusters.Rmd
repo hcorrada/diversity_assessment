@@ -1,0 +1,190 @@
+---
+title: "Replicate Cluster Methods Development"
+author: "Nate Olson"
+date: "2/8/2018"
+output: html_document
+---
+```{r message = FALSE, warning = FALSE, echo = FALSE}
+library(cluster)
+library(ProjectTemplate)
+load.project()
+
+
+cluster_eval_df <- list(beta_cluster_eval_bray_df, 
+     beta_cluster_eval_jaccard_df, 
+     beta_cluster_eval_unifrac_df, 
+     beta_cluster_eval_wunifrac_df) %>% 
+    map_df(tidy_cluster_eval)
+```
+
+## Objective  
+The comparison to cluster results are noisier than expected, this could either be due to the noisy nature of real data, or clustering method finding local-maximum rather than optimal solution. 
+
+```{r clusterEval, fig.cap = "Example comparison to expectation using clustering results."}
+cluster_eval_df %>% 
+    filter(seq_lab == "jhu", 
+           seq_run == 2, 
+           biosample_id == "E01JH0017",
+           n_samples == 8,
+           pipe %in% c("dada")) %>% 
+    mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
+                              "phylo","taxa"),
+           weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
+                            "unweighted", "weighted")) %>% 
+    ggplot() + 
+    geom_line(aes(x = 2^-t_comp, 
+                  y = cluster_results, 
+                  color = method)) + 
+    facet_grid(f_type~weight) + 
+    theme_bw() + 
+    labs(x = "Proportion Post-Exposure", 
+         y = "Fraction Correct", color = "Normalization Method") + 
+    theme(legend.position = "bottom")
+```
+
+
+## Approach
+Using an example dataset, Bray-Curtis, for pipeline DADA2, individual E01JH0017, sequencing run JHU 2, rareified to 10000 sequences.   
+
+1. Perform replicate partitioning around medioids with all possible combinations of seed medoids.
+1. Look at variability of clustering results, can dive in more if necessary. 
+
+
+## Method Development
+```{r}
+## Beta-diversity distance matrix
+dist_obj <- readRDS("data/diversity_data/dada_rare10000_bray.rds")
+dist_mat <- as.matrix(dist_obj$result)
+```
+
+```{r}
+condensed_meta <- mgtstMetadata %>%
+    filter(biosample_id != "NTC") %>%
+    mutate(sample_id = as.character(sample_id)) %>%
+    group_by(seq_lab, seq_run, biosample_id) %>%
+    select(-pcr_16S_plate, -pos) %>%
+    nest()
+
+comparison_meta <- condensed_meta %>%
+    select(-data) %>%
+    add_column(t_comp = list(c(0:5, 10, 15))) %>%
+    unnest() %>%
+    left_join(condensed_meta)
+
+full_comp_df <- comparison_meta %>%
+    ## Generating data frame with sample_id and t_fctr for comparisons to perform
+    mutate(comp_df = map2(data, t_comp, ~ filter(.x, t_fctr %in% c(.y, 20)))) %>%
+    select(-data)
+```
+
+## Clustering Samples  
+Mediouds and cluster assignments are all the same for the 28 potential medoid combinations. 
+
+```{r}
+comp_df <- full_comp_df$comp_df[[1]]
+dist_mat <- as.matrix(dist_obj$result)
+n_comp <- row.names(dist_mat) %in% comp_df$sample_id
+sum(n_comp)
+comp_mat <- dist_mat[row.names(dist_mat) %in% comp_df$sample_id,
+                         colnames(dist_mat) %in% comp_df$sample_id]
+cluster_combn <- combn(8,2, simplify = FALSE) %>% 
+    map(~pam(x = comp_mat, medoids =  ., k = 2, diss = TRUE))
+cluster_combn %>% map(pluck, "clustering") %>% 
+    map_dfr(~data.frame(sample_id = names(.), 
+                        cluster_assignment = .), 
+            .id = "comb") %>% 
+    spread(sample_id, cluster_assignment)
+```
+
+Applying the same method to all cluster assignments for full data set with bray rareified to 1000 reads. 
+
+
+```{r}
+eval_cluster_stability <- function(comp_df, dist_mat) {
+    n_comp <- row.names(dist_mat) %in% comp_df$sample_id
+    if (sum(n_comp) < 8) return(0)
+    
+    comp_mat <- dist_mat[row.names(dist_mat) %in% comp_df$sample_id,
+    colnames(dist_mat) %in% comp_df$sample_id]
+    
+    cluster_combn <- combn(8, 2, simplify = FALSE) %>%
+        map( ~ pam( x = comp_mat,medoids =  .,k = 2,diss = TRUE))
+    
+    cluster_combn %>% map(pluck, "clustering") %>%
+        map_dfr( ~ data.frame(sample_id = names(.),
+                              cluster_assignment = .),
+                .id = "comb") %>%
+    spread(sample_id, cluster_assignment) %>% 
+    select(-comb) %>% distinct() %>% nrow()
+}
+```
+
+```{r}
+full_comp_df %>% 
+    mutate(n_assignments = map_dbl(comp_df, eval_cluster_stability, dist_mat)) %>% 
+    filter(n_assignments != 1)
+```
+
+```{r}
+beta_df <- make_beta_div_df("bray")
+
+get_stab_results <- function(dist_obj, full_comp_df){
+    dist_mat <- as.matrix(dist_obj)
+    full_comp_df %>% 
+        mutate(n_assignments = map_dbl(comp_df, 
+                                       eval_cluster_stability, 
+                                       dist_mat))
+}
+
+assignment_eval_df <- beta_df %>% 
+    mutate(dist_obj = map(dist_results, pluck, "result")) %>%
+    filter(!is.null(dist_obj)) %>%
+    mutate(assignment_output = map(dist_obj, get_stab_results, full_comp_df))
+```
+
+Most clustering results returned the same set of cluster assignments regardless of the medoids. 
+```{r}
+assignment_eval_df %>% 
+    select(-dist_results, -dist_obj) %>% 
+    unnest() %>% 
+    ggplot() + geom_bar(aes(x = n_assignments))
+```
+
+```{r}
+assignment_eval_df %>% 
+    select(-dist_results, -dist_obj) %>% 
+    unnest() %>% nrow()
+```
+600 out of 9600 assignments had multiple cluster results. 
+A small number but enough to warrant inclusion including replicates. 
+Need to figure out how to incorporate permutations into beta_eval_comparison pipeline. 
+
+```{r}
+assignment_eval_df %>% 
+    select(-dist_results, -dist_obj) %>% 
+    unnest() %>% 
+    filter(n_assignments > 1) %>% 
+    ggplot() + geom_bar(aes(x = n_assignments))
+```
+
+
+```{r}
+assignment_eval_df %>% 
+    select(-dist_results, -dist_obj) %>% 
+    unnest() %>% 
+    filter(n_assignments > 1) %>% 
+    ggplot() + geom_bar(aes(x = biosample_id)) + 
+    facet_grid(pipe~seq_lab*seq_run, scales = "free") + 
+    theme_bw() + theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+assignment_eval_df %>% 
+    select(-dist_results, -dist_obj) %>% 
+    unnest() %>% 
+    filter(n_assignments > 1) %>% 
+    group_by(pipe, biosample_id, seq_lab, seq_run, dist_method, method) %>% 
+    summarise(count = n()) %>% 
+    arrange(-count)
+```
+
