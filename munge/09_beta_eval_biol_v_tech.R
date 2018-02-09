@@ -2,15 +2,14 @@
 ## beta diversity metrics used in McMurdie and Holmes 2014 and Weiss et al 2017
 ## comparing unmixed pre-exposure samples to titration and post-exposure samples
 
-library(reshape2)
-
-##################### Functions for PAM Cluster Evaluation #####################
+##################### Functions for Biol. v. Tech. Replicate Evaluation #####################
 
 #' Evaluate biological versus technical variation
 #'
 #' @param map mapping file with sample information 
 #' @param metric diversity metric of interest (bray, jaccard, unifrac or wunifrac)
-#'
+#' @param variation_tests dataframe containing which samples should be compared for different parameters
+#' 
 #' @return data frame with diversity value for paired samples for all pipelines and normalization methods
 #' @export
 #'
@@ -29,7 +28,7 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
                                             which(colnames(beta_div) %in% as.character(map$sample_id))]
         # Melt dataframe so we can look at matched samples 
         beta_div_m$sample<-row.names(beta_div_m)
-        beta_div_m2<-reshape2::melt(beta_div_m, id.vars=c("sample"))
+        beta_div_m2<-gather(beta_div_m, sample)
         colnames(beta_div_m2)<-c("sample_a", "sample_b", "value")
         # Add additional info to melted dataframe
         beta_div_m2$pipe<-data$pipe[i]
@@ -66,6 +65,111 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
     return(data.frame(output2))
 }
 
+#' Run stats on biological versus technical variation
+#'
+#' @param map mapping file with sample information 
+#' @param metric diversity metric of interest (bray, jaccard, unifrac or wunifrac)
+#' 
+#' @return data frame with values from adonis
+#' @export
+#'
+#' @examples
+compute_diversity_stats<-function(map, metric){
+    
+    # Generate list of diversity matrices for piplines/norm methods
+    data<-make_beta_div_df(metric)
+    map$seq_run_merged<-paste0(map$seq_lab,"_", map$seq_run)
+    # For each beta div matrix
+    beta_div_stats<- lapply(1:length(data$pipe), function(i){
+        # Extract distance object
+        dist_data<-as.matrix(data$dist_results[[i]][[1]])
+        # Keep only pre and post titration samples
+        map_sub<-subset(map, t_fctr == 0 | t_fctr ==20)
+        map_sub$t_fctr<-factor(map_sub$t_fctr)
+        dist_data<-as.dist(dist_data[which(row.names(dist_data) %in% map_sub$sample_id),
+                                                which(colnames(dist_data) %in% map_sub$sample_id)])
+        # Order samples so they match
+        sample_order<-row.names(as.matrix(dist_data))
+        map_sub<-subset(map, sample_id %in% c(sample_order))
+        map_sub$sample_id<-factor(map_sub$sample_id, levels=sample_order, ordered=T)
+        map_sub<-map_sub[order(map_sub$sample_id),]
+        
+        output<-vegan::varpart(Y=dist_data, ~seq_run_merged, ~biosample_id, ~t_fctr, data=map_sub)
+        tmp<-as.data.frame(output$part$indfract[c(1:3,7),])
+        tmp<-rbind(tmp, as.data.frame(output$part$fract))
+        
+        tmp$feature<-c("seq_run", "subject", "titration", 
+                      "shared", "seq_run", "subject",
+                      "titration", "seq_run_and_subject", "seq_run_and_titration", 
+                      "subject_and_titration", "all")
+        tmp$effect<-c("conditional", "conditional", "conditional", 
+                      NA, "marginal", "marginal",
+                      "marginal", "marginal", "marginal", 
+                      "marginal", "global")
+        tmp$pipe<-data$pipe[i]
+        tmp$normalization<-data$method[i]
+        tmp$metric<-metric
+        
+        # CONDITIONAL EFFECTS
+        # fraction [a+d+f+g] X1=seq_run:
+        run_cond <- vegan::dbrda(dist_data ~ seq_run_merged + Condition(biosample_id) + Condition(t_fctr), 
+                     data = map_sub)
+        run_cond.a<-anova(run_cond)
+        # fraction [b+d+e+g] X2=sample:
+        sample_cond <- vegan::dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr), 
+                        data = map_sub)
+        sample_cond.a<-anova(sample_cond)
+        # fractions [c+e+f+g] X3=titration:
+        titration_cond <- vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
+                           data = map_sub)
+        titration_cond.a<-anova(titration_cond)
+        # MARGINAL EFFECTS
+        # fraction [a+d+f+g] X1=seq_run:
+        run <- vegan::dbrda(dist_data ~ seq_run_merged, 
+                            data = map_sub)
+        run.a<-anova(run)
+        # fraction [b+d+e+g] X2=sample:
+        sample <- vegan::dbrda(dist_data ~ biosample_id, 
+                        data = map_sub)
+        sample.a<-anova(sample)
+        # fractions [c+e+f+g] X3=titration:
+        titration <- vegan::dbrda(dist_data ~ t_fctr, 
+                    data = map_sub)
+        titration.a<-anova(titration)
+        # fractions [a+b+d+e+f+g] X1+X2=seq_run+sample_id:
+        run.sample <- vegan::dbrda(dist_data ~ seq_run_merged + biosample_id, 
+                           data = map_sub)
+        run.sample.a<-anova(run.sample)
+        # fractions [a+b+d+e+f+g] X1+X3=seq_run+titration:
+        run.titration <- vegan::dbrda(dist_data ~ seq_run_merged + t_fctr, 
+                           data = map_sub)
+        run.titration.a<-anova(run.titration)
+        # fractions [b+c+d+e+f+g] X2+X3=sample+titration:
+        sample.titration <- vegan::dbrda(dist_data ~ biosample_id + t_fctr, 
+                               data = map_sub)
+        sample.titration.a<-anova(sample.titration)
+        # fractions [a+b+c+d+e+f+g] All:
+        all <- vegan::dbrda(dist_data ~ seq_run_merged + biosample_id + t_fctr, data = map_sub)
+        all.a<-anova(all)
+        
+        p_values<-rbind(run_cond.a$`Pr(>F)`[1], sample_cond.a$`Pr(>F)`[1], 
+                        titration_cond.a$`Pr(>F)`[1], NA,
+                        run.a$`Pr(>F)`[1], sample.a$`Pr(>F)`[1], 
+                        titration.a$`Pr(>F)`[1], run.sample.a$`Pr(>F)`[1], 
+                        run.titration.a$`Pr(>F)`[1], sample.titration.a$`Pr(>F)`[1],
+                        all.a$`Pr(>F)`[1])
+        tmp<-cbind(tmp, p_values)
+        # Create column of significance labels
+        tmp$significance <- cut(tmp$p_values, breaks=c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                                label=c("***", "**", "*", ""))
+        tmp$significance[is.na(tmp$significance)]<-""
+        return(tmp)
+    })
+    
+    stats<-do.call("rbind", beta_div_stats)
+    
+    return(stats)
+}
 
 ######## Identify paired samples demonstrating biol or tech variation ######################
 
@@ -194,7 +298,8 @@ variation_tmp<-variation_tmp[-2,]
 variation_tmp[4,5]<-"TRUE OR FALSE"
 variation_tmp<-variation_tmp[-5,]
 
-biol_v_tech_variation_comparison_map<-reshape2::melt(variation_tmp, id.vars = "variation_label")
+biol_v_tech_variation_comparison_map<-gather(data = variation_tmp, key = variation, value = variation_label)
+colnames(biol_v_tech_variation_comparison_map)<-c("variation_label", "variable", "value")
 rm(variation_tmp)
 
 biol_v_tech_variation_comparison_map$value<-factor(biol_v_tech_variation_comparison_map$value, levels = c("TRUE", "TRUE OR FALSE", "FALSE"), ordered = TRUE)
@@ -221,8 +326,21 @@ biol_v_tech_variation_comparisons<-rbind(biol_v_tech_variation_comparisons, weig
 biol_v_tech_variation=list(biol_v_tech_variation_comparison_map, 
                            biol_v_tech_variation_comparison_numbers, 
                            biol_v_tech_variation_comparisons)
+
+# Compute stats
+unifrac_stats<-compute_diversity_stats(mgtstMetadata, "unifrac")
+jaccard_stats<-compute_diversity_stats(mgtstMetadata, "jaccard")
+wunifrac_stats<-compute_diversity_stats(mgtstMetadata, "wunifrac")
+bray_stats<-compute_diversity_stats(mgtstMetadata, "bray")
+
+varpart_stats<-rbind(unifrac_stats, jaccard_stats)
+varpart_stats<-rbind(varpart_stats, wunifrac_stats)
+varpart_stats<-rbind(varpart_stats, bray_stats)
+
 ########################  Cache results ################################
 
 ProjectTemplate::cache('biol_v_tech_variation', 
                        depends = c("mgtstMetadata"))
 
+ProjectTemplate::cache('varpart_stats', 
+                       depends = c("mgtstMetadata"))
