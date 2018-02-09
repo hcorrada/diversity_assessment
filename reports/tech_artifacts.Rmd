@@ -1,0 +1,28 @@
+---
+title: "Technical Artifacts"
+author: "Jackie Meisel"
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
+---
+
+<!--
+Technical artifacts results section, relating PCR replicate average pairwise distance with total abundance coeffient of variation and mean read quality score. 
+-->
+
+```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+## load required libraries
+```
+
+```{r techArtMunge, warning=FALSE, message=FALSE, echo = FALSE}
+## Pre-processing data for figure(s)
+```
+
+```{r techArtPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Text for figure legend"}
+plot(1:10,1:10)
+```
+
+Insert key points for results and disucssion here and relevant figure reference (Fig. \@ref(fig:techArtPlot1)). 

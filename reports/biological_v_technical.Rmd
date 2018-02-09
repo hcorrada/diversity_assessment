@@ -1,0 +1,28 @@
+---
+title: "Biological versus Technical Variability"
+author: "Jackie Meisel"
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
+---
+
+<!--
+Biological versus technical variation results section, comparison of pairwise distances between biological and technical replicates and partitioning total variation into biological and technical components. 
+-->
+
+```{r bioVtechSetup, warning=FALSE, message=FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+## load required libraries
+```
+
+```{r bioVtechMunge, warning=FALSE, message=FALSE, echo = FALSE}
+## Pre-processing data for figure(s)
+```
+
+```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Text for figure legend"}
+plot(1:10,1:10)
+```
+
+Insert key points for results and disucssion here (Fig. \@ref(fig:bioVtechPlot1)). 

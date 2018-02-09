@@ -1,9 +1,54 @@
-## PAM base cluster evaluation similar to normalization method assessment for
-## beta diversity metrics used in McMurdie and Holmes 2014 and Weiss et al 2017
-## comparing unmixed pre-exposure samples to titration and post-exposure samples
+---
+title: "Beta Cluster Eval Error Check"
+author: "Nate Olson"
+date: "1/31/2018"
+output: html_document
+---
 
-##################### Functions for PAM Cluster Evaluation #####################
+```{r}
+library(ProjectTemplate)
+load.project()
+```
 
+```{r}
+tidy_error <- function(eval_df){
+    eval_df %>% 
+    mutate(eval_error = map(eval_output, pluck, "error")) %>%
+        mutate(failed_eval = map_lgl(eval_error, ~!is.null(.))) %>%
+        filter(failed_eval) %>% 
+    mutate(error_message = map_chr(eval_error, pluck, "message")) %>% 
+        select(pipe, method, dist_method, error_message)
+}
+
+```
+
+```{r}
+load("cache/beta_cluster_eval_unifrac_df.RData")
+load("cache/beta_cluster_eval_wunifrac_df.RData")
+load("cache/beta_cluster_eval_bray_df.RData")
+load("cache/beta_cluster_eval_jaccard_df.RData")
+```
+
+```{r}
+error_df <- list(beta_cluster_eval_bray_df, 
+     beta_cluster_eval_jaccard_df, 
+     beta_cluster_eval_wunifrac_df, 
+     beta_cluster_eval_unifrac_df) %>% 
+    map_df(tidy_error)
+```
+
+Evaluations fail for all metrics for a normalization and pipeline combination
+```{r}
+error_df %>% group_by(pipe, method) %>% summarise(count = n())
+```
+
+Error in cluster_samples function
+added safely to to function, need to parse output for test dataset
+```{r}
+test_dat <- readRDS("data/diversity_data/dada_rareq15_unifrac.rds")
+```
+
+```{r}
 #' Bicluster samples using PAM
 #'
 #' @param comp_df data frame with samples in sample_ids column
@@ -16,14 +61,14 @@
 cluster_samples <- function(comp_df, dist_mat) {
     ## Check number of comparisons  
     n_comp <- row.names(dist_mat) %in% comp_df$sample_id
-    if (sum(n_comp) <= 2) return(NULL)
+    if (length(n_comp) <= 2) return(NULL)
     
     comp_mat <- dist_mat[row.names(dist_mat) %in% comp_df$sample_id,
                          colnames(dist_mat) %in% comp_df$sample_id]
-    
+
     safe_pam <- safely(cluster::pam)
     
-    safe_pam(comp_mat, k = 2, cluster.only = TRUE, diss = TRUE) 
+    safe_pam(comp_mat, k = 2, cluster.only = TRUE) 
 }
 
 #' Evaluate PAM clustering results
@@ -101,67 +146,37 @@ perform_cluster_eval <- function(dist_methods, full_comp_df){
     
     ## Removing dist_obj and dist_results - memory hogs
     cluster_eval_df %>% select(-dist_obj, -dist_results)
+    
+    ## Tidy cluster evaluation results - not returning tidy objects for debugging
+    # cluster_eval_df %>%
+    #     mutate(eval_result = map(eval_output, pluck, "result")) %>%
+    #     mutate(eval_error = map_lgl(eval_result, is.null)) %>%
+    #     filter(!eval_error) %>%
+    #     select(pipe, method, dist_method, eval_result) %>%
+    #     unnest() %>%
+    #     select(-comp_df, -cluster_assignments)
 }
+```
 
-######################## Generating Comparison Data Frame ######################
-condensed_meta <- mgtstMetadata %>%
-    filter(biosample_id != "NTC") %>%
-    mutate(sample_id = as.character(sample_id)) %>%
-    group_by(seq_lab, seq_run, biosample_id) %>%
-    select(-pcr_16S_plate, -pos) %>%
-    nest()
+```{r}
+dist_obj <- test_dat$result 
+test_results <- get_cluster_eval_df(dist_obj, full_comp_df)
+```
 
-comparison_meta <- condensed_meta %>%
-    select(-data) %>%
-    add_column(t_comp = list(c(0:5, 10, 15))) %>%
-    unnest() %>%
-    left_join(condensed_meta)
+```{r}
+bray_test <- perform_cluster_eval("bray", full_comp_df)
+```
 
-full_comp_df <- comparison_meta %>%
-    ## Generating data frame with sample_id and t_fctr for comparisons to perform
-    mutate(comp_df = map2(data, t_comp, ~ filter(.x, t_fctr %in% c(.y, 20)))) %>%
-    select(-data)
+```{r}
+bray_test_error <- tidy_error(bray_test)
+```
 
-######################## Bray Curtis Evaluation ################################
-## Execute evaluation and cache results 
+```{r}
 
-ProjectTemplate::cache(
-    "beta_cluster_eval_bray_df",
-    {
-        perform_cluster_eval("bray", full_comp_df)
-    },
-    depends = c("mgtstMetadata")
-)
 
-######################## Weighted UniFrac Evaluation ###########################
-## Execute evaluation and cache results 
+bray_test$eval_output[[1]]
+```
 
-ProjectTemplate::cache(
-    "beta_cluster_eval_wunifrac_df",
-    {
-        perform_cluster_eval("wunifrac", full_comp_df)
-    },
-    depends = c("mgtstMetadata")
-)
 
-######################## Jaccard Evaluation ####################################
-## Execute evaluation and cache results 
 
-ProjectTemplate::cache(
-    "beta_cluster_eval_jaccard_df",
-    {
-        perform_cluster_eval("jaccard", full_comp_df)
-    },
-    depends = c("mgtstMetadata")
-)
 
-######################## Unifrac Metric Evaluation #############################
-## Execute evaluation and cache results 
-
-ProjectTemplate::cache(
-    "beta_cluster_eval_unifrac_df", 
-    {
-       perform_cluster_eval("unifrac", full_comp_df)
-    }, 
-    depends = c("mgtstMetadata")
-)
