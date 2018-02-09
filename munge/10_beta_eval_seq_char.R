@@ -124,5 +124,25 @@ seq_char_comparisons<-rbind(seq_char_comparisons, bray_curtis_comp)
 seq_char_comparisons<-subset(seq_char_comparisons, N_seq_info >=3 & N >=3)
 # IF ONLY 3 SAMPLES-- SOMETIMES LOOKING AT QUALITY OF FOUR SAMPLES COMBINED-- 
 # NEED TO GO BACK AND FIX!!!
+
+# Look at seq quality
+seq_qual_comparisons<-seq_char_comparisons[,c("replicate", "mean_dist", 
+                                              "pipe", "normalization", "metric")]
+seq_char_df_updated<-merge(seq_char_df, mgtstMetadata, by="sample_id")
+seq_char_df_updated$replicate<-paste0(seq_char_df_updated$biosample_id, "_t", 
+                                      seq_char_df_updated$t_fctr, "_",
+                                      seq_char_df_updated$seq_lab, "_run",
+                                      seq_char_df_updated$seq_run)
+seq_char_df_updated_summary<-seq_char_df_updated %>% 
+    group_by(replicate, read_dir) %>% 
+    summarize(mean_quality=mean(quality), sd_quality=sd(quality), 
+              cov_quality=sd_quality/mean_quality)
+seq_qual_comparisons<-merge(seq_qual_comparisons, seq_char_df_updated_summary, by="replicate")
+
+########################  Cache results ################################
+
 ProjectTemplate::cache('seq_char_comparisons', 
+                       depends = c("mgtstMetadata"))
+
+ProjectTemplate::cache('seq_qual_comparisons', 
                        depends = c("mgtstMetadata"))
