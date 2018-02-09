@@ -1,0 +1,63 @@
+---
+title: "Comparison to Expectation"
+author: "Nate Olson"
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
+---
+
+```{r compToExpSetup, message = FALSE, warning = FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+
+cluster_eval_df <- list(beta_cluster_eval_bray_df, 
+     beta_cluster_eval_jaccard_df, 
+     beta_cluster_eval_unifrac_df, 
+     beta_cluster_eval_wunifrac_df) %>% 
+    map_df(tidy_cluster_eval) 
+
+auc_summary <- cluster_eval_df %>% 
+    filter(n_samples == 8) %>% 
+    mutate(t_eval = 2^-t_comp) %>% 
+    group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>% 
+    summarise(n_t = n(), auc = -pracma::trapz(x = t_eval, y = cluster_results))
+
+auc_dat <- auc_summary %>% filter(auc >= 0.5) %>% 
+    group_by(pipe, dist_method, method) %>% 
+    filter(!(method %in% c("rare2000","rare10000", "UQ","RLE"))) %>% 
+    summarise(med_auc = median(auc)) %>% 
+    # group_by(pipe, dist_method) %>%
+    # mutate(med_auc = med_auc - mean(med_auc)) %>% 
+    ungroup() %>%
+    mutate(pipe = factor(pipe)) %>% 
+mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
+                              "Phylogenetic","Taxonomic"),
+           weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
+                            "Unweighted", "Weighted"))
+```
+
+
+```{r compToExpPlot1, message = FALSE, warning = FALSE, echo = FALSE, fig.cap = "Comparison of median AUC for clustering results across pipelines and normalization methods for four beta diversity metrics. Grey line indicates, the median AUC for unnormalized, raw, count table values. Points above the grey line are normalization methods that improve performance and below are methods that decrease performance."}
+auc_dat %>% filter(method != "RAW") %>% 
+    ggplot(aes(x = pipe)) + 
+    geom_blank() +
+       geom_line(data = filter(auc_dat, method == "RAW"), 
+              aes(x = as.numeric(pipe), y = med_auc), color = "grey60") + 
+    geom_jitter(aes(x = pipe, y = med_auc, fill = method), 
+                shape = 21, width = 0.15) + 
+
+    facet_grid(f_type~weight) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90), legend.position = "bottom") +
+    labs(x = "Pipeline", y = "Median AUC", fill = "Normalization Method")
+```
+
+
+__Key points__  
+
+* Performance varied by pipeline with DADA2 having consistently higher performance compared to the other pipelines.  
+
+* Rarefaction level had inconsistent performance relative to unnormalized data. Rareified to the 15th quantile library size improved performance relative to unnormalized data with qiime pipelines when using UniFrac but lower performance for Jaccard.  
+
+* For weighted metrics, normalization method performance relative to unnormalized counts varied by pipeline, though TMM and rarefaction to 15th quantile had consistently lower performance compared to unnormalized data.  
