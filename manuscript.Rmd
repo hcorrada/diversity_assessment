@@ -3,8 +3,8 @@ title: "Evaluation of the impact of bioinformatic pipeline, normalization method
 output:
   bookdown::pdf_document2: 
     toc: FALSE
-    template: template.tex
-    keep_tex: TRUE
+    # template: template.tex
+    # keep_tex: TRUE
 bibliography: [bibliography.bib]
 ---
 
@@ -32,7 +32,7 @@ Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-auth
 ``` 
 
 # Results
-## Dataset characteristics  
+ 
 ```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd"}
 ```
 
@@ -40,7 +40,7 @@ Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-auth
 ```
 
 ## Technical Artifacts
-```{r thetaEst, child="reports/tech_artifacts.Rmd"}
+```{r techArt, child="reports/tech_artifacts.Rmd"}
 ```
 
 
@@ -59,4 +59,4 @@ Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-auth
 ``` 
 
 # References 
-<div id="refs"></div>
+<!-- <div id="refs"></div> -->

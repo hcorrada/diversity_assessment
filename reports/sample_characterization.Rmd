@@ -1,8 +1,54 @@
 ---
-title: "sample_similarity"
+title: "Sample Characterization"
 author: "Nate Olson"
-date: "12/19/2017"
-output: pdf_document
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
 ---
 
-## Beta diversity for unmixed samples
+```{r sampleCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project() 
+
+library(ggpubr)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r sampleChar}
+dada_ps <- readRDS("data/phyloseq_objects/dada_ps.rds")
+
+pruned_ps <- sample_data(dada_ps) %>% data.frame() %>% 
+    rownames_to_column(var = "sample_id") %>% 
+    filter(t_fctr %in% c(0, 20)) %>% 
+    .$sample_id %>% 
+    prune_samples(dada_ps)
+
+sample_data(pruned_ps)$t_fctr <- if_else(sample_data(pruned_ps)$t_fctr == 0, "Post","Pre")
+sample_data(pruned_ps)$seq_run_id <- with(sample_data(pruned_ps), paste0(seq_lab, seq_run))
+    
+ord_plot_fun <- function(ord, ps){
+    phyloseq::plot_ordination(ps, ordination = ord, 
+                          shape = "seq_run_id", color = "t_fctr") + 
+    facet_wrap(~biosample_id, ncol = 1) + theme_bw()
+}
+
+ord_bray <- ordinate(pruned_ps, method =  "PCoA", distance = "bray")
+ord_jaccard <- ordinate(pruned_ps, method =  "PCoA", distance = "jaccard")
+ord_unifrac <- ordinate(pruned_ps, method =  "PCoA", distance = "unifrac")
+ord_wunifrac <- ordinate(pruned_ps, method =  "PCoA", distance = "wunifrac")
+ord_plots <- list(bray = ord_bray, jaccard = ord_jaccard, 
+                  unifrac = ord_unifrac, wunifrac = ord_wunifrac) %>% 
+    map(ord_plot_fun, pruned_ps)
+```
+
+```{r sampleCharPlot, fig.cap = "A - Bray, B - Jaccard, C - Unifrac, D - Weighted unifrac. All plots showing unnormalized dada2 pipeline results."}
+ggarrange(plotlist = ord_plots, ncol = 4, nrow = 1, 
+          labels = "AUTO",
+          legend = "bottom", common.legend = TRUE)
+```
+
+- Unmixed pre- and post-exposure samples are well separated for all individuals (Fig. \@ref(fig:sampleCharPlot)).     
+- JHU 1 samples are distinct from other sequencing runs for unifrac across all individuals, though consistent difference between unmixed pre- and post-exposure samples.  
+- Outlier PCR replicate for NIST runs  
+- Pre- and post-expoure sample separation varies by individual.  

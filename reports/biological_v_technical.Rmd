@@ -19,10 +19,37 @@ load.project()
 
 ```{r bioVtechMunge, warning=FALSE, message=FALSE, echo = FALSE}
 ## Pre-processing data for figure(s)
+biol_v_tech_variation_summary_highlevel <- biol_v_tech_variation[[3]] %>% 
+    group_by(variation, pipe, normalization, metric, normalization_type) %>%
+    summarise(mean_value = mean(value), 
+              stdev = sd(value), 
+              N = n(), 
+              se = stdev/sqrt(N))
+
+biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highlevel[, 1:6] %>%
+    spread(variation, mean_value) %>%
+    mutate(mean_difference  = biological - technical) %>% 
+    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+                        "Phylogenetic","Taxonomic"),
+            weight = if_else(metric %in% c("unifrac","jaccard"),
+                        "Unweighted", "Weighted"))
 ```
 
-```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Text for figure legend"}
-plot(1:10,1:10)
+```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological and technical variation (pairwise distance between replicates.)"}
+biol_v_tech_variation_summary_higherlevel %>% 
+    ggplot(aes(x = normalization, y = mean_difference, 
+               color = pipe, group = pipe)) + 
+        geom_point(size = 2) + 
+        geom_line() + 
+        theme_bw() + 
+        facet_grid(f_type~weight, scales = "free_x") + 
+        theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+        scale_colour_brewer(palette = "Dark2") + 
+        labs(x = "Rarefaction Level", y = "Biological - Technical")
 ```
 
-Insert key points for results and disucssion here (Fig. \@ref(fig:bioVtechPlot1)). 
+
+- Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric (Fig. \@ref(fig:bioVtechPlot1)).  
+- For weighted metrics RLE and TMM decreased the difference relative to raw counts indicating that for beta diversity analysis these normalization methods reduce the power to distingush true biological differences from technical variability or noise.  
+- In general rareifiy count data had higher mean difference excluding when rarefying to 15th quantile for qiime de novo, closed , and open-reference. 
+    - potentially due to sample loss. 

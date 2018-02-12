@@ -1,0 +1,13 @@
+---
+title: "Supplemental"
+author: "Nate Olson"
+date: "2/12/2018"
+output: html_document
+---
+
+
+## Sequencing Data Characterization  
+```{r}
+fqs <- list.files("data/example_seq_data", full.names = TRUE)
+dada2::plotQualityProfile(fqs)
+```

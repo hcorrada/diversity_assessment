@@ -1,31 +1,62 @@
-## Primary Analysis
-- restructure code for faster load.project() and updating files 
-
 ## Coding  
-- evaluate munge results for failed runs: normalization, diversity, and cluster eval
-        - pluck results and get number of failures and error messages 
-        - investigate error source  
+- incorporate replicatation into clustering
 - clean up make ps munge code formatting
-
-## Seq and Pipe QA
-- species abundance curves   
-- rarefaction curves  
 
 ## Sample characterization  
 - beta diversity - unmixed samples  
 
 ## bio v. tech 
-- Statistical test, PERMANOVA??
+- summary figures 
+- key points
 
 ## comparison to expectation
-- results analysis and presentation
+- mixed effects modeling
 
 ## technical artifacts
-- figure out what quality score to use for analysis
-- correlate B-div with difference in seq number and quality
+- summary figure 
+- key points
 
-## Issues and notes
+## Manuscript
+- method  
+- introduction  
+- discussion  
+- abstract  
+- acknowledgements  
+- format for microbiome  
+
+## Issues and notes  
+- Manuscript formatting
+    - error when using hyperref and email references  
+    - lmodern package needed for font warning
+
 - Error in DADA2 tree build - optim.ml matrix too large.... 
     - use NJ tree  
     - email phangorn developer about issue  
-- Check out NTC 1-H12 has a high read count, pass_rate, and total abundance   
+
+- Check out NTC 1-H12 has a high read count, pass_rate, and total abundance    
+
+- Warning messages from re-running normalization 
+```
+[1] "Processing: data/norm_data/qiimeOpenRef_UQ.rds"
+[1] "- Calculating wunifrac"
+Loading required package: 
+Failed with error:  ‘invalid package name’
+In addition: Warning messages:
+1: In .f(...) :
+  Randomly assigning root as -- denovo158217 -- in the phylogenetic tree in the data you provided.
+2: In matrix(tree$edge[order(tree$edge[, 1]), ][, 2], byrow = TRUE,  :
+  data length [361389] is not a sub-multiple or multiple of the number of rows [180695]
+[1] "- Calculating bray"
+ Running preprocessing script: 08_beta_eval_comparison_to_expectation.R
+Joining, by = c("seq_lab", "seq_run", "biosample_id")
+  Skipping cache update for beta_cluster_eval_bray_df: up to date
+  Skipping cache update for beta_cluster_eval_wunifrac_df: up to date
+  Skipping cache update for beta_cluster_eval_jaccard_df: up to date
+  Skipping cache update for beta_cluster_eval_unifrac_df: up to date
+Warning messages:
+1: In .f(...) :
+  Randomly assigning root as -- New.CleanUp.ReferenceOTU42652 -- in the phylogenetic tree in the data you provided.
+2: In matrix(tree$edge[order(tree$edge[, 1]), ][, 2], byrow = TRUE,  :
+  data length [91323] is not a sub-multiple or multiple of the number of rows [45662]
+ ```
+ 
