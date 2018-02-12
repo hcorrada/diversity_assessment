@@ -22,7 +22,7 @@ bibliography: ../bibliography.bib
 
 ## Bioinformatic Pipelines  
 Data from the four sequencing runs was processed using 6 bioinformatic pipelines including the QIIME open reference, closed reference, de novo, and deblur pipelines, as well as the Mothur de novo and DADA2 sequence inference pipelines.
-Code used to run the bioinformatic pipelines is available at https://github.com/nate-d-olson/mgtst_pipelines/, on the multirun branch.
+Code used to run the bioinformatic pipelines is available at https://github.com/nate-d-olson/mgtst\_pipelines/, on the multirun branch.
 The Mothur pipeline uses the OptiClust algorithm for de novo clustering [@Westcott2017].
 Preprocessing includes merging and quality filtering paired-end reads followed by aligning sequences to the SILVA reference alignment [@Schloss2009].
 Taxonomic classification was performed using the Mothur implementation of the RDP bayesian classifier [@Wang2007].
@@ -62,5 +62,8 @@ For our feature-level Beta-diversity assessment the Bray-Curtis weighted and Jac
 To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals,
 within individual between conditions (pre- and post-exposure),
  and different types of technical replicates.  
+__ADD STATS__
+
 We assessed the impact of bioinformatic pipeline and normalization methods on beta-diversity metrics using a similar approach used in [@Reynolds2006;@McMurdie2014].
+To summarize performance across titration comparisons, area under the curve was calculated using the trapazoid method (__R package ref__). 
 This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.

@@ -1,0 +1,78 @@
+%% BioMed_Central_Tex_Template_v1.06
+\documentclass{bmcart}
+% \RequirePackage{hyperref}
+\usepackage{lmodern}
+\def\includegraphic{}
+\def\includegraphics{}
+
+\begin{document}
+  \begin{frontmatter}
+
+    \begin{fmbox}
+      \dochead{Research}
+      \title{$title$}
+
+%% Authors
+\author[addressref={aff1,aff22}, email={nolson@nist.gov}]{ %
+    \inits{ND}\fnm{Nathan} \snm{Olson}}
+\author[addressref={aff2}]{\inits{J}\fnm{Jacquelyn} \snm{Meisel}}
+\author[addressref={aff3}]{\inits{S}\fnm{Stephaine} \snm{Hao}}
+\author[addressref={aff2}]{\inits{M}\fnm{Mihai} \snm{Pop}}
+\author[addressref={aff3}]{\inits{W}\fnm{Winston} \snm{Timp}}
+\author[addressref={aff1}]{\inits{ML}\fnm{Marc} \snm{Salit}}
+\author[addressref={aff4}]{\inits{OC}\fnm{O Colin} \snm{Stine}}
+\author[addressref={aff2}]{\inits{H}\fnm{Hector} \snm{Corrada Bravo}}
+
+
+%% Addresses
+\address[id=aff1]{\orgname{National Institute of Standards and Technology}}
+\address[id=aff2]{\orgname{University of Maryland, College Park}}
+\address[id=aff3]{\orgname{Johns Hopkins University}}
+\address[id=aff4]{\orgname{School of Medicine, University of Maryland}}
+% 
+%       \begin{artnotes}
+%         $for(notes)$
+%           \note[id=$notes.id$]{$notes.text$} % note, connected to author
+%         $endfor$
+%       \end{artnotes}
+
+    \end{fmbox}% comment this for two column layout
+
+    \begin{abstractbox}
+
+      \begin{abstract} % abstract
+      \parttitle{First part title} %if any
+        Text for this section.
+
+      \parttitle{Second part title} %if any
+        Text for this section.
+      \end{abstract}
+
+      \begin{keyword}
+        \kwd{sample}
+        \kwd{article}
+        \kwd{author}
+      \end{keyword}
+
+    \end{abstractbox}
+
+  \end{frontmatter}
+
+  $body$
+
+  \begin{backmatter}
+
+  \section*{Competing interests}
+    The authors declare that they have no competing interests.
+
+  \section*{Author's contributions}
+      Text for this section \ldots
+
+  \section*{Acknowledgements}
+    Text for this section \ldots
+
+  \bibliographystyle{bmc-mathphys} % Style BST file (bmc-mathphys, vancouver, spbasic).
+  \bibliography{bmc_article}      % Bibliography file (usually '*.bib' )
+
+  \end{backmatter}
+\end{document}

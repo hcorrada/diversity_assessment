@@ -1,0 +1,62 @@
+---
+title: "Evaluation of the impact of bioinformatic pipeline, normalization methods, and sequence data characteristics on beta diversity metrics for 16rRNA marker-gene survey data."
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
+    template: template.tex
+    keep_tex: TRUE
+bibliography: [bibliography.bib]
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.path = "img/")
+```
+
+<!-- 
+BMC Microbiome Submission https://microbiomejournal.biomedcentral.com/submission-guidelines/preparing-your-manuscript/methodology 
+
+Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-author-details-in-pdf-from-r-markdown-latex-template 
+-->
+
+
+
+# Abstract
+
+# Introduction
+```{r introduction, child="docs/introduction.Rmd"}
+``` 
+
+
+# Methods  
+```{r methods, child="docs/methods.Rmd"}
+``` 
+
+# Results
+## Dataset characteristics  
+```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd"}
+```
+
+```{r sampleChar, child="reports/sample_characterization.Rmd"}
+```
+
+## Technical Artifacts
+```{r thetaEst, child="reports/tech_artifacts.Rmd"}
+```
+
+
+## Biological v. Technical Variation
+
+```{r bioVtech, child="reports/biological_v_technical.Rmd"}
+```
+
+## Comparison to Expectation
+
+```{r compToExp, child="reports/beta_comp_to_exp.Rmd"}
+```
+
+# Discussion
+```{r discussion, child="docs/discussion.Rmd", warning=FALSE, message=FALSE, echo = FALSE}
+``` 
+
+# References 
+<div id="refs"></div>

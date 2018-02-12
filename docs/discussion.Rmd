@@ -1,0 +1,21 @@
+---
+title: "Introduction"
+author: "Nate Olson"
+date: "`r Sys.Date()`"
+output:
+  bookdown::pdf_document2:
+    toc: FALSE
+bibliography: ../bibliography.bib
+---
+
+- Dataset   
+    - samples  
+    - sequence characteristics  
+    - Pipelines
+    - Normalization methods  
+
+- Technical artifacts  
+
+- Bio V. Tech
+
+- comp to exp
