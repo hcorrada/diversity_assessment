@@ -1,7 +1,7 @@
 
 ## Calculating Beta Diversity Metrics for Normalized count data
-require(doParallel)
-registerDoParallel(cores = 4)
+# require(doParallel)
+# registerDoParallel(cores = 4)
 
 ## Safely calculate distance metrics Instead of stopping when there is an error
 ## when calculating the distance metric provides NULL results with error message
@@ -71,4 +71,4 @@ norm_to_div <- function(rds_file) {
 }
 
 ## Processing normalized count data
-rds_files <- list.files("data/norm_data", full.names = TRUE) %>% walk(norm_to_div)
+list.files("data/norm_data", full.names = TRUE) %>% walk(norm_to_div)
