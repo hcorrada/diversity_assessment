@@ -1,0 +1,59 @@
+---
+title: "NTC investigation"
+author: "Nate Olson"
+date: "2/12/2018"
+output: html_document
+---
+
+```{r seqPipeCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+library(ggpubr)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+## No Template Control Investigation 
+Looking into NIST high read counts for no template controls. 
+
+```{r}
+pipe_char_meta_df <- pipe_char_df %>%
+    unnest() %>% 
+    left_join(mgtstMetadata) %>%
+    mutate(seq_run = as.character(seq_run)) 
+
+pipe_char_ntc <- pipe_char_meta_df %>% filter(biosample_id == "NTC") 
+
+pipe_char_meta_df %>% filter(biosample_id != "NTC") %>%
+    ggplot() + 
+        geom_boxplot(aes(x = seq_lab, y = total_abu + 1, color = seq_run)) + 
+        geom_point(data = pipe_char_ntc, aes(x = seq_lab, y = total_abu + 1, color = seq_run), 
+                   shape = 21,
+                   position = position_jitterdodge(jitter.width = 0.25)) + 
+        scale_y_log10() + 
+        theme_bw() + labs(x = "Sequencing Lab", y = "Total Abundance", color = "Sequencing Run") +
+        theme(legend.position = "bottom") + facet_wrap(~pipe)
+```
+
+- Pass filter rate is lower for samples compared to no template controls excluding outliers. 
+```{r}
+pipe_char_meta_df %>% 
+    mutate(biosample_id = if_else(biosample_id == "NTC", "NTC","Sample")) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = seq_run,  y = pass_rate, color = biosample_id)) + 
+    facet_wrap(pipe~seq_lab, scales = "free_y") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(x = "Sequencing Run", y = "Pass Quality Control", color = "Sample Type")
+```
+
+No template control with high pass rate - all the same sample. 
+```{r}
+pipe_char_meta_df %>% filter(biosample_id == "NTC", pass_rate > 0.2)
+```
+
+Need to figure out better way to look at samples with low pass rate.
+```{r}
+pipe_char_meta_df %>% filter(biosample_id != "NTC") %>% 
+    group_by(pipe, seq_lab, seq_run) %>% 
+    top_n(n = 1, wt = -pass_rate)
+```
