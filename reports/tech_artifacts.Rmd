@@ -47,21 +47,30 @@ norm_impact <- tech_art_df %>%
                             "Unweighted", "Weighted")) 
 ```
   
-```{r techTotalAbuCOV, fig.cap = "Distribution of the coefficienct of variation of total abundance for PCR replicates by bioinformatic pipeline and sequencing run across."}
-ggplot(tech_info_df) + 
-    geom_boxplot(aes(x = seq_run_id, y = cov_total_abu)) + 
-    labs(x = "Sequencing Run", y = "COV(Total Abundance)") + facet_wrap(~pipe) + theme_bw()
-```
+```{r techTotalAbuCOV, fig.cap = "A. Distribution of the coefficienct of variation of total abundance for PCR replicates by bioinformatic pipeline and sequencing run across B. Mean read quality score for PCR replicates across sequencing runs for forward and reverse reads."}
+# ggplot(tech_info_df) + 
+#     geom_boxplot(aes(x = seq_run_id, y = cov_total_abu)) + 
+#     labs(x = "Sequencing Run", y = "COV(Total Abundance)") + facet_wrap(~pipe) + theme_bw()
 
-```{r techQual, fig.cap = "Mean read quality score for PCR replicates across sequencing runs for forward and reverse reads."}
-tech_info_df %>% 
+tech_info_df_summary<-tech_info_df %>% group_by(seq_run_id, pipe) %>% summarize(mean_cov_total_abu=mean(cov_total_abu))
+
+cov_plot<-ggplot(tech_info_df_summary, aes(x = pipe, y = mean_cov_total_abu, group=seq_run_id, color=seq_run_id)) + 
+    geom_point() + geom_line()+
+    labs(x = "Sequencing Run", y = "Mean COV(Total Abundance)") + theme_bw()+
+    theme(axis.text.x=element_text(angle = 45, hjust = 1))
+
+read_qual_plot<-tech_info_df %>% 
     select(biosample_id, t_fctr, seq_run_id, R1_qual, R2_qual) %>% 
     distinct() %>% 
     gather("read_dir","mean_qual", -biosample_id, -t_fctr, -seq_run_id) %>% 
     ggplot() + 
-    geom_boxplot(aes(x = seq_run_id, y = mean_qual)) + 
-    labs(x = "Sequencing Run", y = "Mean Quality Score", color = "Read Direction") + 
-    theme_bw() + facet_wrap(~read_dir)
+    geom_boxplot(aes(x = seq_run_id, y = mean_qual, group=interaction(seq_run_id,read_dir), 
+                     fill=read_dir), position=position_dodge()) + 
+    labs(x = "Sequencing Run", y = "Mean Quality Score", fill = "Read Direction") + 
+    theme_bw()+theme(axis.text.x=element_text(angle = 45, hjust = 1))
+
+ggarrange(cov_plot, read_qual_plot)
+
 ```
 
 ```{r techMeanDist, message = FALSE, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data."}
@@ -75,49 +84,12 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     facet_grid(pipe~metric, scales = "free_x") + theme_bw()
 ```
 
-```{r techNormImpactJ1, fig.cap = "JHU1 - Impact of normalization method on mean beta diversity between pcr repliates."}
+```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean beta diversity between pcr replicates, accross sequencing runs."}
 norm_impact %>% 
-    filter(seq_run_id == "jhu_run1") %>% 
     ggplot() + 
     geom_hline(aes(yintercept = 0)) + 
-    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
-    facet_grid(f_type ~ weight, scales = "free") + 
-    theme_bw() + 
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
-    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
-```
-
-```{r techNormImpactJ2, fig.cap = "JHU2 - Impact of normalization method on mean beta diversity between pcr repliates."}
-norm_impact %>% 
-    filter(seq_run_id == "jhu_run2") %>% 
-    ggplot() + 
-    geom_hline(aes(yintercept = 0)) + 
-    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
-    facet_grid(f_type ~ weight, scales = "free") + 
-    theme_bw() + 
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
-    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
-```
-
-```{r techNormImpactN1, fig.cap = "NIST1 - Impact of normalization method on mean beta diversity between pcr repliates."}
-norm_impact %>% 
-    filter(seq_run_id == "nist_run1") %>% 
-    ggplot() + 
-    geom_hline(aes(yintercept = 0)) + 
-    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
-    facet_grid(f_type ~ weight, scales = "free") + 
-    theme_bw() + 
-    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
-    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
-```
-
-```{r techNormImpactN2, fig.cap = "NIST2 - Impact of normalization method on mean beta diversity between pcr repliates."}
-norm_impact %>% 
-    filter(seq_run_id == "nist_run2") %>% 
-    ggplot() + 
-    geom_hline(aes(yintercept = 0)) + 
-    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
-    facet_grid(f_type ~ weight, scales = "free") + 
+    geom_point(aes(x = pipe, y = dist_change, color = seq_run_id, shape=metric), size=2, position=position_jitter(width=0.3)) + 
+    facet_wrap(~factor(normalization, levels=c("rare2000", "rare5000", "rare10000", "rareq15", "CSS", "RLE", "TMM", "TSS", "UQ"), ordered = T), ncol=5) + 
     theme_bw() + 
     theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
     labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
@@ -125,8 +97,8 @@ norm_impact %>%
 
 __Key Points__  
 
-* JHU run 1 had lower sequence quality (boxplots) (Fig. \@ref(fig:techQual)).  
-* NIST run 1 had greater variabiltiy in sample total abundance (boxplots) (Fig. \@ref(fig:techTotalAbuCOV)).  
+* JHU run 1 had lower sequence quality (boxplots) (Fig. \@ref(fig:techTotalAbuCOV)).  
+* NIST run 1 had greater variabiltiy in sample total abundance (lineplot) (Fig. \@ref(fig:techTotalAbuCOV)).  
 * Mean pairwise distance was greater for qiime De-novo, open and closed reference pipelines for JHU1 relative to the other sequencing runs for all metrics excluding weighted unifrac (Fig. \@ref(fig:techMeanDist)).   
 * Qiime De novo had high pairwise distance across sequencing runs for Unifrac and low for weighted Unifrac.  
 * Pairwise distances varies by metric.  
