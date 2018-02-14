@@ -1,0 +1,230 @@
+---
+title: "Technical Artiffacts Dev"
+author: "Nate"
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
+---
+
+```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+library(ggridges)
+## load required libraries
+```
+
+```{r}
+total_abu_fit_df <- seq_char_comparisons %>% 
+    group_by(pipe, normalization, metric) %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lm(cov_total_abu ~ mean_dist, data = .))) %>% 
+    mutate(fit_glance = map(fit, broom::glance),
+           fit_tidy = map(fit, broom::tidy))
+```
+
+```{r}
+total_abu_tidy <- total_abu_fit_df %>% 
+    select(-data, -fit) %>% 
+    unnest(fit_glance) %>% 
+    unnest() %>% 
+    select(-statistic1, -p.value1, -std.error) %>% 
+    spread(term, estimate)
+```
+
+Low R2 values indicate poor fit and total abundance cov does not impact diversity metrics ...
+```{r}
+total_abu_tidy %>% ggplot() + geom_density(aes(x = adj.r.squared))
+```
+
+```{r}
+summary(total_abu_fit_df$fit[[1]])
+```
+
+```{r}
+plot(total_abu_fit_df$fit[[1]])
+```
+```{r}
+total_abu_fit_df$data[[1]] %>% 
+    ggplot() + geom_point(aes(cov_total_abu, mean_dist))
+```
+
+```{r}
+num_reads_fit_df <- seq_char_comparisons %>% 
+    group_by(pipe, normalization, metric) %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lm(cov_num_reads ~ mean_dist, data = .))) %>% 
+    mutate(fit_glance = map(fit, broom::glance),
+           fit_tidy = map(fit, broom::tidy))
+```
+
+```{r}
+num_reads_tidy <- num_reads_fit_df %>% 
+    select(-data, -fit) %>% 
+    unnest(fit_glance) %>% 
+    unnest() %>% 
+    select(-statistic1, -p.value1, -std.error) %>% 
+    spread(term, estimate)
+```
+
+Low R2 values indicate poor fit and total abundance cov does not impact diversity metrics ...
+```{r}
+num_reads_tidy %>% ggplot() + geom_density(aes(x = adj.r.squared))
+```
+
+
+```{r}
+read_qual_fit_df <- seq_qual_comparisons %>% 
+    group_by(pipe, normalization, metric) %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lm(mean_quality ~ mean_dist, data = .))) %>% 
+    mutate(fit_glance = map(fit, broom::glance),
+           fit_tidy = map(fit, broom::tidy))
+```
+
+```{r}
+read_qual_tidy <- read_qual_fit_df %>% 
+    select(-data, -fit) %>% 
+    unnest(fit_glance) %>% 
+    unnest() %>% 
+    select(-statistic1, -p.value1, -std.error) %>% 
+    spread(term, estimate)
+```
+
+Low R2 values indicate poor fit and total abundance cov does not impact diversity metrics ...
+```{r}
+read_qual_tidy %>% ggplot() + geom_density(aes(x = adj.r.squared))
+```
+
+
+```{r}
+qual_df <- seq_qual_comparisons %>% 
+    mutate(read_dir = paste0(read_dir, "_qual")) %>% 
+    select(-sd_quality, -cov_quality) %>% 
+    spread(read_dir, mean_quality) %>% 
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), remove = FALSE,extra = "merge")
+```
+
+Distribution of mode read quality score by sequencing run for R1
+```{r}
+qual_df %>% ggplot() + geom_density(aes(x = R1_qual, fill = seq_run_id))
+```
+
+Distribution of mode read quality score by sequencing run for R2
+```{r}
+qual_df %>% ggplot() + geom_density(aes(x = R2_qual, fill = seq_run_id))
+```
+
+
+```{r}
+qual_df
+```
+
+```{r}
+tech_art_df <- seq_char_comparisons %>% 
+    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
+    left_join(qual_df)
+```
+
+```{r}
+fit <- lme4::lmer(mean_dist ~ cov_total_abu + R1_qual + R2_qual + (1 | seq_run_id) + (1 | pipe / normalization), 
+                  data = filter(tech_art_df, metric == "unifrac"))
+```
+
+
+```{r}
+fit
+```
+
+```{r}
+summary(fit)
+```
+
+```{r}
+plot(fit)
+```
+
+Sequencing run explains part of the multimodal distribution in mean pairwise distances between PCR replicates.
+```{r}
+library(ggridges)
+tech_art_df %>% ggplot() + 
+    geom_density_ridges(aes(x = mean_dist, y = seq_run_id)) + 
+    facet_wrap(~metric) + theme_bw()
+```
+
+```{r}
+tech_art_df %>% ggplot() + 
+    geom_density_ridges(aes(x = mean_dist, y = biosample_id, fill = seq_run_id), alpha = 0.5) + 
+    facet_wrap(~metric) + theme_bw()
+```
+
+
+## Figure Panel 
+__Key Points__ 
+* JHU run 1 had lower sequence quality (boxplots)
+* NIST run 1 had greater variabiltiy in sample total abundance (boxplots) 
+* Mean pairwise distance was greater for qiime De-novo, open and closed reference pipelines for JHU1 relative to the other sequencing runs for all metrics excluding weighted unifrac. 
+* Qiime De novo had high pairwise distance across sequencing runs for Unifrac and low for weighted Unifrac. 
+* Pairwise distances varies by metric. 
+* DADA2 pairwise distances greater for NIST1 and NIST2 compared to JHU runs, JHU2 had the lowest pairwise distance. 
+* Mothur and dada, consistent results for JHU runs, better able to account for sequencing errors. 
+* Deblur pipeline failed for JHU1.  
+* Higher pairwise distances for NIST runs indicate diversity metrics impacted by larger variation in total abundance across PCR replicates. 
+
+__Additional Points__ 
+* De novo weighted Unifrac low for QIIME De novo: This is potentially due to large number of singletons in weighted unifrac dataset, ~120K out of ~180K total features. These singletons are likely sequencing errors and therefore closely related to other taxa therefore minimally impact the weighted unifrac results.   
+
+```{r message = FALSE}
+tech_art_df %>% filter(normalization == "RAW") %>% 
+    ggplot() + 
+    geom_density_ridges(aes(x = mean_dist, y = seq_run_id), 
+                         stat = "binline",
+                        draw_baseline = FALSE,
+                        scale = 1,
+                    alpha = 0.5) + 
+    facet_grid(pipe~metric, scales = "free_x") + theme_bw()
+```
+
+```{r}
+tech_info_df <- tech_art_df %>% 
+    filter(normalization == "RAW") %>% 
+    select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>% 
+    distinct() 
+```
+
+```{r fig.cap = "Distribution of the coefficienct of variation of total abundance for PCR replicates by bioinformatic pipeline and sequencing run across."}
+ggplot(tech_info_df) + 
+    geom_boxplot(aes(x = seq_run_id, y = cov_total_abu)) + 
+    labs(x = "Sequencing Run", y = "COV(Total Abundance)") + facet_wrap(~pipe) + theme_bw()
+```
+
+```{r fig.cap = "Mean read quality score for PCR replicates across sequencing runs for forward and reverse reads."}
+tech_info_df %>% 
+    select(biosample_id, t_fctr, seq_run_id, R1_qual, R2_qual) %>% 
+    distinct() %>% 
+    gather("read_dir","mean_qual", -biosample_id, -t_fctr, -seq_run_id) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = seq_run_id, y = mean_qual)) + 
+    labs(x = "Sequencing Run", y = "Mean Quality Score", color = "Read Direction") + 
+    theme_bw() + facet_wrap(~read_dir)
+```
+
+Lots of NAs ....
+
+```{r}
+norm_impact %>% 
+    filter(seq_run_id %in% c("jhu_run1", "nist_run1"), !is.na(dist_change)) %>% 
+    group_by(metric, pipe, normalization, seq_run_id) %>% 
+    summarise(dist_change = median(dist_change)) %>% 
+        mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+                            "Phylogenetic","Taxonomic"),
+           weight = if_else(metric %in% c("unifrac","jaccard"),
+                            "Unweighted", "Weighted")) %>% 
+     ggplot() + 
+    geom_hline(aes(yintercept = 0)) + 
+    geom_point(aes(x = pipe, y = dist_change, color = normalization, shape = seq_run_id)) + 
+    facet_grid(f_type ~ weight, scales = "free") + 
+    theme_bw() + 
+    theme(legend.position = "bottom") + 
+    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm", shape = "Seq Run")
+```

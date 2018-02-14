@@ -13,67 +13,76 @@
 #' @export
 #'
 #' @examples
-compute_diversity_comparisons_with_seq_char<-function(metric, sample_comparisons){
+compute_diversity_comparisons_with_seq_char <- function(metric, sample_comparisons){
     
     # Generate list of diversity matrices for piplines/norm methods
-    data<-make_beta_div_df(metric)
+    data <- make_beta_div_df(metric)
     
     # For each beta div matrix
-    beta_div_comp<- lapply(1:length(data$pipe), function(i){
-        # Extract matrix
-        beta_div<-as.data.frame(as.matrix(data$dist_results[[i]][[1]]))
+    make_div_comp_summary_df <- function(i){
+        samples_to_compare <- unique(c(sample_comparisons$sample_a, sample_comparisons$sample_b))
+        
+        # Extract distance matrix and convert to tidy-long data frame
+        beta_div <- as.data.frame(as.matrix(data$dist_results[[i]][[1]])) %>% 
+            rownames_to_column(var = "sample_a")
+       
         # Keep only matrix with samples of interest
-        beta_div_m<-as.data.frame(beta_div)[which(row.names(beta_div) %in% as.character(unique(c(sample_comparisons$sample_a, sample_comparisons$sample_b)))), 
-                                            which(colnames(beta_div) %in% as.character(unique(c(sample_comparisons$sample_a, sample_comparisons$sample_b))))]
-        # Melt dataframe so we can look at matched samples 
-        beta_div_m$sample<-row.names(beta_div_m)
-        beta_div_m2<-gather(beta_div_m, sample)
-        colnames(beta_div_m2)<-c("sample_a", "sample_b", "value")
+        beta_div_long <- beta_div %>% 
+            filter(sample_a %in% samples_to_compare) %>% 
+            gather("sample_b", "value", -sample_a) %>% 
+            filter(sample_b %in% samples_to_compare) %>% 
+            ## excluding pairwise distances between the same sample
+            filter(sample_a != sample_b)
+
+
         # Look only at matched samples
-        beta_div_m2<-as.data.frame(merge(beta_div_m2, sample_comparisons))
-        beta_div_m2$value<-as.numeric(as.character(beta_div_m2$value))
+        beta_div_df <- left_join(beta_div_long, sample_comparisons)
+
         # Calculate average distance for pcr replicates
-        beta_div_summary<- beta_div_m2 %>% 
+        beta_div_summary <- beta_div_df %>% 
             group_by(replicate) %>%
-            summarise(mean_dist=mean(value), N=length(value))
+            summarise(mean_dist = mean(value), N = n())
         
         # Calculate sequencing info for replicates
-        map<-mgtstMetadata
-        map$replicate<-paste0(map$biosample_id, "_t", 
-                              map$t_fctr, "_",
-                              map$seq_lab, "_run",
-                              map$seq_run)
-        map<-map[,c("sample_id", "replicate")]
-        seq_info<-pipe_char_df$per_sample_info[[which(pipe_char_df$pipe == data$pipe[i])]]
-        seq_info<-merge(map, seq_info)
-        seq_info_summary<- seq_info %>% 
+        rep_seq_info <- mgtstMetadata %>% 
+            mutate(replicate = paste0(biosample_id, "_t",
+                                      t_fctr, "_",
+                                      seq_lab, "_run",
+                                      seq_run)) %>% 
+            select(sample_id, replicate)
+        
+        seq_info <- pipe_char_df$per_sample_info[[which(pipe_char_df$pipe == data$pipe[i])]]
+        seq_info <- merge(rep_seq_info, seq_info)
+        seq_info_summary <- seq_info %>% 
             group_by(replicate) %>%
-            summarise(mean_observed_feat=mean(Observed),
-                      sd_observed_feat=sd(Observed),
-                      cov_observed_feat=sd_observed_feat/mean_observed_feat,
-                      mean_total_abu=mean(total_abu),
-                      sd_total_abu=sd(total_abu),
-                      cov_total_abu=sd_total_abu/mean_total_abu,
-                      mean_num_reads=mean(read),
-                      sd_num_reads=sd(read),
-                      cov_num_reads=sd_num_reads/mean_num_reads,
-                      mean_pass_rate=mean(pass_rate),
-                      sd_pass_rate=sd(pass_rate),
-                      cov_pass_rate=sd_pass_rate/mean_pass_rate,
-                      N_seq_info=length(sample_id))
+            summarise(mean_observed_feat = mean(Observed),
+                      sd_observed_feat = sd(Observed),
+                      cov_observed_feat = sd_observed_feat/mean_observed_feat,
+                      mean_total_abu = mean(total_abu),
+                      sd_total_abu = sd(total_abu),
+                      cov_total_abu = sd_total_abu/mean_total_abu,
+                      mean_num_reads = mean(read),
+                      sd_num_reads = sd(read),
+                      cov_num_reads = sd_num_reads/mean_num_reads,
+                      mean_pass_rate = mean(pass_rate),
+                      sd_pass_rate = sd(pass_rate),
+                      cov_pass_rate = sd_pass_rate/mean_pass_rate,
+                      N_seq_info = n())
         
         # Add additional info to melted dataframe
-        summary<-merge(beta_div_summary, seq_info_summary)
-        summary$pipe<-data$pipe[i]
-        summary$normalization<-data$method[i]
-        summary$metric<-metric
+        summary_df <- left_join(beta_div_summary, seq_info_summary)
+        summary_df$pipe <- data$pipe[i]
+        summary_df$normalization <- data$method[i]
+        summary_df$metric <- metric
         
-        return(summary)
-    })
+        return(summary_df)
+    }
+    
+    beta_div_comp <- lapply(1:length(data$pipe), make_div_comp_summary_df )
+    
     # Merge diversity tables from all pipelines
-    output<-do.call("rbind", beta_div_comp)
+    output <- do.call("rbind", beta_div_comp)
     return(output)
-    #return(beta_div_comp)
 }
 
 

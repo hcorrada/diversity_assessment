@@ -1,21 +1,23 @@
-setwd("~/diversity_assessment/")
+# setwd("~/diversity_assessment/")
 library(ProjectTemplate)
 load.project()
 
 
-factors<-c("mean_observed_feat", "cov_observed_feat", 
+factors <- c("mean_observed_feat", "cov_observed_feat", 
            "mean_total_abu", "cov_total_abu", 
            "mean_num_reads", "cov_num_reads", 
            "mean_pass_rate", "cov_pass_rate")
 
-factor_labels<-c("Mean Observed Features", "Coefficient of Variation- Observed Features", 
+factor_labels <- c("Mean Observed Features", "Coefficient of Variation- Observed Features", 
            "Mean Total Abundance", "Coefficient of Variation- Total Abundance", 
            "Mean Number of Reads", "Coefficient of Variation- Number of Reads", 
            "Mean Pass Rate", "Coefficient of Variation- Pass Rate")
 
-seq_char_comparisons$normalization<-factor(seq_char_comparisons$normalization, 
-                                           levels= c("RAW", "rare2000", "rare5000", "rare10000", "rareq15", 
-                                                     "CSS", "TMM", "RLE", "TSS","UQ"),
+norm_methods <- c("RAW", "rare2000", "rare5000", "rare10000", "rareq15", 
+                  "CSS", "TMM", "RLE", "TSS","UQ")
+
+seq_char_comparisons$normalization <- factor(seq_char_comparisons$normalization, 
+                                           levels = norm_methods,
                                            ordered=T)
 
 pdf("reports/bdiv_sequencing_characteristics.pdf", height=8, width=12)

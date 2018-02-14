@@ -1,28 +1,140 @@
 ---
 title: "Technical Artifacts"
-author: "Jackie Meisel"
+author: "Nate Olson"
 date: '`r Sys.Date()`'
 output:
   bookdown::pdf_document2: 
     toc: FALSE
 ---
 
-<!--
-Technical artifacts results section, relating PCR replicate average pairwise distance with total abundance coeffient of variation and mean read quality score. 
--->
-
 ```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
 load.project()
-## load required libraries
+library(ggridges)
+library(ggpubr)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-```{r techArtMunge, warning=FALSE, message=FALSE, echo = FALSE}
+```{r techArtMunge}
 ## Pre-processing data for figure(s)
+qual_df <- seq_qual_comparisons %>% 
+    mutate(read_dir = paste0(read_dir, "_qual")) %>% 
+    select(-sd_quality, -cov_quality) %>% 
+    spread(read_dir, mean_quality) %>% 
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), remove = FALSE,extra = "merge")
+
+tech_art_df <- seq_char_comparisons %>% 
+    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
+    left_join(qual_df)
+
+tech_info_df <- tech_art_df %>% 
+    filter(normalization == "RAW") %>% 
+    select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>% 
+    distinct() 
+
+
+norm_impact <- tech_art_df %>% 
+    select(biosample_id, t_fctr, seq_run_id, pipe, normalization, metric, mean_dist) %>% 
+    spread(normalization, mean_dist) %>% 
+    gather(normalization, mean_dist, -biosample_id, -t_fctr, -seq_run_id, -pipe, -metric, -RAW) %>% 
+    mutate(dist_change = mean_dist - RAW) %>% 
+    filter(!is.na(dist_change)) %>% 
+    group_by(metric, pipe, normalization, seq_run_id) %>% 
+    summarise(dist_change = median(dist_change)) %>% 
+        mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+                            "Phylogenetic","Taxonomic"),
+           weight = if_else(metric %in% c("unifrac","jaccard"),
+                            "Unweighted", "Weighted")) 
+```
+  
+```{r techTotalAbuCOV, fig.cap = "Distribution of the coefficienct of variation of total abundance for PCR replicates by bioinformatic pipeline and sequencing run across."}
+ggplot(tech_info_df) + 
+    geom_boxplot(aes(x = seq_run_id, y = cov_total_abu)) + 
+    labs(x = "Sequencing Run", y = "COV(Total Abundance)") + facet_wrap(~pipe) + theme_bw()
 ```
 
-```{r techArtPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Text for figure legend"}
-plot(1:10,1:10)
+```{r techQual, fig.cap = "Mean read quality score for PCR replicates across sequencing runs for forward and reverse reads."}
+tech_info_df %>% 
+    select(biosample_id, t_fctr, seq_run_id, R1_qual, R2_qual) %>% 
+    distinct() %>% 
+    gather("read_dir","mean_qual", -biosample_id, -t_fctr, -seq_run_id) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = seq_run_id, y = mean_qual)) + 
+    labs(x = "Sequencing Run", y = "Mean Quality Score", color = "Read Direction") + 
+    theme_bw() + facet_wrap(~read_dir)
 ```
 
-Insert key points for results and disucssion here and relevant figure reference (Fig. \@ref(fig:techArtPlot1)). 
+```{r techMeanDist, message = FALSE, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data."}
+tech_art_df %>% filter(normalization == "RAW") %>% 
+    ggplot() + 
+    geom_density_ridges(aes(x = mean_dist, y = seq_run_id), 
+                         stat = "binline",
+                        draw_baseline = FALSE,
+                        scale = 1,
+                    alpha = 0.5) + 
+    facet_grid(pipe~metric, scales = "free_x") + theme_bw()
+```
+
+```{r techNormImpactJ1, fig.cap = "JHU1 - Impact of normalization method on mean beta diversity between pcr repliates."}
+norm_impact %>% 
+    filter(seq_run_id == "jhu_run1") %>% 
+    ggplot() + 
+    geom_hline(aes(yintercept = 0)) + 
+    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
+    facet_grid(f_type ~ weight, scales = "free") + 
+    theme_bw() + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
+    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
+```
+
+```{r techNormImpactJ2, fig.cap = "JHU2 - Impact of normalization method on mean beta diversity between pcr repliates."}
+norm_impact %>% 
+    filter(seq_run_id == "jhu_run2") %>% 
+    ggplot() + 
+    geom_hline(aes(yintercept = 0)) + 
+    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
+    facet_grid(f_type ~ weight, scales = "free") + 
+    theme_bw() + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
+    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
+```
+
+```{r techNormImpactN1, fig.cap = "NIST1 - Impact of normalization method on mean beta diversity between pcr repliates."}
+norm_impact %>% 
+    filter(seq_run_id == "nist_run1") %>% 
+    ggplot() + 
+    geom_hline(aes(yintercept = 0)) + 
+    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
+    facet_grid(f_type ~ weight, scales = "free") + 
+    theme_bw() + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
+    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
+```
+
+```{r techNormImpactN2, fig.cap = "NIST2 - Impact of normalization method on mean beta diversity between pcr repliates."}
+norm_impact %>% 
+    filter(seq_run_id == "nist_run2") %>% 
+    ggplot() + 
+    geom_hline(aes(yintercept = 0)) + 
+    geom_point(aes(x = pipe, y = dist_change, color = normalization)) + 
+    facet_grid(f_type ~ weight, scales = "free") + 
+    theme_bw() + 
+    theme(legend.position = "bottom", axis.text.x = element_text(angle = 90)) + 
+    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Norm") 
+```
+
+__Key Points__  
+
+* JHU run 1 had lower sequence quality (boxplots) (Fig. \@ref(fig:techQual)).  
+* NIST run 1 had greater variabiltiy in sample total abundance (boxplots) (Fig. \@ref(fig:techTotalAbuCOV)).  
+* Mean pairwise distance was greater for qiime De-novo, open and closed reference pipelines for JHU1 relative to the other sequencing runs for all metrics excluding weighted unifrac (Fig. \@ref(fig:techMeanDist)).   
+* Qiime De novo had high pairwise distance across sequencing runs for Unifrac and low for weighted Unifrac.  
+* Pairwise distances varies by metric.  
+* DADA2 pairwise distances greater for NIST1 and NIST2 compared to JHU runs, JHU2 had the lowest pairwise distance.  
+* Mothur and dada, consistent results for JHU runs, better able to account for sequencing errors. 
+* Deblur pipeline failed for JHU1.  
+* Higher pairwise distances for NIST runs indicate diversity metrics impacted by larger variation in total abundance across PCR replicates.  
+
+__Additional Points__  
+
+* De novo weighted Unifrac low for QIIME De novo: This is potentially due to large number of singletons in weighted unifrac dataset, ~120K out of ~180K total features. These singletons are likely sequencing errors and therefore closely related to other taxa therefore minimally impact the weighted unifrac results.  
