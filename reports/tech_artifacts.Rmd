@@ -51,9 +51,9 @@ norm_impact <- tech_art_df %>%
 tech_info_df$cov_total_abu=factor()
 
 cov_plot<-ggplot(tech_info_df) +
-    geom_boxplot(aes(x = reorder(label, cov_total_abu, FUN=median), 
+    geom_boxplot(aes(x = reorder(interaction(pipe, seq_run_id), cov_total_abu, FUN=median), 
                      y = cov_total_abu, fill=seq_run_id)) +
-    labs(x = "Sequencing Run", y = "COV(Total Abundance)") + theme_bw()+coord_flip()+
+    labs(x = "Pipeline", y = "COV(Total Abundance)") + theme_bw()+coord_flip()+
     theme(axis.text.x=element_text(angle = 45, hjust = 1))
 
 #tech_info_df_summary<-tech_info_df %>% group_by(seq_run_id, pipe) %>% summarize(mean_cov_total_abu=mean(cov_total_abu))
