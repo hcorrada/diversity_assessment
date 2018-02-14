@@ -19,6 +19,7 @@
 - add data descriptions  
 - consistent variable names  
 - faster manuscript build
+- long term: using drake for munging https://ropensci.org/blog/2018/02/06/drake/
 
 ## Issues and notes  
 - Manuscript formatting
