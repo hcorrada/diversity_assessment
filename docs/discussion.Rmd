@@ -40,6 +40,11 @@ __comp to exp__
 - For weighted phylogenetic methods normalization methods rarely improved the results, but improved the results in most cases for weighted taxonomic diversity metrics. 
 - Inconsistent results when using rarefyed data and unweighted metrics. Results were pipeline and diversity metric dependent.  
 
+__General__ 
+
+- Pipelines optimized for specific data types using mock communities and evaluating precision  
+- Parameters for pipelines can be optimized for different assessments 
+
 __Conclusions__  
 
 - When you have data with low error rates and variability in number of reads, consistent pipeline performance.  
@@ -54,3 +59,4 @@ __Conclusions__
 
 __Other thoughts/ ideas__  
 - Bio v. tech: only unmixed pre and between individuals 
+- Normalization and diversity metrics for compositional data analysis methods 
