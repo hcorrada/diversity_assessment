@@ -88,3 +88,13 @@ Generally, biological features (subject and titration factor) explain most of th
 * Un-normalized (raw) datasets often showed greater influence of technical factors (seq run)
 
 * Non-rarefaction normalization metrics (esp. RLE and TMM) showed greater influence of technical factors (seq run)-- especially for QIIME pipelines
+
+__Very very very rough draft of text__  
+
+Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric
+
+We next looked at how different pipelines and normalization methods captured diversity differences between our biological and technical replicates. Overall, as expected, the mean diversity observed between biological replicates was greater than that between technical replicates. Generally, taxonomic diversity metrics were better at capturing the biological signal than pylogenetic metrics. One exception was that the weighted unifrac metric mirrored the trends observed with taxonomic metrics when using the mothur pipeline. 
+
+For unweighted metrics, normalization by rarefaction produced consistent differences in variation accross most subsampling depths. The three QIIME pipelines, however, identified smaller differences between biological and technical replicates when subsampled to the 15th quantile. This inconsistency is most likely due to greater sample loss in these pipelines at this subsampling level [?? is this true]. Amongst the non-rarefaction normalization methods, RLE and TMM most noticeably reduced the power to distingush biological signal from technical variability.
+
+We also used variation partitioning to determine the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run. Accross all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor. In our unnormalized pipelines, sequencing run accounts for a greater proprotion of the explained variance, highlighting the overall importance of normalizing our datasets. Rarefaction normalization methods generally show increased amounts of variation explained by biological factors rather than technical artifacts. The non-rarefaction normalization methods do not reduce the impacts of technical arifacts as effectively, especially for the QIIME pipelines. Again, the TMM and RLE methods were consistently less effective than other normalization methods.
