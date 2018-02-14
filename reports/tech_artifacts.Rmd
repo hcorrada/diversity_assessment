@@ -48,16 +48,20 @@ norm_impact <- tech_art_df %>%
 ```
   
 ```{r techTotalAbuCOV, fig.cap = "A. Distribution of the coefficienct of variation of total abundance for PCR replicates by bioinformatic pipeline and sequencing run across B. Mean read quality score for PCR replicates across sequencing runs for forward and reverse reads."}
-# ggplot(tech_info_df) + 
-#     geom_boxplot(aes(x = seq_run_id, y = cov_total_abu)) + 
-#     labs(x = "Sequencing Run", y = "COV(Total Abundance)") + facet_wrap(~pipe) + theme_bw()
+tech_info_df$cov_total_abu=factor()
 
-tech_info_df_summary<-tech_info_df %>% group_by(seq_run_id, pipe) %>% summarize(mean_cov_total_abu=mean(cov_total_abu))
-
-cov_plot<-ggplot(tech_info_df_summary, aes(x = pipe, y = mean_cov_total_abu, group=seq_run_id, color=seq_run_id)) + 
-    geom_point() + geom_line()+
-    labs(x = "Sequencing Run", y = "Mean COV(Total Abundance)") + theme_bw()+
+cov_plot<-ggplot(tech_info_df) +
+    geom_boxplot(aes(x = reorder(label, cov_total_abu, FUN=median), 
+                     y = cov_total_abu, fill=seq_run_id)) +
+    labs(x = "Sequencing Run", y = "COV(Total Abundance)") + theme_bw()+coord_flip()+
     theme(axis.text.x=element_text(angle = 45, hjust = 1))
+
+#tech_info_df_summary<-tech_info_df %>% group_by(seq_run_id, pipe) %>% summarize(mean_cov_total_abu=mean(cov_total_abu))
+# 
+# cov_plot<-ggplot(tech_info_df_summary, aes(x = pipe, y = mean_cov_total_abu, group=seq_run_id, color=seq_run_id)) + 
+#     geom_point() + geom_line()+
+#     labs(x = "Sequencing Run", y = "Mean COV(Total Abundance)") + theme_bw()+
+#     theme(axis.text.x=element_text(angle = 45, hjust = 1))
 
 read_qual_plot<-tech_info_df %>% 
     select(biosample_id, t_fctr, seq_run_id, R1_qual, R2_qual) %>% 
