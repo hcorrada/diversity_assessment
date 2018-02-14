@@ -48,7 +48,6 @@ norm_impact <- tech_art_df %>%
 ```
   
 ```{r techTotalAbuCOV, fig.cap = "A. Distribution of the coefficienct of variation of total abundance for PCR replicates by bioinformatic pipeline and sequencing run across B. Mean read quality score for PCR replicates across sequencing runs for forward and reverse reads."}
-tech_info_df$cov_total_abu=factor()
 
 cov_plot<-ggplot(tech_info_df) +
     geom_boxplot(aes(x = reorder(interaction(pipe, seq_run_id), cov_total_abu, FUN=median), 
