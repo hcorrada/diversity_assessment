@@ -48,7 +48,43 @@ biol_v_tech_variation_summary_higherlevel %>%
         labs(x = "Rarefaction Level", y = "Biological - Technical")
 ```
 
+```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable"}
+varpart_stats %>% subset(effect=="conditional") %>%
+    ggplot(aes(x=factor(normalization, 
+                        levels=c("RAW", "rare2000", "rare5000", "rare10000", "rareq15", "CSS", 
+                                 "RLE", "TMM", "TSS", "UQ"), ordered = T), 
+               y=Adj.R.square, fill=feature))+
+              geom_bar(stat="identity")+
+              theme_bw()+theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+              xlab("")+ylab("Adjusted R^2")+
+              scale_fill_manual(values = c("gray","#d53e4f", "#3288bd"))+
+    facet_grid(pipe~metric, scales="free_x", space="free")
+
+
+# varpart_stats %>% subset(effect=="conditional") %>%
+#     ggplot(aes(x=factor(normalization, 
+#                         levels=c("RAW", "rare2000", "rare5000", "rare10000", "rareq15", "CSS", 
+#                                  "RLE", "TMM", "TSS", "UQ"), ordered = T), 
+#                y=Adj.R.square, color=feature, shape=feature))+
+#               geom_point(position=position_jitter(width=0.2))+
+#               theme_bw()+theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+#               xlab("")+ylab("Adjusted R^2")+
+#               scale_color_manual(values = c("gray","#d53e4f", "#3288bd"))+
+#     facet_grid(pipe~metric, scales="free_x", space="free")
+```
+
+__Key Points__  
 
 Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric (Fig. \@ref(fig:bioVtechPlot1)).  
-For weighted metrics RLE and TMM decreased the difference relative to raw counts indicating that for beta diversity analysis these normalization methods reduce the power to distingush true biological differences from technical variability or noise.  
-In general rareifiy count data had higher mean difference excluding when rarefying to 15th quantile for qiime de novo, closed , and open-reference, this is potentially due to sample loss. 
+
+* Generally, greater differences between biological and technical replicates were observed using taxonomic metrics, rather than pylogenetic metrics (with the exception of mothur for weighted phylogenetic metrics).
+
+* For weighted metrics, RLE and TMM decreased the difference relative to raw counts indicating that for beta diversity analysis these normalization methods reduce the power to distingush true biological differences from technical variability or noise.  
+
+*In general, rarified count data had higher mean difference between biological and technical variation (excluding when rarefying to 15th quantile for qiime de novo, closed , and open-reference, which is potentially due to sample loss). 
+
+Generally, biological features (subject and titration factor) explain most of the observed variance (Fig. \@ref(fig:bioVtechPlot1)).  
+
+* Un-normalized (raw) datasets often showed greater influence of technical factors (seq run)
+
+* Non-rarefaction normalization metrics (esp. RLE and TMM) showed greater influence of technical factors (seq run)-- especially for QIIME pipelines
