@@ -56,10 +56,6 @@ auc_dat %>% filter(method != "RAW") %>%
 ```
 
 
-__Key points__  
-
-* Performance varied by pipeline with DADA2 having consistently higher performance compared to the other pipelines (Fig. \@ref(fig:compToExpAUC)).  
-
-* Rarefaction level had inconsistent performance relative to unnormalized data. Rareified to the 15th quantile library size improved performance relative to unnormalized data with qiime pipelines when using UniFrac but lower performance for Jaccard.  
-
-* For weighted metrics, normalization method performance relative to unnormalized counts varied by pipeline, though TMM and rarefaction to 15th quantile had consistently lower performance compared to unnormalized data.  
+Performance varied by pipeline with DADA2 having consistently higher performance compared to the other pipelines (Fig. \@ref(fig:compToExpAUC)).  
+Rarefaction level had inconsistent performance relative to unnormalized data. Rareified to the 15th quantile library size improved performance relative to unnormalized data with qiime pipelines when using UniFrac but lower performance for Jaccard.  
+For weighted metrics, normalization method performance relative to unnormalized counts varied by pipeline, though TMM and rarefaction to 15th quantile had consistently lower performance compared to unnormalized data.  

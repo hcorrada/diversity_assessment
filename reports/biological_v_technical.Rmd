@@ -49,7 +49,6 @@ biol_v_tech_variation_summary_higherlevel %>%
 ```
 
 
-- Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric (Fig. \@ref(fig:bioVtechPlot1)).  
-- For weighted metrics RLE and TMM decreased the difference relative to raw counts indicating that for beta diversity analysis these normalization methods reduce the power to distingush true biological differences from technical variability or noise.  
-- In general rareifiy count data had higher mean difference excluding when rarefying to 15th quantile for qiime de novo, closed , and open-reference. 
-    - potentially due to sample loss. 
+Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric (Fig. \@ref(fig:bioVtechPlot1)).  
+For weighted metrics RLE and TMM decreased the difference relative to raw counts indicating that for beta diversity analysis these normalization methods reduce the power to distingush true biological differences from technical variability or noise.  
+In general rareifiy count data had higher mean difference excluding when rarefying to 15th quantile for qiime de novo, closed , and open-reference, this is potentially due to sample loss. 

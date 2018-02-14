@@ -31,12 +31,18 @@ Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-auth
 ```{r methods, child="docs/methods.Rmd"}
 ``` 
 
-# Results
- 
+# Results 
+
+The beta diversity assessment framework includes three components; (1) evaluating beta diversity between PCR replicates for sequencing runs with different error rates and library sizes, (2) difference in beta diversity between biological and technical replicates, and (3) ability to differentiate between PCR replicates from unmixed pre-exposure samples and post-exposure samples as well as the unmixed post-exposure samples.  
+For our assessment we used a dataset consisting of two-sample titrations of DNA extracts from five vaccine trial participant stool samples collected before and after exposure to pathogenic _E. coli_ ( __Experimental Design Figure__ ). 
+
+## Dataset Characteristics  
+
 ```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd"}
 ```
 
-```{r sampleChar, child="reports/sample_characterization.Rmd"}
+```{r sampleChar, child="reports/sample_characterization.Rmd", eval = FALSE}
+## Excluding for now, not sure how it fits into the narrative
 ```
 
 ## Technical Artifacts
@@ -51,7 +57,7 @@ Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-auth
 
 ## Comparison to Expectation
 
-```{r compToExp, child="reports/beta_comp_to_exp.Rmd"}
+```{r compToExp, child="reports/comparison_to_expectation.Rmd"}
 ```
 
 # Discussion
