@@ -1,20 +1,7 @@
-## Coding  
-- incorporate replicatation into clustering
-- clean up make ps munge code formatting
-
-## Sample characterization  
-- beta diversity - unmixed samples  
-
-## bio v. tech 
-- summary figures 
-- key points
-
-## comparison to expectation
-- mixed effects modeling
-
-## technical artifacts
-- summary figure 
-- key points
+## Statistical Models
+- technical artifacts  
+- bio v. technical variation
+- comparison to expectation
 
 ## Manuscript
 - method  
@@ -23,6 +10,15 @@
 - abstract  
 - acknowledgements  
 - format for microbiome  
+- clean-up figures  
+- supplemental
+
+## Coding and Reproducibility
+- incorporate replicatation into clustering
+- clean up make ps munge code formatting   
+- add data descriptions  
+- consistent variable names  
+- faster manuscript build
 
 ## Issues and notes  
 - Manuscript formatting
