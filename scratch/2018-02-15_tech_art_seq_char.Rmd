@@ -1,0 +1,161 @@
+---
+title: "Seq char and qual figures and stats"
+author: "Nate Olson"
+date: "2/15/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ProjectTemplate)
+load.project()
+```
+
+```{r}
+qual_df <- seq_qual_comparisons %>% 
+    mutate(read_dir = paste0(read_dir, "_qual")) %>% 
+    select(-sd_quality, -cov_quality) %>% 
+    spread(read_dir, mean_quality) %>% 
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), remove = FALSE,extra = "merge")
+
+tech_art_df <- seq_char_comparisons %>% 
+    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
+    left_join(qual_df)
+
+tech_info_df <- tech_art_df %>% 
+    filter(normalization == "RAW") %>% 
+    select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>% 
+    distinct() 
+
+```
+
+## Total Abundance COV
+
+COV by pipeline and sequencing run
+```{r}
+tech_art_df %>% 
+    mutate(seq_run_id = factor(seq_run_id)) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = pipe, y = cov_total_abu, color = seq_run_id)) + 
+    theme_bw()
+```
+
+COV by pipeline and seqencing run showing relationship between PCR sets across sequencing runs
+```{r}
+tech_art_df %>% 
+    mutate(seq_run_id = factor(seq_run_id)) %>% 
+    ggplot() + 
+    geom_point(aes(x = seq_run_id, y = cov_total_abu)) + 
+    geom_line(aes(x = as.numeric(seq_run_id), y = cov_total_abu, group = paste(biosample_id, t_fctr))) + facet_wrap(~pipe) + theme_bw()
+```
+
+
+
+
+Testing for differences using a mixed effects model
+```{r}
+fit2 <- lme4::lmer(cov_total_abu ~ seq_run_id + (1 | pipe / biosample_id / t_fctr), 
+                   data = tech_art_df %>% mutate(pcr_set = paste(pipe, biosample_id, t_fctr)))
+```
+
+```{r}
+summary(fit2)
+```
+
+Not ideal fit but results show differences between the first and second runs at the two sequencing centers. 
+```{r}
+plot(fit2,type=c("p","smooth"))
+```
+
+```{r}
+plot(fit2,sqrt(abs(resid(.)))~fitted(.), type = c("p","smooth"))
+```
+
+
+```{r}
+lattice::qqmath(fit2)
+```
+
+```{r}
+confint_dat <- confint(fit2)
+```
+
+```{r}
+fit_coef <- coef(fit2)
+fit_coef_tidy <- fit_coef$pipe %>% rownames_to_column(var = "pipe") %>% 
+    gather("run_id","cov_est", -pipe, -`(Intercept)`) %>% 
+    mutate(cov_est = `(Intercept)` + cov_est) %>% 
+    mutate(run_id = str_replace(run_id, "seq_run_id","")) %>% 
+    rename(jhu_run1 = `(Intercept)`) %>%
+    spread(run_id, cov_est) %>%
+    gather("run_id","cov_est", -pipe)
+```
+
+```{r}
+fit_coef_tidy %>% ggplot() + geom_point(aes(x = pipe, y = cov_est, color = run_id)) + theme_bw()
+```
+
+```{r}
+mod_betas <- fit2@beta
+cov_est <- data_frame(run_id = c("jhu_run1","jhu_run2","nist_run1","nist_run2"),
+                      est = c(mod_betas[1], 
+                              mod_betas[1] + mod_betas[2],
+                              mod_betas[1] + mod_betas[3],
+                              mod_betas[1] + mod_betas[4]))
+                    
+fit_est_df <- as.data.frame(confint_dat) %>% 
+    rownames_to_column(var = "run_id") %>% 
+    filter(!grepl("sig", run_id)) %>% 
+    gather("conf_int","est", -run_id) %>% 
+    spread(run_id, est) %>%
+    rename(jhu_run1 = `(Intercept)`) %>%
+    gather("run_id","est", -conf_int, -jhu_run1) %>% 
+    mutate(est = jhu_run1 + est) %>% 
+    mutate(run_id = str_replace(run_id, "seq_run_id","")) %>%
+    spread(run_id, est) %>% 
+    gather("run_id","est", -conf_int) %>% 
+    mutate(conf_int = if_else(conf_int == "2.5 %", "lci","uci")) %>% 
+    spread(conf_int, est) %>% 
+    left_join(cov_est)
+```
+
+
+```{r}
+ggplot(fit_est_df) + 
+    geom_pointrange(aes(x = run_id, y = est, ymin = lci, ymax = uci)) + 
+    labs(x = "Sequencing Run", y = "Total Abundance COV") + theme_bw()
+```
+
+## Sequnce Quality Score Analysis  
+```{r}
+seq_qual_dat <- seq_char_df %>% 
+    left_join(mgtstMetadata) %>% 
+    filter(biosample_id != "NTC") %>% 
+    mutate(seq_run_id = paste0(seq_lab, seq_run))
+
+seq_qual_dat %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = seq_run_id, y = quality, color = read_dir))  + theme_bw() + 
+    labs(x = "Sequencing Run", y = "Mode Read Base Quality Score", color = "Read Direction") + 
+    theme(legend.position = "bottom")
+```
+
+Testing for statistical difference in read quality between sequencing runs. 
+```{r}
+fit <- lm(quality~ - 1 + read_dir*seq_run_id, data = seq_qual_dat)
+```
+
+```{r}
+plot(fit)
+```
+
+```{r}
+summary(fit)
+```
+```{r}
+anova(fit)
+```
+```{r}
+aov(fit) %>% TukeyHSD()
+```
+
+
