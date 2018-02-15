@@ -35,17 +35,24 @@ biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highl
                         "Unweighted", "Weighted"))
 ```
 
-```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological and technical variation (pairwise distance between replicates.)"}
+```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological and technical variation (pairwise distance between replicates.) Grey line indicates the mean differences for diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method."}
+raw_bio_v_tech <- biol_v_tech_variation_summary_higherlevel %>% filter(normalization == "RAW") %>% 
+    ungroup() %>% 
+    mutate(pipe = factor(pipe))
+
 biol_v_tech_variation_summary_higherlevel %>% 
-    ggplot(aes(x = normalization, y = mean_difference, 
-               color = pipe, group = pipe)) + 
-        geom_point(size = 2) + 
-        geom_line() + 
+    filter(normalization != "RAW") %>% 
+    ggplot(aes(x = pipe)) + 
+        geom_blank() + 
+        geom_line(data = raw_bio_v_tech, 
+                  aes(x = as.numeric(pipe), y = mean_difference), color = "grey60") + 
+        geom_point(aes(x = pipe, y = mean_difference, fill = normalization),
+                   shape = 21) + 
         theme_bw() + 
-        facet_grid(f_type~weight, scales = "free_x") + 
-        theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
-        scale_colour_brewer(palette = "Dark2") + 
-        labs(x = "Rarefaction Level", y = "Biological - Technical")
+        facet_grid(f_type~weight, scales = "free_y") + 
+        theme(axis.text.x = element_text(angle = -45, hjust = 0),
+              legend.position = "bottom") + 
+        labs(x = "Pipeline", y = "Biological - Technical", fill = "Normalization")
 ```
 
 ```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable"}
