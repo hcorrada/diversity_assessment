@@ -56,29 +56,26 @@ biol_v_tech_variation_summary_higherlevel %>%
 ```
 
 ```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable"}
-varpart_stats %>% subset(effect=="conditional") %>%
-    ggplot(aes(x=factor(normalization, 
-                        levels=c("RAW", "rare2000", "rare5000", "rare10000", "rareq15", "CSS", 
-                                 "RLE", "TMM", "TSS", "UQ"), ordered = T), 
-               y=Adj.R.square, fill=feature))+
-              geom_bar(stat="identity")+
-              theme_bw()+theme(axis.text.x=element_text(angle = -45, hjust = 0))+
-              xlab("")+ylab("Adjusted R^2")+
-              scale_fill_manual(values = c("gray","#d53e4f", "#3288bd"))+
-    facet_grid(pipe~metric, scales="free_x", space="free")
+varpart_trim <- varpart_stats %>% filter(effect == "conditional", 
+                                         normalization %in% c("RAW","rare5000", "rareq15","RLE","TMM"), 
+                                         metric %in% c("bray", "wunifrac")) %>% 
+    mutate(normalization = factor(normalization, 
+                                  levels = c("RAW", "rare5000", "rareq15", "RLE", "TMM"), ordered = T))
 
-
-# varpart_stats %>% subset(effect=="conditional") %>%
-#     ggplot(aes(x=factor(normalization, 
-#                         levels=c("RAW", "rare2000", "rare5000", "rare10000", "rareq15", "CSS", 
-#                                  "RLE", "TMM", "TSS", "UQ"), ordered = T), 
-#                y=Adj.R.square, color=feature, shape=feature))+
-#               geom_point(position=position_jitter(width=0.2))+
-#               theme_bw()+theme(axis.text.x=element_text(angle = -45, hjust = 0))+
-#               xlab("")+ylab("Adjusted R^2")+
-#               scale_color_manual(values = c("gray","#d53e4f", "#3288bd"))+
-#     facet_grid(pipe~metric, scales="free_x", space="free")
-```
+varpart_trim %>% filter(normalization != "RAW") %>% 
+ggplot() +
+    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
+             stat = "identity", position = "dodge", width = 0.5) + 
+    geom_point(data = varpart_trim %>% filter(normalization == "RAW"),
+               aes(x = feature, y = Adj.R.square)) + 
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    xlab("") + ylab("Adjusted R^2") + 
+    facet_grid(metric~pipe, scales = "free_x", space = "free") +
+    theme(legend.position = "bottom")
+``` 
+- Effective normalization methods decrease the technical variability in the data without decreasing the biological variability. 
+- RLE and TMM consistently increase the technical variability and often decrease the amount of variability in the data attributed to biological factors.  
 
 __Key Points__  
 
