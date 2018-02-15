@@ -1,5 +1,5 @@
 ---
-title: "Evaluation of the impact of bioinformatic pipeline, normalization methods, and sequence data characteristics on beta diversity metrics for 16rRNA marker-gene survey data."
+title: "Assessing the impact of sequencing characteristics on 16S rRNA marker-gene surveys beta diversity analysis."
 output:
   bookdown::pdf_document2: 
     toc: FALSE
