@@ -1,15 +1,16 @@
 ---
 title: "Assessing the impact of sequencing characteristics on 16S rRNA marker-gene surveys beta diversity analysis."
+
 output:
   bookdown::pdf_document2: 
     toc: FALSE
-    # template: template.tex
-    # keep_tex: TRUE
+    template: template.tex
+    keep_tex: TRUE
 bibliography: [bibliography.bib]
 ---
 
 ```{r include = FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.path = "img/")
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.path = "img/", fig.width = 5)
 ```
 
 <!-- 
@@ -18,9 +19,6 @@ BMC Microbiome Submission https://microbiomejournal.biomedcentral.com/submission
 Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-author-details-in-pdf-from-r-markdown-latex-template 
 -->
 
-
-
-# Abstract
 
 # Introduction
 ```{r introduction, child="docs/introduction.Rmd"}

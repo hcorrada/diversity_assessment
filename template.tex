@@ -1,9 +1,11 @@
 %% BioMed_Central_Tex_Template_v1.06
 \documentclass{bmcart}
-% \RequirePackage{hyperref}
+\RequirePackage{hyperref}
 \usepackage{lmodern}
-\def\includegraphic{}
-\def\includegraphics{}
+\usepackage{booktabs}
+\usepackage{graphicx}
+% \def\includegraphic{}
+% \def\includegraphics{}
 
 \begin{document}
   \begin{frontmatter}
@@ -72,7 +74,7 @@
     Text for this section \ldots
 
   \bibliographystyle{bmc-mathphys} % Style BST file (bmc-mathphys, vancouver, spbasic).
-  \bibliography{bmc_article}      % Bibliography file (usually '*.bib' )
+  \bibliography{$bibliography$}      % Bibliography file (usually '*.bib' )
 
   \end{backmatter}
 \end{document}
