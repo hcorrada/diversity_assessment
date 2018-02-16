@@ -115,18 +115,14 @@ tech_art_df %>%
     labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Normalization") 
 ```
 
-__Key Points__  
+We evaluated differences in beta diversity between PCR replicates between the four sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 
+Higher pairwise distances for NIST runs indicate diversity metrics negatively impacted by larger variation in total abundance across PCR replicates. 
+Whereas higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are less robust to sequencing errors. 
+Mean pairwise distance was greater for qiime De-novo, open and closed reference pipelines for JHU1 (lower quality and greater variability) relative to the other sequencing runs for all metrics excluding weighted UniFrac (Fig. \@ref(fig:techMeanDist)).
+QIIME _de novo_ had high mean pairwise distance across sequencing runs for unweighted UniFrac and low for weighted Unifrac. 
+The low weighted UniFrac for QIIME _de novo_ is potentially due to large number of singletons in the dataset, ~120K out of ~180K total features. 
+These singletons are likely sequencing errors and therefore closely related to other taxa therefore minimally impact the weighted unifrac results.  
+DADA2 pairwise distances were greater for NIST1 and NIST2 (which had greater variability in library size) compared to the JHU2 run which had the lowest pairwise distance.  
+Mean pairwise distances were consistent across the JHU runs for Mothur and DADA2, suggesting they are better able to account for sequencing errors than other pipelines evaluated in this study. 
+Conversely, the Deblur pipeline had the highest number of failed samples for JHU1, suggesting it is less robust to sequencing errors compared to the other pipelines (Table \@ref(tab:pipeCharTbl)).  
 
-* JHU run 1 had lower sequence quality (boxplots) and greater variability in sample total abundance for QIIME pipelines (Fig. \@ref(fig:techTotalAbuCOV)).  
-* NIST run 1 had greater variabiltiy in sample total abundance (lineplot) (Fig. \@ref(fig:techTotalAbuCOV)). 
-* Pairwise distances varies by metric and was consistently lower for weighted unifrac compared to others (Fig. \@ref(fig:techMeanDist)).
-* Mean pairwise distance was greater for qiime De-novo, open and closed reference pipelines for JHU1 (lower quality and greater variability ) relative to the other sequencing runs for all metrics excluding weighted unifrac (Fig. \@ref(fig:techMeanDist)).
-* Qiime De novo had high pairwise distance across sequencing runs for Unifrac and low for weighted Unifrac.  
-* DADA2 pairwise distances greater for NIST1 and NIST2 (which had greater variability in library size) compared to JHU runs, JHU2 had the lowest pairwise distance (better quality than JHU1).  
-* Mothur and dada, consistent results for JHU runs, suggesting they are better able to account for sequencing errors than other pipelines. 
-* Deblur pipeline failed for JHU1, suggesting it doesn't do well handling sequencing errors.  
-* Higher pairwise distances for NIST runs indicate diversity metrics impacted by larger variation in total abundance across PCR replicates.  
-
-__Additional Points__  
-
-* De novo weighted Unifrac low for QIIME De novo: This is potentially due to large number of singletons in weighted unifrac dataset, ~120K out of ~180K total features. These singletons are likely sequencing errors and therefore closely related to other taxa therefore minimally impact the weighted unifrac results.  
