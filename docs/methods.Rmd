@@ -9,16 +9,16 @@ bibliography: ../bibliography.bib
 ---
 
 ## Methods
-- data set  
-    - mixtures from Olson et al. in-prep
-    - four sequencing runs
-        - libraries prepared at independent laboratories using the same protocol (ILLUMINA) with the sample 16S PCR as input.
-        - libraries were sequenced twice at each laboratory.
-    - For the first laboratory (JHU) the base quality scores were lower than expected and the instrument was re-calibrated before the second run resulting in improved quality scores.
-    - For the second laboratory (NIST) the total run throughput was lower than expected, the pool library was re-optimized for resulting in increased throughput and lower sample to sample read count variability.  
-- Seq data characterization - R packages for calculating summary values
-    - illumina quality control output [@savR]
-    - [@Rqc]
+Our assessment framework utilized a dataset of DNA mixtures from five vaccine trial participants (Olson et al. _in prep_).
+DNA extracts from stool collected from individuals (biological replicates) before and after exposure to pathogenic _Escherichia coli_.
+The pre- and post-exposure DNA was mixed following a $log_2$ two-sample titration mixture design, resulting in a set of samples with varying levels of similarity.
+The microbial community in the unmixed pre- and post exposure samples and titrations were measured using 16S rRNA marker-gene sequencing.
+In order to assess the measurement process technical variability technical replicates were generated at multiple levels, 16S rRNA PCR, sequence library generation, and sequencing run.
+Sequencing libraries were prepared at independent laboratories using the same protocol (ILLUMINA) with the sample 16S PCR as input, the resulting libraries were sequenced twice at each laboratory.
+Resulting in four sequence datasets with varying sequence quality and library size variability.
+For the first laboratory (JHU) the base quality scores were lower than expected and the instrument was re-calibrated before the second run resulting in improved quality scores.
+For the second laboratory (NIST) the total run throughput was lower than expected, the pool library was re-optimized for resulting in increased throughput and lower sample to sample read count variability.  
+Sequence data characterization was performed using the savR [@savR] and ShortRead Bioconductor R packages [__REF__].
 
 ## Bioinformatic Pipelines  
 Data from the four sequencing runs was processed using 6 bioinformatic pipelines including the QIIME open reference, closed reference, de novo, and deblur pipelines, as well as the Mothur de novo and DADA2 sequence inference pipelines.
@@ -65,5 +65,5 @@ within individual between conditions (pre- and post-exposure),
 __ADD STATS__
 
 We assessed the impact of bioinformatic pipeline and normalization methods on beta-diversity metrics using a similar approach used in [@Reynolds2006;@McMurdie2014].
-To summarize performance across titration comparisons, area under the curve was calculated using the trapazoid method (__R package ref__). 
+To summarize performance across titration comparisons, area under the curve was calculated using the trapazoid method (__R package ref__).
 This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.

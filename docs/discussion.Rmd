@@ -1,5 +1,5 @@
 ---
-title: "Introduction"
+title: "Discussion"
 author: "Nate Olson"
 date: "`r Sys.Date()`"
 output:
@@ -8,55 +8,53 @@ output:
 bibliography: ../bibliography.bib
 ---
 
-__Dataset__   
+Sequence data characteristics, specifically sequence error rate and variation in library size can negatively impact beta diversity analysis.
+The bioinformatic pipeline used to convert the raw sequence data to a count matrix ideally differentiate true biological sequences from sequencing artifacts alleviating this bias.
+Normalization methods, such as rarefying count data and cumulative sum scaling, are used to account for library size differences.
+For our assessment we compared the performance of six bioinformatic pipelines and nine normalization methods for four beta-diversity metrics.
+The results from our assessment study employing a novel dataset and framework indicate that bioinformatic pipeline vary in their ability to alleviate biases in beta diversity due to sequencing errors and some normalization methods accentuate the biases in beta diversity analysis due to library size differences.
 
-- samples  
-- sequence characteristics  
-    - Four sequencing runs vary in error rates and number of reads per sample.  
+The assessment framework consistent of three components, (1) beta-diversity repeatability, (2) biological signal detection, (3) signal detection power.
+Our assessment framework utilized a novel two-sample titration dataset with multiple levels of technical replication, 16S rRNA PCR, sequencing libraries, and sequencing runs.
+Multiple PCR replicates were used to assess beta-diversity repeatability, the different sample types (trial participants and exposure status) in conjunction with multiple sequencing runs were used to assess biological signal detection.
+The titrations were used to assess signal detection power.
 
-- Pipelines  
-    - Pipelines vary in ability to differentiate true sequences from sequencing artifacts. 
-    - De novo rarefaction curves, singletons, and sparsity - high false positive rate  
-    - DADA2 - rarefaction plateu at different points for individual runs - high false negative rate  
+Using mean beta diversity between PCR replicates for the four sequencing runs we were able to show that the impact of sequence quality and variation in number of reads on diversity metric repeatability, mean beta diversity between PCR replicates, was pipeline and diversity metric dependent.  
+For the QIIME De novo pipeline the mean unweighted UniFrac between PCR replicates was high for all runs but low weighted UniFrac.
+We attributed the difference in results between the weighted and unweighted UniFrac metric results for the QIIME _de novo_ dataset to singletons, in ability to group sequencing artifacts with true biological sequences.
+Singleton removal addresses this bias.  
+Sequence data from JHU run 1, which had lower error rate and read number variability relative to the other sequencing runs had consistently better repeatability across pipelines and diversity metrics.  
+Normalization methods improved repeatability, excluding rarefying data to 15th quantile, which decreased repeatability especially for QIIME pipelines. TMM improved weighted beta diversity repeatability for NIST datasets, greater variability in library size.  
+While it is important to reduce the beta-diversity between technical replicates, it is more important to be able to detect true differences between biological samples.
+To detect differences between biological samples, sample dissimilarity due to biological factors must be greater than sample dissimilarity due to technical variability or noise.
 
-__Technical artifacts__  
+To evaluate how well bioinformatic pipeline and normalization methods are able to differentiate between biological signal and noise due to technical variability we compared the mean beta diversity between different biological samples and technical replicates, including PCR and sequencing run.
+Differences in beta diversity between biological samples and technical replicates varied by diversity metric, pipeline, and normalization method.
+Overall differences in beta diversity metrics are due to differences in how the four metrics measure community similarity.
+For phylogenetic metric, the beta diversity tended to be lower compared to than taxonomic metrics.
+This was due to low overall phylogenetic diversity, or the majority of the features being phylogenetically closely related.
+For most pipelines and beta diversity metrics, normalizing the count data increased the difference in beta diversity between biological and technical replicates, resulting in a greater ability to detect true biological signal.
+However, some metrics, namely rarefying to the 15th quantile, RLE, and TMM, frequently reduced the difference between the biological signal and noise due to technical variability.
+Variation partitioning results were consistent with this conclusion.
+RLE and TMM were developed for normalizing microarray and and RNAseq data and not marker-gene sequence data.
+While these normalization methods have been show to be useful for differential abundance analysis, they are not appropriate for beta-diversity analysis.
 
-- Impact of sequence quality and variation in number of reads on diversity metric repeatability, mean beta diversity between PCR replicates, is pipeline and diversity metric dependent.  
-    - De novo high unweighted unifrac for all runs but low weighted unifrac, attributed to singletons, in ability to group sequencing artifacts with true biological sequences.  
-    - Low error rate and read number variability had consistently better repeatability.  
-    - Normalization methods help increase repeatablity, excluding rarefying data to 15th quantile, which decreased repeatability especially for QIIME pipelines. TMM improved weighted beta diversity repeatabilty for NIST datasets, greater varability in library size.  
-
-__Bio V. Tech__   
-
-- Difference in beta diverity between biological samples (individuals and exposure) and technical replicates (sequencing runs) varied by diversity metric and pipeline.  
-- Normalization method impact varied by pipeline and diversity metric. 
-- Rareifying data to 15th quantile decreased the ability to differentiate between biological and technical replicates. 
-- RLE and TMM similarly decreased the difference in beta-diversity between biological and technical replicates, especially for Bray Curtis (weighted taxonomic diversity metric.) 
-
-__comp to exp__  
-
-- Evaluate the ability to distinguish between biological samples with varying levels of similarity   
-- Results varied by pipeline and diversity metric, with DADA2 and mothur consistently out performing the other methods.  
-- For weighted phylogenetic methods normalization methods rarely improved the results, but improved the results in most cases for weighted taxonomic diversity metrics. 
-- Inconsistent results when using rarefyed data and unweighted metrics. Results were pipeline and diversity metric dependent.  
-
-__General__ 
-
-- Pipelines optimized for specific data types using mock communities and evaluating precision  
-- Parameters for pipelines can be optimized for different assessments 
-
-__Conclusions__  
-
-- When you have data with low error rates and variability in number of reads, consistent pipeline performance.  
-- Pipelines vary in ability to distingush sequencing artifacts from true biological sequences.  
-- These differences impact the beta diversity estimate repeatabiltiy.  
-- Normalization can help improve repeatabiltiy, but sometimes at the cost of decreasing the difference between biological signal and technical variability.  
-- Mothur and dada2 are better able to handle lower quality datasets. 
-- Normalization methods can improve ability to detect true biological signal though normalization methods developed for gene expression methods may not be appropriate. 
-
- 
+For the third component of our assessment we evaluated the relationship between sequence data characteristics, bioinformatic pipeline, and normalization method on sets of samples with varying levels of similarity.
+The assessment results varied by pipeline and diversity metric, with DADA2 and mothur consistently out performing the other bioinformatic pipelines.  
+For weighted phylogenetic methods normalization methods rarely improved the results, but improved the results in most cases for weighted taxonomic diversity metrics.
+Inconsistent results were observed for unweighted metrics, with rarefying data to 5000 total abundance per sample improved the results, rarefying to the 15th percentile lowered performance.  
 
 
-__Other thoughts/ ideas__  
-- Bio v. tech: only unmixed pre and between individuals 
-- Normalization and diversity metrics for compositional data analysis methods 
+
+## Conclusions
+The results presented in this study can be used to help determine the appropriate bioinformatic pipeline and normalization method for a marker-gene survey beta diversity analysis.
+The six pipelines evaluated in this study varied in their ability to distinguish sequencing artifacts from true biological sequences.
+These differences impacted the beta diversity repeatability.
+Normalization can help improve repeatability, but sometimes at the cost of decreasing the difference between biological signal and technical variability.
+Mothur and DADA2 are better able to handle lower quality datasets.
+Normalization methods can improve ability to detect true biological signal though normalization methods developed for gene expression methods may not be appropriate.
+
+Bioinformatic pipelines combine multiple algorithms to convert the raw sequence data into a count table for use in statistical analysis.
+The choice of algorithm and parameters can significantly impact pipeline results.
+The pipelines compared in this study were optimized using mock communities and benchmarked against other methods based on similarity in beta-diversity results (__REF Mock__).
+The assessment framework and dataset presented here is novel and can be used to optimize existing pipelines and benchmarking new pipelines.

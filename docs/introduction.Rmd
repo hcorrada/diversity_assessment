@@ -8,66 +8,59 @@ output:
 bibliography: ../bibliography.bib
 ---
 
-__Previous diversity assessments__   
-_incorporate into pipeline and normalization sections_  
 
-- MBQC  
-- McMurdie and Holmes 2013  
-- Weiss et al. 2017  
+Beta-diversity metrics, a measure of community similarity, are used to compare microbial community profiles between different sample types, e.g. case and control.
+Microbial community profiles are frequently measured using 16S rRNA marker-gene sequencing.
+For marker-gene sequencing PCR is used to target and amplify a marker-gene of interest and the resulting PCR products are sequenced using high-throughput sequencing methods.
+Sequence artifacts introduced during PCR and sequencing as well as differences in the number of sequencing reads generated per sample, library size, can bias microbial community analysis.
+Bioinformatic pipelines and normalization methods are used to reduce this bias.  
+Previous studies have evaluated the impact of different bioinformatic pipelines (MBQC, others?) and normalization methods on beta-diversity metrics [@Weiss2017; @McMurdie2014].
+However, the impact of how well bioinformatic pipelines and normalization methods account for sequence quality and coverage on beta diversity metrics is unknown.  
 
-- 16S metagenomics and ecological diversity analysis   
-    - targeted sequencing of the 16S rRNA genes, marker gene survey/ metagenomics  
-    - used to characterize microbial community structure, identify differentially abundant organisms, or co-expression...  
+There are two primary characteristics of sequence data that impact microbial community beta diversity analysis, sequencing artifacts and differences in library size.
+PCR used to target the desired region of the 16S rRNA gene as well as the sequencing process itself produce sequencing artifacts or sequences that are not present in the sample being sequenced.
+Sequence artifacts include sequences with single or multiple base pair differences or variants from the true biological sequence as well as chimera, sequences originating from two distinct molecules in a sample.
+Variants can be introduced during both PCR and sequencing whereas chimeras are only introduced during sequencing.
+Library size differences are due uneven pooling of samples prior to sequencing, or differences in sequencing run throughput.
+Differences in library sizes results in uneven sampling which has been shown to bias unweighted metrics, presence - absence, number of features or OTUs per sample.
+Library size differences do not bias weighted metrics as much as unweighted metrics.
+Bioinformatic pipelines are used to remove sequencing artifacts from sequence datasets and normalization methods are used to account for library size differences.
 
-- beta-diversity metrics, measure of community similarity, are often used to evaluate the microbial community in samples from different populations, eg. case and control. 
-- Important to understand how sequence data characteristics, bioinformatic pipelines, and normalization methods impact inferences made about differences in microbial community structure between different populations.
-- Relationship between sequencing data, bioinformatic pipelines, and normalization methods. 
+Bioinformatic pipelines include three, pre-processing, clustering or feature inference, and post-processing.
+Pre-processing includes initial quality filtering and trimming.
+For clustering or feature inference the quality filtered sequences are grouped into biologically informatics units.
+There are four primary feature inference methods, de novo clustering, closed-reference clustering,  open-reference clustering, and sequence inference.
+De novo clustering groups sequences based on pairwise similarity.
+For closed reference clustering sequences are mapped to pre-clustered reference sequences.
+Open-reference is a combination of de novo and closed reference clustering where reads not mapped to reference clusters are clustered de novo.
+Sequence inference methods use statistical models and algorithms to group sequences independent of sequence similarity but based on the probability that a less abundant sequence is a sequencing artifact originating from the higher abundant sequence.
+The resulting features, OTUs (operational taxonomic units) for clustering methods and SVs (sequence variants) for sequence inference methods have different characteristics and vary the types of sequence artifacts they are able to remove from the dataset and true biological sequences that are incorrectly removed from the dataset.
 
-There are two primary characteristics of sequence data that impact microbial community beta diversity analysis, sequencing artifacts and differences in library size. 
-PCR used to target the desired region of the 16S rRNA gene as well as the sequencing process itself produce sequencing artifacts or sequences that are not present in the sample being sequenced. 
-Sequence artifacts include sequences with single or multiple base pair differences or variants from the true biological sequence as well as chimera, sequences orignating from two distinct molecules in a sample. 
-Variants can be introduced during both PCR and sequencing whereas chimeras are only introduced during sequencing. 
-Differences in library size, or the number of reads generated per sample, is due uneven pooling of samples prior to sequencing, or differences in sequencing run throughput. 
-Differences in library sizes results in uneven sampling which has been shown to bias unweighted metrics, presence - absence, number of features or OTUs per sample. 
-Library size differences do not bias weighted metrics as much as unweighted metrics. 
-Bioinformatic pipelines are used to remove sequencing artifacts from sequence datasets and normalization methods are used to account for library size differences. 
-
-Bioinformatic pipelines include three, pre-processing, clustering or feature inference, and post-processing. 
-Pre-processing includes initial quality filtering and trimming. 
-For clustering or feature inference the quality filtered sequences are grouped into biologically informatics units. 
-There are four primary feature inference methods, de novo clustering, closed-reference clustering,  open-reference clustering, and sequence inference. 
-De novo clustering groups sequences based on pairwise similarity. 
-For closed reference clustering sequences are mapped to pre-clustered reference sequences. 
-Open-reference is a combination of de novo and closed reference clustering where reads not mapped to reference clusters are clustered de novo. 
-Sequence inference methods use statistical models and alogrithms to group sequences independent of sequence similarity but based on the probablility that a less abundant sequence is a sequencing artifact originating from the higher abundant sequence. 
-The resulting features, OTUs for clustering methods and SVs for sequence inference methods have different characteristics and vary the types of sequence artifacts they are able to remove from the dataset and true biological sequences that are incorrectly removed from the dataset. 
-
-Normalization methods are used to account for differences in the total abundance between samples for the count tables generated by the bioinformatic pipelines. 
-There are two primary types of normalization methods, rarefaction and numeric methods. 
-Rarefaction traces it origins to macro ecology, 
-where counts for a unit (sample) are randomly subsampled to a desired level. 
-While the statistical validaity of this method is questionable (McMurdie), rarefaction is currently the only normalization method for unweighted beta-diversity metrics. 
-Numeric methods include total and cumulative sum scaling (TSS and CSS), 
-where counts are divided by sample total abundance (TSS) or by the cumulative abundance for a defined percentile (Paulson). 
-CSS is one of the few normalization methods developed with 16S rRNA marker-gene survey data in mind. 
-Other normalization methods include UQ, TMM and RLE. 
-These method were developed for normalizing RNAseq and microarray data and have been show to be useful in normalizing marker-gene survey data for differential abundance analysis (REF), 
+Normalization methods are used to account for differences in the total abundance between samples for the count tables generated by the bioinformatic pipelines.
+There are two primary types of normalization methods, rarefaction and numeric methods.
+Rareifying abundance data traces it origins to macro ecology,
+where counts for a unit (sample) are randomly subsampled to a user defined constant level.
+While the statistical validity of rareifying is questionable [@McMurdie2014], rarefaction is currently the only normalization method for unweighted beta-diversity metrics [@Weiss2017].
+Numeric methods include total and cumulative sum scaling (TSS and CSS),
+where counts are divided by sample total abundance (TSS) or by the cumulative abundance for a defined percentile (Paulson).
+CSS is one of the few normalization methods developed with 16S rRNA marker-gene survey data in mind.
+Other normalization methods include UQ, TMM and RLE.
+These method were developed for normalizing RNAseq and microarray data and have been show to be useful in normalizing marker-gene survey data for differential abundance analysis (REF),
 though suitability for beta-diversity analysis is unclear.  
 
-Beta diversity metrics are used to measure the community structure between two samples. 
-Diversity metrics can be generally grouped based on whether they incorporate phylogenetic distance between features or not and whether they take into account feature relative abundance or presence-absence. 
-The UniFrac is a phylogenetic beta diversity metric developed specifically for marker-gene survey data. 
-Unweighted UniFrac takes feature phylogenetic relatedness into account but only uses presence-absence information, whereas weighted UniFrac incorporates feature relative abundance (__REF__). 
-UniFrac incorporates feature phylogenetic relatedness by comparing the branch lengths for features that are unique to the communities being compared. 
-Taxonomic metrics do not consider relationship between features. 
-Bray-Curtis and Jaccard dissimilarity index are example weighted and unweighted taxonomic metrics (__REF__). 
-These four groups of beta diversity metrics measure different community characteristics, therefore the results for the metrics should not be used interchangeable. 
-The results from the metrics should be evaluated in a complementary manner inorder to gain additional insight into the differences between the communities being compared. 
+Beta diversity metrics are used to measure the community structure between two samples.
+Diversity metrics can be grouped based on whether they incorporate phylogenetic distance between features or not and whether they take into account feature relative abundance or presence-absence.
+The UniFrac is a phylogenetic beta diversity metric developed specifically for marker-gene survey data.
+Unweighted UniFrac takes feature phylogenetic relatedness into account but only uses presence-absence information, whereas weighted UniFrac incorporates feature relative abundance (__REF__).
+UniFrac incorporates feature phylogenetic relatedness by comparing the branch lengths for features that are unique to the communities being compared.
+Taxonomic metrics do not consider relationship between features.
+Bray-Curtis and Jaccard dissimilarity index are example weighted and unweighted taxonomic metrics (__REF__).
+These four groups of beta diversity metrics measure different community characteristics, therefore the results for the metrics should not be used interchangeable.
+The results from the metrics should be evaluated in a complementary manner in order to gain additional insight into community differences.
 
-Here we present a novel framework for assessing the ability of different bioinformatic pipelines and normalization methods to reduce the negative impact of sequence data characteristics on beta diversity analysis. The assessment framework consisted of three components; 
-1) beta diversity repeatability, 
-2) difference in beta diversity between individuals and treatments, 
-3) ability to distinguish between sample sets with varying levels of similarity. 
-For this study used a novel dataset consisting of mixtures of DNA extracted from stool samples with technical PCR replicates. 
-Data from four replicate sequencing runs with varying sequencing error rates and library sizes were produced allowing for the assessment of bioinformatic pipelines and normalization methods ability to handle datasets with varying quality. 
-
+Here we present results for an assessment of the impact of sequence characteristics on beta diversity analysis when the data are processed using different bioinformatic pipelines and normalization method. The assessment framework evaluated
+(1) beta-diversity repeatability,
+(2) difference in beta diversity between individuals and treatments,
+and (3) ability to distinguish between groups of samples with varying levels of similarity.
+This study employed a novel dataset consisting of mixtures of DNA extracted from stool samples with technical PCR replicates.
+Data from four replicate sequencing runs with varying sequencing error rates and library sizes were produced allowing for the assessment of bioinformatic pipelines and normalization methods ability to handle datasets with varying quality.
