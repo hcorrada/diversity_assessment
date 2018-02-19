@@ -4,8 +4,14 @@ title: "Assessing the impact of sequencing characteristics on 16S rRNA marker-ge
 output:
   bookdown::pdf_document2: 
     toc: FALSE
-    template: template.tex
-    keep_tex: TRUE
+    # template: template.tex
+    # keep_tex: TRUE
+    # pandoc_args: [
+    #   "--bibliography=bibliography.bib",
+    #   "--biblatex"
+    # ]
+    # citation_package: biblatex
+documentclass: "amsart"
 bibliography: [bibliography.bib]
 ---
 
