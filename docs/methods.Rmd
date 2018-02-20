@@ -49,7 +49,7 @@ Samples were rarified to four level; 2000, 5000, and 10000 total abundance per s
 Rarefaction levels were selected based on values commonly used in published studies [@Thompson2017], other comparison studies [@Weiss2017;@McMurdie2014].
 Rarified count data was analyzed using both weighted and unweighted Beta-diversity metrics.
 Other normalization methods were only analyzed for weighted metrics as these methods would not impact unweighted metric results.
-Other normalization methods include those previously developed for normalizing microarray and RNAseq data that are commonly used to normalize 16S rRNA marker-gene survey including upperquartile (UQ), trimmed mean of M values (TMM), and relative log expression [@Robinson2010;@McCarthy2012].
+Other normalization methods include those previously developed for normalizing microarray and RNAseq data that are commonly used to normalize 16S rRNA marker-gene survey including upper quartile (UQ), trimmed mean of M values (TMM), and relative log expression [@Robinson2010;@McCarthy2012].
 Cumulative sum scaling (CSS) [@Paulson2013] a normalization method developed specifically for 16S rRNA marker-gene survey data and total sum scaling (proportions, TSS) were also included in our weighted Beta-diversity metric assessment.
 
 Weighted and unweighted phylogenetic and taxonomic beta diversity metrics were compared.

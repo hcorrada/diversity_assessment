@@ -56,5 +56,5 @@ Normalization methods can improve ability to detect true biological signal thoug
 
 Bioinformatic pipelines combine multiple algorithms to convert the raw sequence data into a count table for use in statistical analysis.
 The choice of algorithm and parameters can significantly impact pipeline results.
-The pipelines compared in this study were optimized using mock communities and benchmarked against other methods based on similarity in beta-diversity results (__REF Mock__).
+The pipelines compared in this study were optimized using mock communities and benchmarked against other methods based on similarity in beta-diversity results [@bokulich2016mockrobiota].
 The assessment framework and dataset presented here is novel and can be used to optimize existing pipelines and benchmarking new pipelines.
