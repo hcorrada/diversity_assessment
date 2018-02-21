@@ -1,18 +1,18 @@
 For discussion— look up reareq15 stats
 
 ## Statistical Models
-- technical artifacts  
+- technical artifacts
 - bio v. technical variation
 - comparison to expectation
 
 ## Manuscript
-- method  
-- introduction  
-- discussion  
-- abstract  
-- acknowledgements  
-- format for microbiome  
-- clean-up figures and tables 
+- method
+- introduction
+- discussion
+- abstract
+- acknowledgements
+- format for microbiome
+- clean-up figures and tables
     Fig1- resize to fit, cut part a
     Table 1- add number of singletons
     Fig 2- change to 2x3
@@ -25,28 +25,36 @@ For discussion— look up reareq15 stats
 
 ## Coding and Reproducibility
 - incorporate replicatation into clustering
-- clean up make ps munge code formatting   
-- add data descriptions  
-- consistent variable names  
+- clean up make ps munge code formatting
+- add data descriptions
+- consistent variable names
 - faster manuscript build
 - long term: using drake for munging https://ropensci.org/blog/2018/02/06/drake/
 
-## Issues and notes  
+## Backing up
+using rsync to backup repo to remote repository
+```
+rsync -rv --progress --delete \
+  Projects/diversity_assessment \
+  nolson@cbcbsub00.umiacs.umd.edu:/fs/cbcb-scratch/nolson/
+``` 
+
+## Issues and notes
 - Manuscript formatting
-    - error when using hyperref and email references  
+    - error when using hyperref and email references
     - lmodern package needed for font warning
 
-- Error in DADA2 tree build - optim.ml matrix too large.... 
-    - use NJ tree  
-    - email phangorn developer about issue  
+- Error in DADA2 tree build - optim.ml matrix too large....
+    - use NJ tree
+    - email phangorn developer about issue
 
-- Check out NTC 1-H12 has a high read count, pass_rate, and total abundance    
+- Check out NTC 1-H12 has a high read count, pass_rate, and total abundance
 
-- Warning messages from re-running normalization 
+- Warning messages from re-running normalization
 ```
 [1] "Processing: data/norm_data/qiimeOpenRef_UQ.rds"
 [1] "- Calculating wunifrac"
-Loading required package: 
+Loading required package:
 Failed with error:  ‘invalid package name’
 In addition: Warning messages:
 1: In .f(...) :
@@ -66,4 +74,3 @@ Warning messages:
 2: In matrix(tree$edge[order(tree$edge[, 1]), ][, 2], byrow = TRUE,  :
   data length [91323] is not a sub-multiple or multiple of the number of rows [45662]
  ```
- 
