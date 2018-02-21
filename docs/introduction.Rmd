@@ -12,7 +12,7 @@ bibliography: ../bibliography.bib
 Beta-diversity metrics, a measure of community similarity, are used to compare microbial community profiles between different sample types, e.g. case and control.
 Microbial community profiles are frequently measured using 16S rRNA marker-gene sequencing [@Goodrich2014].
 For marker-gene sequencing PCR is used to target and amplify a marker-gene of interest and the resulting PCR products are sequenced using high-throughput sequencing methods.
-Sequence artifacts introduced during PCR and sequencing as well as differences in the number of sequencing reads generated per sample, library size, can bias microbial community analysis [@DAmore201; @Goodrich2014].
+Sequence artifacts introduced during PCR and sequencing as well as differences in the number of sequencing reads generated per sample, library size, can bias microbial community analysis [@DAmore2016; @Goodrich2014].
 Bioinformatic pipelines and normalization methods are used to reduce this bias[@Goodrich2014; @Kong2017].  
 Previous studies have evaluated the impact of different bioinformatic pipelines [@Sinha2017] and normalization methods on beta-diversity metrics [@Weiss2017; @McMurdie2014].
 However, the impact of how well bioinformatic pipelines and normalization methods account for sequence quality and coverage on beta diversity metrics is unknown.  
