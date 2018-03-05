@@ -1,30 +1,32 @@
-For discussion— look up reareq15 stats
-
 ## Statistical Models
 - technical artifacts
 - bio v. technical variation
 - comparison to expectation
 
+## Analysis
+- varpart sanity check
+- TSS v RAW results comparison
+- constrained k-means clustering
+
 ## Manuscript
 - method
-- introduction
 - discussion
+  + For discussion — look up reareq15 stats
 - abstract
 - acknowledgements
 - format for microbiome
 - clean-up figures and tables
-    Fig1- resize to fit, cut part a
+    Fig 1- resize to fit, cut part a
     Table 1- add number of singletons
     Fig 2- change to 2x3
     Fig 3- make outlier points smaller
     Fig 4- split into two (weighted and unweighted), add lines for raw interquartile range and median values, generate for other seq runs (JHU 1&2 and NIST2) to add to supplement— are there any major differences (esp with rarefaction for poorer quality runs)
-    Fig 5- leave for now, but maybe make into ink bojxplots like in fig4
+    Fig 5- leave for now, but maybe make into ink boxplots like in fig 4
     Fig 6- clean up raw info, generate for other metrics and normalization methods for supplement
     Fig 7- leave for now (like fig 5)
 - supplemental
 
 ## Coding and Reproducibility
-- incorporate replicatation into clustering
 - clean up make ps munge code formatting
 - add data descriptions
 - consistent variable names
@@ -37,7 +39,7 @@ using rsync to backup repo to remote repository
 rsync -rv --progress --delete \
   Projects/diversity_assessment \
   nolson@cbcbsub00.umiacs.umd.edu:/fs/cbcb-scratch/nolson/
-``` 
+```
 
 ## Issues and notes
 - Manuscript formatting
@@ -49,6 +51,9 @@ rsync -rv --progress --delete \
     - email phangorn developer about issue
 
 - Check out NTC 1-H12 has a high read count, pass_rate, and total abundance
+
+- Potential relevant reference on normalization and beta-diversity
+https://www.biorxiv.org/content/biorxiv/early/2018/02/06/259325.full.pdf
 
 - Warning messages from re-running normalization
 ```
