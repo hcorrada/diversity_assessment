@@ -40,7 +40,7 @@ calc_beta_div <- function(rds_file, div_metric){
             div_results <- safe_unifrac(norm_ps, weighted = FALSE, parallel = TRUE)
         }
     } else if (div_metric == "jaccard") {
-        div_results <- safe_dist(norm_ps, method = "jaccard")
+        div_results <- safe_dist(norm_ps, method = "j")
     } else if (div_metric == "bray") {
         div_results <- safe_dist(norm_ps, method = "bray")
     } else {
