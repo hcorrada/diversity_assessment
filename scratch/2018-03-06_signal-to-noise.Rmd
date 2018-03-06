@@ -1,0 +1,128 @@
+---
+title: "Comparison to Expectation Signal-to-Noise"
+author: "Nate Olson"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Setup
+
+## Objective
+Compare within PCR replicate pairwise distance to between titration pairwise distances, signal to noise. 
+How does this signal-to-noise relationship compare for different pipelines, normalization methods, and diversity metrics across individuals.
+
+## Approach
+- Calculate within PCR replicates mean and median dist 
+To extract distance between samples $i$ and $j$ from dist object $do$ with $n$ as the total number of samples. 
+
+`do[n*(i-1) - i*(i-1)/2 + j-i]`, from https://www.rdocumentation.org/packages/stats/versions/3.4.3/topics/dist 
+```{r}
+dist_obj <- readRDS("data/diversity_data/dada_CSS_bray.rds")
+dist_obj <- dist_obj$result
+```
+
+Metadata
+```{r}
+load("cache/mgtstMetadata.RData")
+```
+
+```{r}
+## pairwise index combinations
+idx_combn <- combn(1:4, 2,simplify = FALSE)
+
+## sample names and number of samples from distance object
+dist_labels <- labels(dist_obj)
+sams <- length(dist_labels)
+
+dist_idx_df <- mgtstMetadata %>% 
+    filter(biosample_id != "NTC") %>% 
+    ## Get sample idx value for dist object
+    mutate(dist_idx = match(sample_id, dist_labels))
+
+## Create list of replicate ids 
+rep_idx_df <- dist_idx_df %>% 
+    group_by(seq_lab, seq_run, biosample_id, t_fctr) %>% 
+    select(-pcr_16S_plate, -pos) %>% 
+    nest() %>% 
+    mutate(rep_idx = map(data, ~.$dist_idx))
+
+## replicate idx combinations
+rep_pair_idx_df <- rep_idx_df %>% 
+    mutate(idx_combn = list(idx_combn)) %>% 
+    unnest(idx_combn,.drop = FALSE) %>% 
+    mutate(rep_comb = map2(rep_idx, idx_combn, ~.x[.y]))
+
+## extract pairdist value from dist_object   
+rep_pair_dist_df <-  rep_pair_idx_df  %>% 
+    mutate(rep_dist = map_dbl(rep_comb, ~dist_obj[sams*(.[1]-1) - .[1]*(.[1]-1)/2 + .[2]-.[1]]))
+
+## pairwise distance summary statistics
+rep_pair_dist_summary_df <- rep_pair_dist_df %>% 
+    group_by(seq_lab, seq_run, biosample_id, t_fctr) %>% 
+    summarise(mean_rep_dist = mean(rep_dist),
+              median_rep_dist = median(rep_dist),
+              max_rep_dist = max(rep_dist),
+              min_rep_dist = min(rep_dist), 
+              sd_rep_dist = sd(rep_dist))
+```
+
+
+- Calculate between mean dist - unmixed pre to titrations 
+
+```{r}
+pre_dist_idx_df <- dist_idx_df %>% 
+    filter(t_fctr == 20) %>% 
+    dplyr::rename(pre_idx = dist_idx, pre_id = sample_id) %>% 
+    select(-t_fctr, -pcr_16S_plate, -pos)
+
+comp_dist_idx_df <- dist_idx_df %>% filter(t_fctr != 20)
+
+pre_comp_dist_idx_df <- left_join(comp_dist_idx_df, pre_dist_idx_df)
+```
+
+```{r}
+comp_dist_summary_df <- pre_comp_dist_idx_df %>% 
+    mutate(pair_dist = dist_obj[sams*(pre_idx - 1) - pre_idx*(pre_idx-1)/2 + dist_idx-pre_idx]) %>% 
+    group_by(seq_lab, seq_run, biosample_id, t_fctr) %>% 
+    summarise(mean_dist = mean(pair_dist),
+              median_dist = median(pair_dist),
+              max_dist = max(pair_dist),
+              min_dist = min(pair_dist), 
+              sd_dist = sd(pair_dist))
+```
+
+```{r}
+rep_pair_dist_summary_df 
+```
+
+
+```{r}
+pre_rep_pair_dist <- rep_pair_dist_summary_df %>% 
+    filter(t_fctr == 20) %>% 
+    dplyr::rename(mean_pre_dist = mean_rep_dist, 
+           median_pre_dist = median_rep_dist) %>% 
+    select(-contains("rep_dist"), -t_fctr)
+
+sig_noise_df <- comp_dist_summary_df %>% 
+    left_join(rep_pair_dist_summary_df) %>% 
+    left_join(pre_rep_pair_dist) %>% 
+    mutate(mean_sig_noise = mean_dist/mean(c(mean_rep_dist, mean_pre_dist)),
+           median_sig_noise = median_dist/mean(c(median_rep_dist, median_pre_dist)))
+```
+```{r}
+sig_noise_df %>% 
+    ggplot() + 
+    geom_path(aes(x = t_fctr, y = mean_sig_noise, color = biosample_id)) + 
+    facet_grid(seq_lab~seq_run, scales = "free") + 
+    theme_bw() + 
+    labs(x = "Titration", y = "Mean Signal/Noise", color = "Individual")
+```
+```{r}
+sig_noise_df %>% 
+    ggplot() + 
+    geom_path(aes(x = t_fctr, y = median_sig_noise, color = biosample_id)) + 
+    facet_grid(seq_lab~seq_run, scales = "free") + 
+    theme_bw() + 
+    labs(x = "Titration", y = "Median Signal/Noise", color = "Individual")
+```
+

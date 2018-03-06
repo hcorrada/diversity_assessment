@@ -27,9 +27,9 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
         beta_div_m<-as.data.frame(beta_div)[which(row.names(beta_div) %in% as.character(map$sample_id)), 
                                             which(colnames(beta_div) %in% as.character(map$sample_id))]
         # Melt dataframe so we can look at matched samples 
-        beta_div_m$sample<-row.names(beta_div_m)
-        beta_div_m2<-gather(beta_div_m, sample)
-        colnames(beta_div_m2)<-c("sample_a", "sample_b", "value")
+        beta_div_m$sample_a<-row.names(beta_div_m)
+        beta_div_m2<-gather(beta_div_m, key = "sample_b", value = "value", -sample_a)
+ 
         # Add additional info to melted dataframe
         beta_div_m2$pipe<-data$pipe[i]
         beta_div_m2$normalization<-data$method[i]
@@ -65,6 +65,9 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
     return(data.frame(output2))
 }
 
+
+map <- mgtstMetadata
+metric <- "jaccard"
 #' Run stats on biological versus technical variation
 #'
 #' @param map mapping file with sample information 
@@ -80,6 +83,7 @@ compute_diversity_stats<-function(map, metric){
     data<-make_beta_div_df(metric)
     map$seq_run_merged<-paste0(map$seq_lab,"_", map$seq_run)
     # For each beta div matrix
+    i <- 1
     beta_div_stats<- lapply(1:length(data$pipe), function(i){
         # Extract distance object
         dist_data<-as.matrix(data$dist_results[[i]][[1]])
@@ -116,10 +120,12 @@ compute_diversity_stats<-function(map, metric){
                      data = map_sub)
         run_cond.a<-anova(run_cond)
         # fraction [b+d+e+g] X2=sample:
+# Error in matrix(NA, ncol = ncol(wa)) : data is too long
         sample_cond <- vegan::dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr), 
                         data = map_sub)
         sample_cond.a<-anova(sample_cond)
         # fractions [c+e+f+g] X3=titration:
+# Error in matrix(NA, ncol = ncol(wa)) : data is too long
         titration_cond <- vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
                            data = map_sub)
         titration_cond.a<-anova(titration_cond)
@@ -129,10 +135,12 @@ compute_diversity_stats<-function(map, metric){
                             data = map_sub)
         run.a<-anova(run)
         # fraction [b+d+e+g] X2=sample:
+# Error in matrix(NA, ncol = ncol(wa)) : data is too long
         sample <- vegan::dbrda(dist_data ~ biosample_id, 
                         data = map_sub)
         sample.a<-anova(sample)
         # fractions [c+e+f+g] X3=titration:
+# Error in matrix(NA, ncol = ncol(wa)) : data is too long
         titration <- vegan::dbrda(dist_data ~ t_fctr, 
                     data = map_sub)
         titration.a<-anova(titration)
@@ -144,7 +152,8 @@ compute_diversity_stats<-function(map, metric){
         run.titration <- vegan::dbrda(dist_data ~ seq_run_merged + t_fctr, 
                            data = map_sub)
         run.titration.a<-anova(run.titration)
-        # fractions [b+c+d+e+f+g] X2+X3=sample+titration:
+        # fractions [b+c+d+e+f+g] X2+X3=sample+titration: 
+# Error in matrix(NA, ncol = ncol(wa)) : data is too long
         sample.titration <- vegan::dbrda(dist_data ~ biosample_id + t_fctr, 
                                data = map_sub)
         sample.titration.a<-anova(sample.titration)
@@ -298,8 +307,7 @@ variation_tmp<-variation_tmp[-2,]
 variation_tmp[4,5]<-"TRUE OR FALSE"
 variation_tmp<-variation_tmp[-5,]
 
-biol_v_tech_variation_comparison_map<-gather(data = variation_tmp, key = variation, value = variation_label)
-colnames(biol_v_tech_variation_comparison_map)<-c("variation_label", "variable", "value")
+biol_v_tech_variation_comparison_map<-gather(data = variation_tmp, key = variable, value = value, -variation_label)
 rm(variation_tmp)
 
 biol_v_tech_variation_comparison_map$value<-factor(biol_v_tech_variation_comparison_map$value, levels = c("TRUE", "TRUE OR FALSE", "FALSE"), ordered = TRUE)

@@ -1,0 +1,57 @@
+---
+title: "Signal to Noise Analysis"
+author: "Nate Olson"
+date: "3/6/2018"
+output: html_document
+---
+
+```{r}
+library(ProjectTemplate)
+load.project()
+```
+
+```{r}
+sig_noise_df <- bind_rows(
+        sig_noise_bray_df,
+        sig_noise_jaccard_df,
+        sig_noise_unifrac_df,
+        sig_noise_wunifrac_df)
+```
+
+```{r}
+sig_noise_df <- sig_noise_df %>% 
+    rowwise() %>% 
+    mutate(mean_noise = mean(c(mean_rep_dist, mean_pre_dist),na.rm = TRUE), 
+            mean_sig_noise = mean_dist/mean_noise,
+           median_sig_noise = median_dist/mean_noise)
+```
+
+```{r}
+sig_noise_df
+```
+
+```{r}
+sig_noise_df %>% filter(method == "RAW", t_fctr != 0) %>% ggplot() + 
+    geom_path(aes(x = t_fctr, y = mean_sig_noise, color = biosample_id, linetype = paste0(seq_lab, seq_run))) + 
+    facet_grid(dist_method~pipe, scales = "free_y")
+```
+
+```{r}
+library(trelliscopejs)
+sig_noise_df %>% #filter(dist_method == "bray_dist") %>% 
+    mutate(seq_lab_run = paste0(seq_lab, seq_run)) %>% 
+    group_by(pipe, dist_method) %>% 
+    nest() %>% 
+    mutate(panel = map_plot(data, ~{
+        ggplot(.) + 
+            geom_path(aes(x = t_fctr, y = median_sig_noise, color = method)) +
+            facet_grid(biosample_id~seq_lab_run) + theme_bw()}
+   )) %>%
+  trelliscope(name = "signal to noise", nrow = 1, ncol = 1)
+ # %>% ggplot() + 
+    # geom_path(aes(x = t_fctr, y = mean_sig_noise, color = method)) + 
+    # theme_bw() + 
+    # facet_trelliscope(~ pipe + biosample_id + seq_lab + seq_run, nrow = 5, ncol = 4)
+```
+
+
