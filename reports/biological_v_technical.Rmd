@@ -6,7 +6,7 @@ output:
   bookdown::pdf_document2: 
     toc: FALSE
 ---
-
+<!-- differences between beta diversity metrics  -->
 <!--
 Biological versus technical variation results section, comparison of pairwise distances between biological and technical replicates and partitioning total variation into biological and technical components. 
 -->
