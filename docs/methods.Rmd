@@ -9,7 +9,7 @@ bibliography: ../bibliography.bib
 ---
 
 ## Methods
-Our assessment framework utilized a dataset of DNA mixtures from five vaccine trial participants (Olson et al. _in prep_).
+Our assessment framework utilizes a dataset of DNA mixtures from five vaccine trial participants (Olson et al. _in prep_).
 DNA extracts from stool collected from individuals (biological replicates) before and after exposure to pathogenic _Escherichia coli_.
 The pre- and post-exposure DNA was mixed following a $log_2$ two-sample titration mixture design, resulting in a set of samples with varying levels of similarity.
 The microbial community in the unmixed pre- and post exposure samples and titrations were measured using 16S rRNA marker-gene sequencing.
@@ -58,12 +58,30 @@ Weighted and Unweighted UniFrac phylogenetic Beta-diversity metrics were calcula
 For our feature-level Beta-diversity assessment the Bray-Curtis weighted and Jaccard unweighted metrics were used [@Bray1957;@Jaccard1912].
 
 ## Beta-Diversity Assessment
-- technical artifacts  
-To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals,
-within individual between conditions (pre- and post-exposure),
- and different types of technical replicates.  
-__ADD STATS__
+- Three assessment components, (1) beta-diversity repeatability, 
+(2) differences in beta diversity between individuals and treatments, 
+and (3) ability to distinguish between groups of samples with varying levels of similarity. 
 
-We assessed the impact of bioinformatic pipeline and normalization methods on beta-diversity metrics using a similar approach used in [@Reynolds2006;@McMurdie2014].
-To summarize performance across titration comparisons, area under the curve was calculated using the trapazoid method (__R package ref__).
-This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.
+### Beta-Diversity Repeatability
+- To assess beta-diversity repeatability we compared beta-diversity values between PCR replicates within the four sequencing runs. 
+- Sequencing runs different characteristics, variance in sample total abundance and sequence quality 
+- Compared mean beta diversity between PCR replicates for across pipelines for the four beta diversity metrics. 
+- Used __XYZ model__ to test for differences. 
+- Evaluated the impact of normalization methods for NIST run 1. 
+- Used __XYZ model__ to test for significance. 
+
+### Beta Diversity Between Individuals and Treatments
+- To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.  
+- Used __XYZ model__ to test for significance.  
+- Used variation partitioning (__REF__) to quantify how technical and biological factors contribute to the total observed variation.  
+
+
+### Differentiation Power  
+
+- We assessed the impact of bioinformatic pipeline and normalization methods on beta-diversity metrics using a similar approach used in [@Reynolds2006;@McMurdie2014].  
+- This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.  
+- To summarize performance across titration comparisons, area under the curve was calculated using the trapazoid method (__R package ref__).  
+- Use __XYZ model__ to test for significance.  
+
+
+
