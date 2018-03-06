@@ -1,15 +1,16 @@
 ## Statistical Models
 - technical artifacts
 - bio v. technical variation
-- comparison to expectation
 
 ## Analysis
 - varpart sanity check
-- TSS v RAW results comparison
-- constrained k-means clustering
+- signal to noise
+
+## debugging 09 munge 
+error with jaccard - line 86
 
 ## Manuscript
-- method
+- methods
 - discussion
   + For discussion — look up reareq15 stats
 - abstract
@@ -22,8 +23,8 @@
     Fig 3- make outlier points smaller
     Fig 4- split into two (weighted and unweighted), add lines for raw interquartile range and median values, generate for other seq runs (JHU 1&2 and NIST2) to add to supplement— are there any major differences (esp with rarefaction for poorer quality runs)
     Fig 5- leave for now, but maybe make into ink boxplots like in fig 4
-    Fig 6- clean up raw info, generate for other metrics and normalization methods for supplement
-    Fig 7- leave for now (like fig 5)
+    Fig 6- clean up raw info, generate for other metrics and normalization methods for supplemental
+    Fig 7- cut
 - supplemental
 
 ## Coding and Reproducibility
