@@ -104,7 +104,7 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
                  outlier.size = 0.5) + 
     facet_grid(f_type~weight) + theme_bw() + 
-    theme(axis.text.x = element_text(angle = 90),
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
           legend.position = "bottom") + 
     labs(x = "Bioinformatic Pipeline", y = "Mean Distance", fill = "Sequncing Run")+scale_fill_manual(values=run_colors)
 ```
