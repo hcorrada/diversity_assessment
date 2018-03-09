@@ -16,7 +16,7 @@ library(ProjectTemplate)
 load.project()
 
 run_colors=c(jhu1="#E41A1C", jhu2="#4A72A6", nist1="#48A462", nist2="#A35390")
-pipe_colors=c(dada="#5D995D", deblur="#bf548c", mother="#ef8a1e", 
+pipe_colors=c(dada="#5D995D", deblur="#bf548c", mothur="#ef8a1e", 
               qiimeClosedRef="#f2ae02", qiimeOpenRef="#c63f4a", 
               qiimeDeNovo="#7190c4")
 norm_colors=c(rare2000="#974661", rare5000="#3E8E93", rare10000="#9b6ba3", 
