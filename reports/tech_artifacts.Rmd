@@ -118,10 +118,10 @@ tech_art_df %>%
                        levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
     ggplot() + 
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization) +  
-    facet_grid(f_type~weight+pipe,scales = "free", space = "free") + 
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization)) +
+    facet_grid(pipe~metric,scales = "free_x", space = "free") + 
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "bottom") + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none") + 
     labs(x = "Normalization", y = "Change in Mean Beta Diversity", 
          color = "Pipeline") +scale_color_manual(values=norm_colors)
 ```
