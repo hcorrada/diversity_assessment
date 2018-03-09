@@ -14,6 +14,14 @@ Biological versus technical variation results section, comparison of pairwise di
 ```{r bioVtechSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
 load.project()
+
+run_colors=c(jhu1="#E41A1C", jhu2="#4A72A6", nist1="#48A462", nist2="#A35390")
+pipe_colors=c(dada="#5D995D", deblur="#bf548c", mother="#ef8a1e", 
+              qiimeClosedRef="#f2ae02", qiimeOpenRef="#c63f4a", 
+              qiimeDeNovo="#7190c4")
+norm_colors=c(rare2000="#974661", rare5000="#3E8E93", rare10000="#9b6ba3", 
+              raw="black", rareq15="#FFA100", RLE="#DB728C", CSS="#B75F49", 
+              TMM="#526E9F", UQ="#f2d51a", TSS="#66ad85")
 ## load required libraries
 ```
 
@@ -33,6 +41,7 @@ biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highl
                         "Phylogenetic","Taxonomic"),
             weight = if_else(metric %in% c("unifrac","jaccard"),
                         "Unweighted", "Weighted"))
+
 ```
 
 ```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological and technical variation (pairwise distance between replicates.) Grey line indicates the mean differences for diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method."}
@@ -52,7 +61,8 @@ biol_v_tech_variation_summary_higherlevel %>%
         facet_grid(f_type~weight, scales = "free_y") + 
         theme(axis.text.x = element_text(angle = -45, hjust = 0),
               legend.position = "bottom") + 
-        labs(x = "Pipeline", y = "Biological - Technical", fill = "Normalization")
+        labs(x = "Pipeline", y = "Biological - Technical", fill = "Normalization") +
+    scale_fill_manual(values = norm_colors)
 ```
 
 ```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable"}
@@ -64,15 +74,16 @@ varpart_trim <- varpart_stats %>% filter(effect == "conditional",
 
 varpart_trim %>% filter(normalization != "RAW") %>% 
 ggplot() +
-    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
+    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization),
              stat = "identity", position = "dodge", width = 0.5) + 
     geom_point(data = varpart_trim %>% filter(normalization == "RAW"),
-               aes(x = feature, y = Adj.R.square)) + 
+               aes(x = metric, y = Adj.R.square), shape="-", size=8) + 
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") + 
-    facet_grid(metric~pipe, scales = "free_x", space = "free") +
-    theme(legend.position = "bottom")
+    facet_grid(feature~pipe, scales = "free_x", space = "free") +
+    theme(legend.position = "bottom")+scale_fill_manual(values = norm_colors)
+
 ``` 
 
 We next looked at how different pipelines and normalization methods captured diversity differences between our biological and technical replicates. 
