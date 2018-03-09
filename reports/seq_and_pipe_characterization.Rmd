@@ -12,6 +12,7 @@ library(ProjectTemplate)
 load.project() 
 
 run_colors=c(jhu1="#E41A1C", jhu2="#4A72A6", nist1="#48A462", nist2="#A35390")
+run_colors2=c('jhu_run1_2-A10'="#E41A1C", 'jhu_run2_2-A10'="#4A72A6", 'nist_run1_2-A10'="#48A462", 'nist_run2_2-A10'="#A35390")
 pipe_colors=c(dada="#5D995D", deblur="#bf548c", mothur="#ef8a1e", 
               qiimeClosedRef="#f2ae02", qiimeOpenRef="#c63f4a", 
               qiimeDeNovo="#7190c4")
@@ -117,7 +118,7 @@ seq_qual_plot <- seq_qual_dat %>%
 ```
 
 
-```{r seqCharPlot, fig.cap = "A. Coeffient of variation in total abundance by sequencing run estimate and 95\\% confidence interval obtined using a mixed effects linear model. B. PhiX error rate relative to 16S rRNA amplicon base position for initial and the four sequencing runs. C. Distribution of mode read quality score by sequencing run. "}
+```{r seqCharPlot, fig.cap = "A. Coeffient of variation in total abundance by sequencing run estimate and 95\\% confidence interval obtined using a mixed effects linear model. B. PhiX error rate relative to 16S rRNA amplicon base position for initial and the four sequencing runs. C. Distribution of mode read quality score by sequencing run. ", fig.height=4, fig.width=8}
 ggarrange(cov_plot, error_plot, seq_qual_plot, labels = "AUTO", ncol = 3)
 ```
 
@@ -197,12 +198,13 @@ ps_iNEXT <- function(ps){
 rare_plot_df <- tibble(ps_obj = ps_list) %>% 
     add_column(pipe = names(ps_list)) %>% 
     mutate(inext_dat = map(ps_obj, ps_iNEXT),
-           rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) + theme_bw() + ggtitle(.y)})) %>%
+           rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) + theme_bw() + ggtitle(.y)+
+                   scale_color_manual(values=run_colors2)})) %>%
     select(-ps_obj, -inext_dat)
 ```
 
-```{r rarePlot, fig.cap = "Rarefaction curves for example sample across pipelines and sequencing runs."} 
-ggarrange(plotlist = rare_plot_df$rare_plot,labels = "AUTO",legend = "right",common.legend = TRUE, nrow=2, ncol=3)
+```{r rarePlot, fig.cap = "Rarefaction curves for example sample across pipelines and sequencing runs.", fig.height=6, fig.width=8} 
+ggarrange(plotlist = rare_plot_df$rare_plot,labels = "AUTO", legend = "right",common.legend = TRUE, nrow=3, ncol=2)
 ```
 
 ```{r prevDF}
