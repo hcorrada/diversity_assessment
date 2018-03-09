@@ -65,7 +65,7 @@ biol_v_tech_variation_summary_higherlevel %>%
     scale_fill_manual(values = norm_colors)
 ```
 
-```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable"}
+```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for un-normalized data."}
 varpart_trim <- varpart_stats %>% filter(effect == "conditional", 
                                          normalization %in% c("RAW","rare5000", "rareq15","RLE","TMM"), 
                                          metric %in% c("bray", "wunifrac")) %>% 
