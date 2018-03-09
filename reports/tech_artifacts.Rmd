@@ -118,13 +118,12 @@ tech_art_df %>%
                        levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
     ggplot() + 
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = pipe,
-                          group=interaction(normalization,pipe)), position = position_dodge()) +  
-    facet_grid(f_type~weight,scales = "free", space = "free") + 
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization) +  
+    facet_grid(f_type~weight+pipe,scales = "free", space = "free") + 
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "bottom") + 
     labs(x = "Normalization", y = "Change in Mean Beta Diversity", 
-         color = "Pipeline") +scale_color_manual(values=pipe_colors)
+         color = "Pipeline") +scale_color_manual(values=norm_colors)
 ```
 
 We evaluated differences in beta diversity between PCR replicates between the four sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 
