@@ -66,8 +66,6 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
 }
 
 
-map <- mgtstMetadata
-metric <- "jaccard"
 #' Run stats on biological versus technical variation
 #'
 #' @param map mapping file with sample information 
@@ -99,17 +97,10 @@ compute_diversity_stats<-function(map, metric){
         map_sub<-map_sub[order(map_sub$sample_id),]
         
         output<-vegan::varpart(Y=dist_data, ~seq_run_merged, ~biosample_id, ~t_fctr, data=map_sub)
-        tmp<-as.data.frame(output$part$indfract[c(1:3,7),])
-        tmp<-rbind(tmp, as.data.frame(output$part$fract))
+        tmp<-as.data.frame(output$part$indfract[c(1:3),])
         
-        tmp$feature<-c("seq_run", "subject", "titration", 
-                      "shared", "seq_run", "subject",
-                      "titration", "seq_run_and_subject", "seq_run_and_titration", 
-                      "subject_and_titration", "all")
-        tmp$effect<-c("conditional", "conditional", "conditional", 
-                      NA, "marginal", "marginal",
-                      "marginal", "marginal", "marginal", 
-                      "marginal", "global")
+        tmp$feature<-c("seq_run", "subject", "titration")
+        tmp$effect<-c("conditional", "conditional", "conditional")
         tmp$pipe<-data$pipe[i]
         tmp$normalization<-data$method[i]
         tmp$metric<-metric
@@ -129,44 +120,9 @@ compute_diversity_stats<-function(map, metric){
         titration_cond <- vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
                            data = map_sub)
         titration_cond.a<-anova(titration_cond)
-        # MARGINAL EFFECTS
-        # fraction [a+d+f+g] X1=seq_run:
-        run <- vegan::dbrda(dist_data ~ seq_run_merged, 
-                            data = map_sub)
-        run.a<-anova(run)
-        # fraction [b+d+e+g] X2=sample:
-# Error in matrix(NA, ncol = ncol(wa)) : data is too long
-        sample <- vegan::dbrda(dist_data ~ biosample_id, 
-                        data = map_sub)
-        sample.a<-anova(sample)
-        # fractions [c+e+f+g] X3=titration:
-# Error in matrix(NA, ncol = ncol(wa)) : data is too long
-        titration <- vegan::dbrda(dist_data ~ t_fctr, 
-                    data = map_sub)
-        titration.a<-anova(titration)
-        # fractions [a+b+d+e+f+g] X1+X2=seq_run+sample_id:
-        run.sample <- vegan::dbrda(dist_data ~ seq_run_merged + biosample_id, 
-                           data = map_sub)
-        run.sample.a<-anova(run.sample)
-        # fractions [a+b+d+e+f+g] X1+X3=seq_run+titration:
-        run.titration <- vegan::dbrda(dist_data ~ seq_run_merged + t_fctr, 
-                           data = map_sub)
-        run.titration.a<-anova(run.titration)
-        # fractions [b+c+d+e+f+g] X2+X3=sample+titration: 
-# Error in matrix(NA, ncol = ncol(wa)) : data is too long
-        sample.titration <- vegan::dbrda(dist_data ~ biosample_id + t_fctr, 
-                               data = map_sub)
-        sample.titration.a<-anova(sample.titration)
-        # fractions [a+b+c+d+e+f+g] All:
-        all <- vegan::dbrda(dist_data ~ seq_run_merged + biosample_id + t_fctr, data = map_sub)
-        all.a<-anova(all)
         
         p_values<-rbind(run_cond.a$`Pr(>F)`[1], sample_cond.a$`Pr(>F)`[1], 
-                        titration_cond.a$`Pr(>F)`[1], NA,
-                        run.a$`Pr(>F)`[1], sample.a$`Pr(>F)`[1], 
-                        titration.a$`Pr(>F)`[1], run.sample.a$`Pr(>F)`[1], 
-                        run.titration.a$`Pr(>F)`[1], sample.titration.a$`Pr(>F)`[1],
-                        all.a$`Pr(>F)`[1])
+                        titration_cond.a$`Pr(>F)`[1])
         tmp<-cbind(tmp, p_values)
         # Create column of significance labels
         tmp$significance <- cut(tmp$p_values, breaks=c(-Inf, 0.001, 0.01, 0.05, Inf), 

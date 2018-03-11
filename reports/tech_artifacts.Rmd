@@ -14,6 +14,15 @@ library(ProjectTemplate)
 load.project()
 # library(ggridges)
 # library(ggpubr)
+
+run_colors=c(jhu_run1="#E41A1C", jhu_run2="#4A72A6", nist_run1="#48A462", nist_run2="#A35390")
+pipe_colors=c(dada="#5D995D", deblur="#bf548c", mothur="#ef8a1e", 
+              qiimeClosedRef="#f2ae02", qiimeOpenRef="#c63f4a", 
+              qiimeDeNovo="#7190c4")
+norm_colors=c(rare2000="#974661", rare5000="#3E8E93", rare10000="#9b6ba3", 
+              RAW="black", rareq15="#FFA100", RLE="#DB728C", CSS="#B75F49", 
+              TMM="#526E9F", UQ="#f2d51a", TSS="#66ad85")
+
 library(ggthemes)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
@@ -57,7 +66,7 @@ cov_plot<-ggplot(tech_info_df) +
     geom_boxplot(aes(x = reorder(interaction(pipe, seq_run_id), cov_total_abu, FUN=median), 
                      y = cov_total_abu, fill=seq_run_id)) +
     labs(x = "Pipeline", y = "COV(Total Abundance)") + theme_bw()+coord_flip()+
-    theme(axis.text.x=element_text(angle = 45, hjust = 1))
+    theme(axis.text.x=element_text(angle = 45, hjust = 1))+scale_fill_manual(values=run_colors)
 
 #tech_info_df_summary<-tech_info_df %>% group_by(seq_run_id, pipe) %>% summarize(mean_cov_total_abu=mean(cov_total_abu))
 # 
@@ -74,7 +83,7 @@ read_qual_plot<-tech_info_df %>%
     geom_boxplot(aes(x = seq_run_id, y = mean_qual, group=interaction(seq_run_id,read_dir), 
                      fill=read_dir), position=position_dodge()) + 
     labs(x = "Sequencing Run", y = "Mean Quality Score", fill = "Read Direction") + 
-    theme_bw()+theme(axis.text.x=element_text(angle = 45, hjust = 1))
+    theme_bw()+theme(axis.text.x=element_text(angle = 45, hjust = 1))+scale_fill_manual(values=c("black", "darkgray"))
 
 ggarrange(cov_plot, read_qual_plot)
 
@@ -94,11 +103,12 @@ tech_art_df %>% filter(normalization == "RAW") %>%
 ```{r techMeanDist, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data."}
 tech_art_df %>% filter(normalization == "RAW") %>% 
     ggplot() + 
-    geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id)) + 
+    geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
+                 outlier.size = 0.5) + 
     facet_grid(f_type~weight) + theme_bw() + 
-    theme(axis.text.x = element_text(angle = 90),
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
           legend.position = "bottom") + 
-    labs(x = "Bioinformatic Pipeline", y = "Mean Distance", fill = "Sequncing Run")
+    labs(x = "Bioinformatic Pipeline", y = "Mean Distance", fill = "Sequncing Run")+scale_fill_manual(values=run_colors)
 ```
 
 ```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers."}
@@ -110,11 +120,12 @@ tech_art_df %>%
                        levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
     ggplot() + 
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization)) + 
-    facet_grid(pipe~metric,scales = "free") + 
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization)) +
+    facet_grid(pipe~metric,scales = "free_x", space = "free") + 
     theme_bw() + 
-    theme(legend.position = "none", axis.text.x = element_text(angle = 90)) + 
-    labs(x = "Pipeline", y = "Change in Mean Beta Diversity", color = "Normalization") 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none") + 
+    labs(x = "Normalization", y = "Change in Mean Beta Diversity", 
+         color = "Pipeline") +scale_color_manual(values=norm_colors)
 ```
 
 We evaluated differences in beta diversity between PCR replicates between the four sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 

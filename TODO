@@ -17,10 +17,8 @@ error with jaccard - line 86
 - acknowledgements
 - format for microbiome
 - clean-up figures and tables
-    Fig 1- resize to fit, cut part a
+    Fig 1- resize to fit
     Table 1- add number of singletons
-    Fig 2- change to 2x3
-    Fig 3- make outlier points smaller
     Fig 4- split into two (weighted and unweighted), add lines for raw interquartile range and median values, generate for other seq runs (JHU 1&2 and NIST2) to add to supplement— are there any major differences (esp with rarefaction for poorer quality runs)
     Fig 5- leave for now, but maybe make into ink boxplots like in fig 4
     Fig 6- clean up raw info, generate for other metrics and normalization methods for supplemental
