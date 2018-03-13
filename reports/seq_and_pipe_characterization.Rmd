@@ -34,7 +34,8 @@ error_plot <- ggplot(phix_error_df) +
     geom_smooth(aes(x = base_position, y = errorrate, color = ds, linetype = read)) +
     theme_bw() +
     labs(x = "Amplicon Base Position", y = "PhiX Error Rate", color = "Dataset") +
-    scale_color_manual(values=run_colors)
+    scale_color_manual(values=run_colors)+
+    theme(legend.direction = "horizontal", legend.position = "bottom", legend.box = "vertical")
 ```
 
 ```{r seqCharCount}
@@ -118,7 +119,7 @@ seq_qual_plot <- seq_qual_dat %>%
 ```
 
 
-```{r seqCharPlot, fig.cap = "A. Coeffient of variation in total abundance by sequencing run estimate and 95\\% confidence interval obtined using a mixed effects linear model. B. PhiX error rate relative to 16S rRNA amplicon base position for initial and the four sequencing runs. C. Distribution of mode read quality score by sequencing run. ", fig.height=4, fig.width=8}
+```{r seqCharPlot, fig.cap = "A. Coeffient of variation in total abundance by sequencing run estimate and 95\\% confidence interval obtined using a mixed effects linear model. B. PhiX error rate relative to 16S rRNA amplicon base position for initial and the four sequencing runs. C. Distribution of mode read quality score by sequencing run. ", fig.height=4, fig.width=10}
 ggarrange(cov_plot, error_plot, seq_qual_plot, labels = "AUTO", ncol = 3)
 ```
 

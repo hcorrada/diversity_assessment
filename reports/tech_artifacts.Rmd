@@ -111,17 +111,19 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     labs(x = "Bioinformatic Pipeline", y = "Mean Distance", fill = "Sequncing Run")+scale_fill_manual(values=run_colors)
 ```
 
-```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers."}
+```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean weighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers."}
 norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15", 
                     "CSS", "RLE", "TMM", "TSS", "UQ") 
 tech_art_df %>% 
     ungroup() %>% 
+    filter(weight=="Weighted") %>%
     mutate(normalization = factor(normalization, 
                        levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
     ggplot() + 
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization)) +
-    facet_grid(pipe~metric,scales = "free_x", space = "free") + 
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, 
+                          group=interaction(normalization,pipe)), position = position_dodge()) + 
+    facet_grid(f_type~pipe,scales = "free", space = "free") + 
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none") + 
     labs(x = "Normalization", y = "Change in Mean Beta Diversity", 
