@@ -66,23 +66,23 @@ biol_v_tech_variation_summary_higherlevel %>%
 ```
 
 ```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for un-normalized data."}
-varpart_trim <- varpart_stats %>% filter(effect == "conditional", 
-                                         normalization %in% c("RAW","rare5000", "rareq15","RLE","TMM"), 
-                                         metric %in% c("bray", "wunifrac")) %>% 
-    mutate(normalization = factor(normalization, 
-                                  levels = c("RAW", "rare5000", "rareq15", "RLE", "TMM"), ordered = T))
+# varpart_trim <- varpart_stats %>% filter(effect == "conditional", 
+                                         # normalization %in% c("RAW","rare5000", "rareq15","RLE","TMM"), 
+                                         # metric %in% c("bray", "wunifrac")) %>% 
+    # mutate(normalization = factor(normalization, 
+                                  # levels = c("RAW", "rare5000", "rareq15", "RLE", "TMM"), ordered = T))
 
-varpart_trim %>% filter(normalization != "RAW") %>% 
-ggplot() +
-    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization),
-             stat = "identity", position = "dodge", width = 0.5) + 
-    geom_point(data = varpart_trim %>% filter(normalization == "RAW"),
-               aes(x = metric, y = Adj.R.square), shape="-", size=8) + 
-    theme_bw() +
-    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
-    xlab("") + ylab("Adjusted R^2") + 
-    facet_grid(feature~pipe, scales = "free_x", space = "free") +
-    theme(legend.position = "bottom")+scale_fill_manual(values = norm_colors)
+# varpart_trim %>% filter(normalization != "RAW") %>% 
+# ggplot() +
+    # geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization),
+    #          stat = "identity", position = "dodge", width = 0.5) + 
+    # geom_point(data = varpart_trim %>% filter(normalization == "RAW"),
+    #            aes(x = metric, y = Adj.R.square), shape="-", size=8) + 
+    # theme_bw() +
+    # theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    # xlab("") + ylab("Adjusted R^2") + 
+    # facet_grid(feature~pipe, scales = "free_x", space = "free") +
+    # theme(legend.position = "bottom")+scale_fill_manual(values = norm_colors)
 
 ``` 
 

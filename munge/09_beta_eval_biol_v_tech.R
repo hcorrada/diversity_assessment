@@ -15,7 +15,7 @@
 #'
 #' @examples
 compute_diversity_comparisons<-function(map, metric, variation_tests){
-    
+
     # Generate list of diversity matrices for piplines/norm methods
     data<-make_beta_div_df(metric)
     
@@ -76,12 +76,13 @@ compute_diversity_comparisons<-function(map, metric, variation_tests){
 #'
 #' @examples
 compute_diversity_stats<-function(map, metric){
-    
+    map <- mgtstMetadata
+    metric <- "jaccard"
     # Generate list of diversity matrices for piplines/norm methods
     data<-make_beta_div_df(metric)
     map$seq_run_merged<-paste0(map$seq_lab,"_", map$seq_run)
     # For each beta div matrix
-    i <- 1
+    #i<- 1
     beta_div_stats<- lapply(1:length(data$pipe), function(i){
         # Extract distance object
         dist_data<-as.matrix(data$dist_results[[i]][[1]])
@@ -292,19 +293,19 @@ biol_v_tech_variation=list(biol_v_tech_variation_comparison_map,
                            biol_v_tech_variation_comparisons)
 
 # Compute stats
-unifrac_stats<-compute_diversity_stats(mgtstMetadata, "unifrac")
-jaccard_stats<-compute_diversity_stats(mgtstMetadata, "jaccard")
-wunifrac_stats<-compute_diversity_stats(mgtstMetadata, "wunifrac")
-bray_stats<-compute_diversity_stats(mgtstMetadata, "bray")
-
-varpart_stats<-rbind(unifrac_stats, jaccard_stats)
-varpart_stats<-rbind(varpart_stats, wunifrac_stats)
-varpart_stats<-rbind(varpart_stats, bray_stats)
+# unifrac_stats<-compute_diversity_stats(mgtstMetadata, "unifrac")
+# jaccard_stats<-compute_diversity_stats(mgtstMetadata, "jaccard")
+# wunifrac_stats<-compute_diversity_stats(mgtstMetadata, "wunifrac")
+# bray_stats<-compute_diversity_stats(mgtstMetadata, "bray")
+# 
+# varpart_stats<-rbind(unifrac_stats, jaccard_stats)
+# varpart_stats<-rbind(varpart_stats, wunifrac_stats)
+# varpart_stats<-rbind(varpart_stats, bray_stats)
 
 ########################  Cache results ################################
 
 ProjectTemplate::cache('biol_v_tech_variation', 
                        depends = c("mgtstMetadata"))
 
-ProjectTemplate::cache('varpart_stats', 
-                       depends = c("mgtstMetadata"))
+# ProjectTemplate::cache('varpart_stats', 
+                       # depends = c("mgtstMetadata"))
