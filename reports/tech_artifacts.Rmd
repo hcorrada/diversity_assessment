@@ -10,10 +10,10 @@ output:
 <!-- differences between beta diversity metrics  -->
 
 ```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
-library(ProjectTemplate)
-load.project()
-# library(ggridges)
-# library(ggpubr)
+#library(ProjectTemplate)
+#load.project()
+ library(ggridges)
+ library(ggpubr)
 
 run_colors=c(jhu_run1="#E41A1C", jhu_run2="#4A72A6", nist_run1="#48A462", nist_run2="#A35390")
 pipe_colors=c(dada="#5D995D", deblur="#bf548c", mothur="#ef8a1e", 

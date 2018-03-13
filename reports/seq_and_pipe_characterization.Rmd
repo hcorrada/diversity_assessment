@@ -8,8 +8,10 @@ output:
 ---
 
 ```{r seqPipeCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
-library(ProjectTemplate)
-load.project() 
+#library(ProjectTemplate)
+#load.project() 
+
+library(iNEXT)
 
 run_colors=c(jhu1="#E41A1C", jhu2="#4A72A6", nist1="#48A462", nist2="#A35390")
 run_colors2=c('jhu_run1_2-A10'="#E41A1C", 'jhu_run2_2-A10'="#4A72A6", 'nist_run1_2-A10'="#48A462", 'nist_run2_2-A10'="#A35390")
@@ -20,7 +22,7 @@ norm_colors=c(rare2000="#974661", rare5000="#3E8E93", rare10000="#9b6ba3",
               raw="black", rareq15="#FFA100", RLE="#DB728C", CSS="#B75F49", 
               TMM="#526E9F", UQ="#f2d51a", TSS="#66ad85")
 
-ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>% 
+ps_list <- list.files("~/diversity_assessment/data/phyloseq_objects", full.names = TRUE) %>% 
     set_names(str_replace(basename(.), "_ps.rds", "")) %>% 
     map(readRDS)
 
