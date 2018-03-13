@@ -1,0 +1,280 @@
+---
+title: "Signal to noise quantitative analysis"
+author: "Nate Olson"
+date: "3/8/2018"
+output: html_document
+---
+
+```{r message = FALSE, warning = FALSE}
+library(ProjectTemplate)
+load.project()
+library(ggfortify)
+```
+
+<!-- 
+For manuscript
+* RAW AUC comparison plot 
+* Pairwise normalization method AUC comparison - only for significant?
+-->
+
+## Objective
+Comparing effect size (signal to noise ratio) across pipeline and run for raw count data by diversity metric. 
+Then evaluate how different normaliztion methods impact the effect size. 
+
+## Approach
+- Signal-to-noise ratio is the median beta-diversity between unmixed pre-exposure samples and titrations divided by the average of the median beta-diversity within unmixed pre-exposure PCR replicates and the titration PCR replicates. 
+- Area under the curve (AUC) for the signal-to-noise ratio was used to summarise the signal-to-noise ratio across titrations. The AUC represents a weighted average, where titrations with less pre-exposure DNA are downweighted. 
+    - Due to the mixture design 3 of the 8 titrations are > 90\% pre-exposure DNA. 
+    - Using AUC downweights these samples in caculating the average. 
+- A regression model was used to characterize the effect-size by beta-diversity metric. 
+    - `auc ~ biosample_id + pipe * seq_run_num`
+- The following metric $Norm\ Effect = (NORM - RAW) / RAW$ was measure the impact of different normalization methods on the effect size, where $NORM$ and $RAW$ is the signal-to-noise ratio defined above for normalized and raw counts respectively. 
+- A mixed effects model was then used to quantify the normalization method impact on the signal to noise ratio. 
+
+## Pre-processing  
+
+### Calculating AUC and Fitting Regression Model
+```{r}
+sig_noise_df <- bind_rows(
+        sig_noise_bray_df,
+        sig_noise_jaccard_df,
+        sig_noise_unifrac_df,
+        sig_noise_wunifrac_df)
+```
+
+```{r}
+sig_noise_df <- sig_noise_df %>% 
+    rowwise() %>% 
+    mutate(mean_noise = mean(c(mean_rep_dist, mean_pre_dist),na.rm = TRUE), 
+           median_noise = mean(c(mean_rep_dist, mean_pre_dist), na.rm = TRUE),
+            mean_sig_noise = mean_dist/mean_noise,
+           median_sig_noise = median_dist/median_noise)
+```
+
+```{r}
+auc_summary <- sig_noise_df %>% 
+    filter(method == "RAW") %>% 
+    mutate(t_eval = 2^-t_fctr) %>% 
+    group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>% 
+    summarise(n_t = n(), 
+              auc = -pracma::trapz(x = t_eval, y = median_sig_noise))
+```
+
+```{r}
+auc_fit <- auc_summary %>% 
+    ungroup() %>% 
+    mutate(seq_run = as.numeric(seq_run),
+           seq_run_num = if_else(seq_lab == "jhu", seq_run, 2 + seq_run),
+           seq_run_num = factor(seq_run_num)) %>% 
+    group_by(dist_method) %>%
+    nest() %>%
+    mutate(fit = map(data, ~lm(log10(auc) ~ pipe + seq_run_num + biosample_id, data = .)))
+```
+
+### Calculating Normalization Effect and Fitting Regression Model
+```{r}
+norm_effect_auc_df <- sig_noise_df %>%
+    mutate(t_eval = 2^-t_fctr) %>%
+    group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>%
+    summarise(auc = -pracma::trapz(x = t_eval, y = median_sig_noise))
+```
+
+```{r}
+# unweighted_levels <- c("RAW", "rare2000", "rare5000", "rare10000", "rareq15")
+# weighted_levels <- c(unweighted_levels, "CSS","TSS","UQ","RLE","TMM")
+
+norm_effect_auc_fit <- norm_effect_auc_df %>%
+    ungroup() %>%
+    mutate(seq_run = as.numeric(seq_run),
+           seq_run_num = if_else(seq_lab == "jhu", seq_run, 2 + seq_run),
+           seq_run_num = factor(seq_run_num)) %>%
+    # mutate(method = factor(method, levels = weighted_levels)) %>%
+    group_by(dist_method, pipe) %>%
+    nest() %>%
+    mutate(fit = map(data, ~lm(log10(auc) ~ method + seq_run_num + biosample_id, data = .)))
+```
+
+## AUC Results 
+The AUC values varied by diversity metic with weighted metrics having higher signal-to-noise ratios than unweighted metrics. 
+All pipelines used the QIIME pre-processing methods had signal to noise-ratios around 1 for all metrics and sequencing runs. 
+Within the diversity metrics, mothur and dada were significantly different from eachother and the QIIME pre-processed pipelines. 
+Pairwise significant differences between indivduals was only observed for Bray-Curtis. 
+Sequencing run differences were only observed for phylogenetic metrics. 
+For weighted unifrac there was a library effect. 
+Batch effects were observed, primarily between sequencing labs rather than between within lab runs, though most differences were comparisons to low quality JHU run. 
+
+### Summary Plot 
+```{r warning = FALSE, fig.cap = "The area under the curve (AUC) varied by pipeline, run, and diversity metric. Points indicate the AUC for each individual with grey lines representing the range of AUC values for a pipeline and sequencing run."}
+auc_summary %>% 
+    ungroup() %>% 
+    mutate(seq_lab_run = paste(seq_lab, seq_run)) %>% 
+        mutate(pipe = if_else(pipe == "deblur", "qiimeDeblur",pipe),
+           pipe = factor(pipe)) %>% 
+    mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
+                            "Phylogenetic","Taxonomic"),
+           weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
+                            "Unweighted", "Weighted")) %>% 
+    
+    mutate(x_offset = if_else(seq_lab == "jhu", -0.3  + 0.1 * seq_run, 0.1 * seq_run),
+           x_pos = as.numeric(pipe) + x_offset) %>% 
+    ggplot() + 
+    geom_blank(aes(x = pipe)) + 
+    geom_line(aes(x = x_pos, y = auc,group = paste(pipe,seq_lab_run)), color = "grey60") + 
+    geom_point(aes(x = x_pos, y = auc, color = seq_lab_run, shape = biosample_id)) + 
+    # facet_grid(weight~f_type, scales = "free_y") + 
+    facet_grid(dist_method~., scales = "free_y") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+    labs(x = "Pipeline", y = "AUC", color = "Seq Run", shape = "Individual")
+```
+
+### ANOVA results  
+```{r}
+auc_fit %>% mutate(aov_fit = map(fit, aov), 
+                   tidy_aov = map(aov_fit, broom::tidy)) %>% 
+    unnest(tidy_aov) %>% 
+    mutate(sumsq = round(sumsq, 3),
+           meansq = round(meansq, 3),
+           statistic = round(statistic, 1)) %>% 
+    knitr::kable()
+```
+
+### Post-Hoc Test
+```{r}
+auc_fit %>% mutate(anova_fit = map(fit, aov), 
+                   tukey_fit = map(anova_fit, TukeyHSD),
+                   tidy_tukey = map(tukey_fit, broom::tidy)) %>% 
+    unnest(tidy_tukey) %>% 
+    filter(adj.p.value < 0.001) %>% ## Using conservative value in place of multiple test correction ...
+    ## Excluding inter pipe run comparisons 
+    filter(term != "pipe:seq_run_num") %>% 
+    mutate(estimate = round(estimate, 3),
+           conf.low = round(conf.low, 3),
+           conf.high = round(conf.high, 3)) %>%
+    knitr::kable()
+```
+
+Pipeline sequencing run interactions
+```{r}
+auc_fit %>% mutate(anova_fit = map(fit, aov), 
+                   tukey_fit = map(anova_fit, TukeyHSD),
+                   tidy_tukey = map(tukey_fit, broom::tidy)) %>% 
+    unnest(tidy_tukey) %>% 
+    filter(adj.p.value < 0.05) %>% ## Using conservative value in place of multiple test correction ...
+    ## Excluding inter pipe run comparisons 
+    filter(grepl("dada.*dada",comparison) |
+           grepl("mothur.*mothur",comparison) |
+           grepl("qiimeDeNovo.*qiimeDeNovo",comparison) |
+           grepl("deblur.*deblur",comparison) |
+           grepl("qiimeOpenRef.*qiimeOpenRef",comparison) |
+           grepl("qiimeClosedRef.*qiimeClosedRef",comparison)) %>% 
+        mutate(estimate = round(estimate, 3),
+           conf.low = round(conf.low, 3),
+           conf.high = round(conf.high, 3)) %>%
+    knitr::kable()
+```
+
+<!-- Plotting pairwise comparisons  -->
+<!-- tky = as.data.frame(TukeyHSD(m)$x) -->
+<!-- tky$pair = rownames(tky) -->
+
+<!-- # Plot pairwise TukeyHSD comparisons and color by significance level -->
+<!-- ggplot(tky, aes(colour=cut(`p adj`, c(0, 0.01, 0.05, 1),  -->
+<!--                            label=c("p<0.01","p<0.05","Non-Sig")))) + -->
+<!--   geom_hline(yintercept=0, lty="11", colour="grey30") + -->
+<!--   geom_errorbar(aes(pair, ymin=lwr, ymax=upr), width=0.2) + -->
+<!--   geom_point(aes(pair, diff)) + -->
+<!--   labs(colour="") -->
+
+## Normalization Method Impact Results
+
+```{r fig.height = 6}
+norm_effect_auc_df %>% 
+    mutate(seq_lab_run = paste(seq_lab, seq_run)) %>% 
+    filter(dist_method %in% c("jaccard_dist", "unifrac_dist")) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = method, y = auc, color = seq_lab_run)) + 
+    geom_hline(aes(yintercept = 0), linetype = 2, color = "grey40") + 
+    facet_grid(pipe~dist_method, scales = "free") +     
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom") + 
+    labs(x = "Normalization method", y = "AUC", color = "Seq Run")
+```
+
+```{r fig.height = 6}
+norm_effect_auc_df %>% 
+    mutate(seq_lab_run = paste(seq_lab, seq_run)) %>% 
+    filter(!(dist_method %in% c("jaccard_dist", "unifrac_dist"))) %>% 
+    # filter(!is.na(auc)) %>% 
+    ggplot() + 
+    geom_boxplot(aes(x = method, y = auc, color = seq_lab_run)) + 
+    geom_hline(aes(yintercept = 0), linetype = 2, color = "grey40") + 
+    facet_grid(pipe~dist_method, scales = "free") +     
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom") + 
+    labs(x = "Normalization method", y = "AUC", color = "Seq Run")
+```
+
+
+
+```{r}
+norm_effect_auc_fit %>% mutate(aov_fit = map(fit, aov), 
+                   tidy_aov = map(aov_fit, broom::tidy)) %>% 
+    unnest(tidy_aov) %>% 
+    mutate(sumsq = round(sumsq, 3),
+           meansq = round(meansq, 3),
+           statistic = round(statistic, 1)) %>% 
+    knitr::kable()
+```
+
+### Post-Hoc Test
+__TODO__ Convert normalization method comparison to plot
+```{r}
+norm_effect_auc_fit %>% mutate(anova_fit = map(fit, aov), 
+                   tukey_fit = map(anova_fit, TukeyHSD),
+                   tidy_tukey = map(tukey_fit, broom::tidy)) %>% 
+    unnest(tidy_tukey) %>% 
+    ## Comparison to RAW 
+    filter(term == "method", grepl("RAW", comparison)) %>%
+    mutate(estimate = round(estimate, 3),
+           conf.low = round(conf.low, 3),
+           conf.high = round(conf.high, 3)) %>%
+    knitr::kable()
+```
+
+## AUC Regression Diagnostics 
+### Fit Summary Statistics 
+```{r}
+auc_fit %>% mutate(glance_fit = map(fit, broom::glance)) %>% 
+    unnest(glance_fit) %>% 
+    select(-data, -fit) %>% 
+    gather(metric, value, -dist_method) %>% 
+    spread(dist_method, value) %>% 
+    knitr::kable(digits = 3)
+```
+
+### Diagnostic Plots
+```{r}
+map2(auc_fit$fit, auc_fit$dist_method, ~print(autoplot(.x) + ggtitle(.y))) 
+```
+
+
+## Normalization Method Effect 
+### Fit Summary Statistics
+```{r}
+norm_effect_auc_fit %>% mutate(glance_fit = map(fit, broom::glance)) %>% 
+    unnest(glance_fit) %>% 
+    select(-data, -fit) %>% 
+    gather(metric, value, -dist_method, -pipe) %>% 
+    spread(dist_method, value) %>% 
+    filter(metric %in% c("adj.r.squared","AIC","BIC","logLik")) %>% 
+    knitr::kable(digits = 3)
+```
+
+### Diagnostic Plots
+```{r}
+plot_fit <- norm_effect_auc_fit %>% mutate(plot_lab = paste(pipe, dist_method))
+map2(plot_fit$fit, plot_fit$plot_lab, ~print(autoplot(.x) + ggtitle(.y))) 
+```
