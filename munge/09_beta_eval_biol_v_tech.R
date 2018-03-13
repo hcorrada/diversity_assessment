@@ -105,30 +105,30 @@ compute_diversity_stats<-function(map, metric){
         tmp$pipe<-data$pipe[i]
         tmp$normalization<-data$method[i]
         tmp$metric<-metric
-        
-        # CONDITIONAL EFFECTS
-        # fraction [a+d+f+g] X1=seq_run:
-        run_cond <- vegan::dbrda(dist_data ~ seq_run_merged + Condition(biosample_id) + Condition(t_fctr), 
-                     data = map_sub)
-        run_cond.a<-anova(run_cond)
-        # fraction [b+d+e+g] X2=sample:
-# Error in matrix(NA, ncol = ncol(wa)) : data is too long
-        sample_cond <- vegan::dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr), 
-                        data = map_sub)
-        sample_cond.a<-anova(sample_cond)
-        # fractions [c+e+f+g] X3=titration:
-# Error in matrix(NA, ncol = ncol(wa)) : data is too long
-        titration_cond <- vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
-                           data = map_sub)
-        titration_cond.a<-anova(titration_cond)
-        
-        p_values<-rbind(run_cond.a$`Pr(>F)`[1], sample_cond.a$`Pr(>F)`[1], 
-                        titration_cond.a$`Pr(>F)`[1])
-        tmp<-cbind(tmp, p_values)
-        # Create column of significance labels
-        tmp$significance <- cut(tmp$p_values, breaks=c(-Inf, 0.001, 0.01, 0.05, Inf), 
-                                label=c("***", "**", "*", ""))
-        tmp$significance[is.na(tmp$significance)]<-""
+###GETTING ERRORS WHEN RUNNING WITH JACCARD-- TAKING THIS SECTION OUT FOR NOW, NOT SURE IF WE WANT TO USE THIS OR ANOTHER APPROACH        
+#         # CONDITIONAL EFFECTS
+#         # fraction [a+d+f+g] X1=seq_run:
+#         run_cond <- vegan::dbrda(dist_data ~ seq_run_merged + Condition(biosample_id) + Condition(t_fctr), 
+#                      data = map_sub)
+#         run_cond.a<-anova(run_cond)
+#         # fraction [b+d+e+g] X2=sample:
+# # Error in matrix(NA, ncol = ncol(wa)) : data is too long
+#         sample_cond <- vegan::dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr), 
+#                         data = map_sub)
+#         sample_cond.a<-anova(sample_cond)
+#         # fractions [c+e+f+g] X3=titration:
+# # Error in matrix(NA, ncol = ncol(wa)) : data is too long
+#         titration_cond <- vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id), 
+#                            data = map_sub)
+#         titration_cond.a<-anova(titration_cond)
+#         
+#         p_values<-rbind(run_cond.a$`Pr(>F)`[1], sample_cond.a$`Pr(>F)`[1], 
+#                         titration_cond.a$`Pr(>F)`[1])
+#         tmp<-cbind(tmp, p_values)
+#         # Create column of significance labels
+#         tmp$significance <- cut(tmp$p_values, breaks=c(-Inf, 0.001, 0.01, 0.05, Inf), 
+#                                 label=c("***", "**", "*", ""))
+#         tmp$significance[is.na(tmp$significance)]<-""
         return(tmp)
     })
     
