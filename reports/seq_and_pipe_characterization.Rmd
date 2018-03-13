@@ -128,7 +128,7 @@ pipe_char_summary <- pipe_char_df %>%
     unnest() %>% 
     left_join(mgtstMetadata) %>% 
     filter(biosample_id != "NTC") %>% 
-    group_by(pipe, n_taxa, n_samples, sparsity) %>% 
+    group_by(pipe, n_taxa, n_samples, num_singletons, sparsity) %>% 
     summarise(total_abu_med = round(median(total_abu),0),
               total_abu_max = round(max(total_abu),0),
               total_abu_min = round(min(total_abu),0), 
@@ -144,12 +144,15 @@ pipe_char_summary <- pipe_char_df %>%
            -pass_rate_med, -pass_rate_max, -pass_rate_min)
 
 pipe_char_summary %>% 
-    select(pipe, n_taxa, n_samples, sparsity, total_abu_summary, pass_rate_summary) %>% 
-      dplyr::rename(Pipelines = pipe, Features = n_taxa, Samples = n_samples, 
+    select(pipe, n_taxa, num_singletons, n_samples,  sparsity, 
+           total_abu_summary, pass_rate_summary) %>% 
+      dplyr::rename(Pipelines = pipe, Features = n_taxa, 
+                    Singletons = num_singletons,
+                    Samples = n_samples, 
                     Sparsity = sparsity, 
                     `Total Abundance` = total_abu_summary, 
                     `Pass Rate` = pass_rate_summary) %>% 
-      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. Four pipelines, de novo, open reference, closed reference, and deblur (sequence inference), used the sample sequence pre-processing methods. DADA2 is a denoising sequence inference pipeline and mothur is a de-novo clustering pipeline. No template controls were excluded from summary statistics. Sparsity is the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2) in the count. Sample coverage is the median and range (minimum - maximum) per sample total feature abundance. Filter rate is the proportion of reads that were removed while processing the sequencing data for each bioinformatic pipeline.", booktabs = TRUE)
+      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. Four pipelines, de novo, open reference, closed reference, and deblur (sequence inference), used the sample sequence pre-processing methods. DADA2 is a denoising sequence inference pipeline and mothur is a de-novo clustering pipeline. No template controls were excluded from summary statistics. Sparsity is the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2) in the count. Singletons is the total number of OTUs comprised of a single read in a single sample. Sample coverage is the median and range (minimum - maximum) per sample total feature abundance. Filter rate is the proportion of reads that were removed while processing the sequencing data for each bioinformatic pipeline.", booktabs = TRUE)
 ```
 
 
