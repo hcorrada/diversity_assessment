@@ -8,21 +8,21 @@ output:
 ---
 
 ```{r seqPipeCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
-#library(ProjectTemplate)
-#load.project() 
+library(ProjectTemplate)
+load.project() 
 
-library(iNEXT)
+#library(iNEXT)
 
 run_colors=c(jhu1="#E41A1C", jhu2="#4A72A6", nist1="#48A462", nist2="#A35390")
 run_colors2=c('jhu_run1_2-A10'="#E41A1C", 'jhu_run2_2-A10'="#4A72A6", 'nist_run1_2-A10'="#48A462", 'nist_run2_2-A10'="#A35390")
-pipe_colors=c(dada="#5D995D", deblur="#bf548c", mothur="#ef8a1e", 
-              qiimeClosedRef="#f2ae02", qiimeOpenRef="#c63f4a", 
-              qiimeDeNovo="#7190c4")
+pipe_colors=c(dada="#5D995D", q_deblur="#bf548c", mothur="#ef8a1e", 
+              q_closed="#f2ae02", q_open="#c63f4a", 
+              q_denovo="#7190c4")
 norm_colors=c(rare2000="#974661", rare5000="#3E8E93", rare10000="#9b6ba3", 
               raw="black", rareq15="#FFA100", RLE="#DB728C", CSS="#B75F49", 
               TMM="#526E9F", UQ="#f2d51a", TSS="#66ad85")
 
-ps_list <- list.files("~/diversity_assessment/data/phyloseq_objects", full.names = TRUE) %>% 
+ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>% 
     set_names(str_replace(basename(.), "_ps.rds", "")) %>% 
     map(readRDS)
 
@@ -109,7 +109,7 @@ cov_plot <- ggplot(fit_est_df) +
 seq_qual_dat <- seq_char_df %>% 
     left_join(mgtstMetadata) %>% 
     filter(biosample_id != "NTC") %>% 
-    mutate(seq_run_id = paste0(seq_lab, seq_run))
+    mutate(seq_run_id = paste0(seq_lab, seq_run)) 
 
 ## See 2018-02-15 for linear model results - all statistically significantly different 
 
@@ -129,6 +129,12 @@ ggarrange(cov_plot, error_plot, seq_qual_plot, labels = "AUTO", ncol = 3)
 ```{r pipeCharTbl, echo = FALSE, message = FALSE, warning = FALSE}
 pipe_char_summary <- pipe_char_df %>%
     unnest() %>% 
+    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
+                          if_else(pipe == "qiimeOpenRef", "q_open", 
+                                  if_else(pipe == "qiimeClosedRef", "q_closed",
+                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
+                                          pipe)))),
+           pipe = factor(pipe)) %>%
     left_join(mgtstMetadata) %>% 
     filter(biosample_id != "NTC") %>% 
     group_by(pipe, n_taxa, n_samples, num_singletons, sparsity) %>% 
@@ -144,7 +150,7 @@ pipe_char_summary <- pipe_char_df %>%
                                       pass_rate_max, "-", pass_rate_min,")")) %>% 
     mutate(sparsity = round(sparsity, 3)) %>% 
     select(-total_abu_med, -total_abu_max, -total_abu_min,
-           -pass_rate_med, -pass_rate_max, -pass_rate_min)
+           -pass_rate_med, -pass_rate_max, -pass_rate_min) 
 
 pipe_char_summary %>% 
     select(pipe, n_taxa, num_singletons, n_samples,  sparsity, 
@@ -201,12 +207,20 @@ ps_iNEXT <- function(ps){
     iNEXT::iNEXT(count_df)
 }
 
+
 rare_plot_df <- tibble(ps_obj = ps_list) %>% 
     add_column(pipe = names(ps_list)) %>% 
+    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
+                          if_else(pipe == "qiimeOpenRef", "q_open", 
+                                  if_else(pipe == "qiimeClosedRef", "q_closed",
+                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
+                                          pipe)))),
+           pipe = factor(pipe)) %>%
     mutate(inext_dat = map(ps_obj, ps_iNEXT),
            rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) + theme_bw() + ggtitle(.y)+
                    scale_color_manual(values=run_colors2)})) %>%
     select(-ps_obj, -inext_dat)
+
 ```
 
 ```{r rarePlot, fig.cap = "Rarefaction curves for example sample across pipelines and sequencing runs.", fig.height=6, fig.width=8} 
