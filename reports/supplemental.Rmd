@@ -11,3 +11,17 @@ output: html_document
 fqs <- list.files("data/example_seq_data", full.names = TRUE)
 dada2::plotQualityProfile(fqs)
 ```
+
+```{r rarefactionTbl, echo = FALSE, message = FALSE, warning = FALSE}
+norm_level_ord=c("rare2000", "rare5000", "rare10000", "rareq15")
+rare_char_df$norm<-factor(rare_char_df$norm, levels=norm_level_ord, ordered = T)
+rare_char_df<-rare_char_df[order(rare_char_df$norm),]
+rare_char_df %>% 
+    select(pipe, norm, n_reads, n_taxa, n_samples) %>% 
+      dplyr::rename(Pipeline = pipe, 
+                    Normalization = norm,
+                    Reads = n_reads,
+                    Features = n_taxa, 
+                    Samples = n_samples) %>% 
+      knitr::kable(caption = "Summary statistics for rarefaction levels of the different bioinformatic pipelines.", booktabs = TRUE)
+```
