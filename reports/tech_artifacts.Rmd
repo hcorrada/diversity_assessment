@@ -12,6 +12,7 @@ output:
 ```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
 load.project()
+
 library(ggthemes)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
@@ -109,17 +110,33 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     scale_fill_manual(values = run_colors)
 ```
 
-```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers."}
+```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean weighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=6, fig.width=12}
 norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15", 
                     "CSS", "RLE", "TMM", "TSS", "UQ") 
-tech_art_df %>% 
+tech_art_df_for_plot_RAW <- tech_art_df %>% 
     ungroup() %>% 
+    filter(normalization=="RAW" & seq_run_id=="nist_run1") %>% 
+    group_by(pipe,metric,f_type,weight) %>%
+    summarize(RAW_median= as.numeric(as.character(summary(mean_dist)[3])),
+              RAW_first_quartile=as.numeric(as.character(summary(mean_dist)[2])),
+              RAW_third_quartile=as.numeric(as.character(summary(mean_dist)[5])))
+
+tech_art_df_for_plot <- tech_art_df %>% ungroup() %>% filter(normalization!="RAW", seq_run_id=="nist_run1")
+tech_art_df_for_plot<-merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW, 
+                            by=c("pipe","metric","f_type","weight"))
+
+tech_art_df_for_plot %>% 
+    filter(weight=="Weighted") %>%
     mutate(normalization = factor(normalization, 
                        levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
     ggplot() + 
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization)) +
-    facet_grid(pipe~metric,scales = "free_x", space = "free") + 
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, 
+                          group=interaction(normalization,pipe)), position = position_dodge(), size=1) + 
+    geom_line(aes(x=normalization, y=RAW_median, group=interaction(pipe, f_type)))+
+    geom_line(aes(x=normalization, y=RAW_first_quartile, group=interaction(pipe, f_type)),linetype="dashed")+
+    geom_line(aes(x=normalization, y=RAW_third_quartile, group=interaction(pipe, f_type)), linetype="dashed")+
+    facet_grid(f_type~pipe,scales = "free", space = "free") + 
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0), 
           legend.position = "none") + 
@@ -129,6 +146,26 @@ tech_art_df %>%
     scale_color_manual(values = norm_colors)
 ```
 
+
+```{r techNormImpactALL2, fig.cap = "Impact of normalization method on mean unweighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=6, fig.width=12, eval=F}
+
+tech_art_df_for_plot %>% 
+    filter(weight=="Unweighted") %>%
+    mutate(normalization = factor(normalization, 
+                       levels = norm_level_ord, ordered = T)) %>% 
+    filter(seq_run_id %in% c("nist_run1")) %>% 
+    ggplot() + 
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, 
+                          group=interaction(normalization,pipe)), position = position_dodge(), size=1) + 
+    geom_line(aes(x=normalization, y=RAW_median, group=interaction(pipe, f_type)))+
+    geom_line(aes(x=normalization, y=RAW_first_quartile, group=interaction(pipe, f_type)),linetype="dashed")+
+    geom_line(aes(x=normalization, y=RAW_third_quartile, group=interaction(pipe, f_type)), linetype="dashed")+
+    facet_grid(f_type~pipe,scales = "free", space = "free") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none") + 
+    labs(x = "Normalization", y = "Change in Mean Beta Diversity", 
+         color = "Pipeline") +scale_color_manual(values=norm_colors)
+```
 We evaluated differences in beta diversity between PCR replicates between the four sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 
 Higher pairwise distances for NIST runs indicate diversity metrics negatively impacted by larger variation in total abundance across PCR replicates. 
 Whereas higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are less robust to sequencing errors. 
