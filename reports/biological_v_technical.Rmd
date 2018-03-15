@@ -14,14 +14,6 @@ Biological versus technical variation results section, comparison of pairwise di
 ```{r bioVtechSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
 load.project()
-
-run_colors=c(jhu1="#E41A1C", jhu2="#4A72A6", nist1="#48A462", nist2="#A35390")
-pipe_colors=c(dada="#5D995D", q_deblur="#bf548c", mothur="#ef8a1e", 
-              q_closed="#f2ae02", q_open="#c63f4a", 
-              q_denovo="#7190c4")
-norm_colors=c(rare2000="#974661", rare5000="#3E8E93", rare10000="#9b6ba3", 
-              raw="black", rareq15="#FFA100", RLE="#DB728C", CSS="#B75F49", 
-              TMM="#526E9F", UQ="#f2d51a", TSS="#66ad85")
 ## load required libraries
 ```
 
