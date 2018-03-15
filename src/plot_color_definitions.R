@@ -16,11 +16,11 @@ run_colors2 <- c(
 
 pipe_colors <- c(
     dada = "#5D995D",
-    deblur = "#bf548c",
+    q_deblur = "#bf548c",
     mothur = "#ef8a1e",
-    qiimeClosedRef = "#f2ae02",
-    qiimeOpenRef = "#c63f4a",
-    qiimeDeNovo = "#7190c4"
+    q_closed = "#f2ae02",
+    q_open = "#c63f4a",
+    q_denovo = "#7190c4"
 )
 
 norm_colors <- c(
