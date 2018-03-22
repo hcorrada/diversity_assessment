@@ -41,6 +41,10 @@ calc_beta_div <- function(rds_file, div_metric){
         }
     } else if (div_metric == "jaccard") {
         div_results <- safe_dist(norm_ps, method = "j")
+        if (is.null(div_results$error)) {
+            ## Make consistent with other metrics converting to dissimilarity
+            div_results$result <- 1 - div_results$result
+        }
     } else if (div_metric == "bray") {
         div_results <- safe_dist(norm_ps, method = "bray")
     } else {
