@@ -66,9 +66,17 @@ and (3) ability to distinguish between groups of samples with varying levels of 
 - To assess beta-diversity repeatability we compared beta-diversity values between PCR replicates within the four sequencing runs. 
 - Sequencing runs different characteristics, variance in sample total abundance and sequence quality 
 - Compared mean beta diversity between PCR replicates for across pipelines for the four beta diversity metrics. 
-- Used __XYZ model__ to test for differences. 
-- Evaluated the impact of normalization methods for NIST run 1. 
-- Used __XYZ model__ to test for significance. 
+- Used a linear model and Tukey Honest Significant Differences to test for differences between pipelines and across sequencing runs for each of the diversity metrics calculated for the raw count data. 
+    - Equation: $\bar{D_i} = P_j\Beta_0 + S_k\Beta_1 + P*S\Beta_2$ 
+        - $D_{ijk}$ mean diversity metric for sample $i$, pipeline $j$, and sequencing run $k$   
+        - $P_j$ - bioinformatic pipeline   
+        - $S_k$ - sequencing run  
+    - R: `lm(mean_dist~pipe*seq_run_id, data = dat)`
+- Evaluated the impact of normalization methods for NIST run 1.  
+- Used a linear model to and TukeyHSD to quantify the impact of different normalization methods on sample to sample variability. 
+    - Indendent models fit for each diversity metric-pipeline combination. 
+    - R: `lm(mean_dist~normalization, data = dat)`
+- Model fit was evaluated based on model statistics, AIC, BIC, and logLik, as well as diagnostic plots. 
 
 ### Beta Diversity Between Individuals and Treatments
 - To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.  
