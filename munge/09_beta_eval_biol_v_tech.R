@@ -192,7 +192,8 @@ get_variation <- function(sample_comparisons) {
   # Classify variation (biological or technical) and add variation labels (between timepoint variation, etc.)
   ## biological variation
   # between timepoint variation
-  between_timepoint <- subset(sample_comparisons, sample_comparisons$same_timepoint == FALSE &
+  between_timepoint <- subset(sample_comparisons, 
+                              sample_comparisons$same_timepoint == FALSE &
                                 sample_comparisons$same_seq_lab == TRUE &
                                 sample_comparisons$same_seq_run == TRUE)
   between_timepoint$variation <- "biological"
@@ -215,35 +216,32 @@ get_variation <- function(sample_comparisons) {
   within_individual_timepoint$variation_label <- "w/in_subj_btw_time"
   
   variation <- rbind(between_timepoint, between_individual)
-  rbind(variation, within_individual_timepoint)
-}
-
-
-get_biol_v_tech_variation_comparison_map <- function(sample_comparisons, variation) {
+  variation <- rbind(variation, within_individual_timepoint) 
+  
   ## technical variation
   # between seq labs
   between_seq_labs <- subset(sample_comparisons, sample_comparisons$same_individual == TRUE & 
-                               sample_comparisons$same_timepoint == TRUE &
-                               sample_comparisons$same_pcr_product == TRUE &
-                               sample_comparisons$same_seq_lab == FALSE)
+                                 sample_comparisons$same_timepoint == TRUE &
+                                 sample_comparisons$same_pcr_product == TRUE &
+                                 sample_comparisons$same_seq_lab == FALSE)
   between_seq_labs$variation <- "technical"
   between_seq_labs$variation_label <- "btw_labs"
   
   # within seq labs run variation
   within_seq_lab_runs <- subset(sample_comparisons, sample_comparisons$same_individual == TRUE & 
-                                  sample_comparisons$same_timepoint == TRUE &
-                                  sample_comparisons$same_seq_lab == TRUE &
-                                  sample_comparisons$same_pcr_product == TRUE &
-                                  sample_comparisons$same_seq_run == FALSE)
+                                    sample_comparisons$same_timepoint == TRUE &
+                                    sample_comparisons$same_seq_lab == TRUE &
+                                    sample_comparisons$same_pcr_product == TRUE &
+                                    sample_comparisons$same_seq_run == FALSE)
   within_seq_lab_runs$variation <- "technical"
   within_seq_lab_runs$variation_label <- "w/in_lab_runs"
   
   # within seq labs PCR product variation
   within_seq_lab_pcr <- subset(sample_comparisons, sample_comparisons$same_individual == TRUE & 
-                                 sample_comparisons$same_timepoint == TRUE &
-                                 sample_comparisons$same_seq_lab == TRUE &
-                                 sample_comparisons$same_seq_run == TRUE &
-                                 sample_comparisons$same_pcr_product == FALSE)
+                                   sample_comparisons$same_timepoint == TRUE &
+                                   sample_comparisons$same_seq_lab == TRUE &
+                                   sample_comparisons$same_seq_run == TRUE &
+                                   sample_comparisons$same_pcr_product == FALSE)
   within_seq_lab_pcr$variation <- "technical"
   within_seq_lab_pcr$variation_label <- "w/in_lab_pcr"
   
@@ -254,11 +252,17 @@ get_biol_v_tech_variation_comparison_map <- function(sample_comparisons, variati
   
   # Order variation types
   variation$variation_label <- factor(variation$variation_label, 
-                                    levels = c("btw_subj_w/in_time", 
-                                             "w/in_subj_btw_time", 
-                                             "btw_time", "w/in_lab_pcr", 
-                                             "w/in_lab_runs","btw_labs"))
+                                      levels = c("btw_subj_w/in_time", 
+                                                 "w/in_subj_btw_time", 
+                                                 "btw_time", "w/in_lab_pcr", 
+                                                 "w/in_lab_runs","btw_labs"))
   
+  variation
+}
+
+
+get_biol_v_tech_variation_comparison_map <- function(variation) {
+
   # Generate dataframe to plot what comparisons are being made
   variation_tmp <- unique(variation[,c(3:7,9)])
   # Clean up and merge duplicates in same variation label
@@ -280,9 +284,8 @@ get_biol_v_tech_variation_comparison_map <- function(sample_comparisons, variati
 
 get_bio_v_tech_var_comp <- function(mgtstMetadata) {
     map_sub <- get_map_sub(mgtstMetadata) 
-    sample_comparisons <- get_sample_comparisons(map_sub)
-    variation <- get_variation(sample_comparisons) 
-    biol_v_tech_variation_comparison_map <- get_biol_v_tech_variation_comparison_map(sample_comparisons, variation)  
+    variation <- get_sample_comparisons(map_sub) %>% get_variation() 
+    biol_v_tech_variation_comparison_map <- get_biol_v_tech_variation_comparison_map(variation)  
     
   # Unweighted metrics
   unweighted_unifrac_comp <- compute_diversity_comparisons(map_sub, "unifrac", variation)
