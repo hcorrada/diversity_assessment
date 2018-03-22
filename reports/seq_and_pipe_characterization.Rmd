@@ -8,8 +8,8 @@ output:
 ---
 
 ```{r seqPipeCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
-#library(ProjectTemplate)
-#load.project() 
+library(ProjectTemplate)
+load.project()
 
 library(iNEXT)
 
