@@ -166,9 +166,20 @@ tech_art_df_for_plot %>%
     labs(x = "Normalization", y = "Change in Mean Beta Diversity", 
          color = "Pipeline") +scale_color_manual(values=norm_colors)
 ```
+
+
 We evaluated differences in beta diversity between PCR replicates between the four sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 
 Higher pairwise distances for NIST runs indicate diversity metrics negatively impacted by larger variation in total abundance across PCR replicates. 
 Whereas higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are less robust to sequencing errors. 
+
+- Pipeline, sequencing run, and interactions all significants for the four distance metrics  
+- Mothur, dada, and deblur lower mean pairwise distance compared to other pipelines, for all metrics excluding Jaccard, opposite trend. 
+- Mothur and qiime Closed ref not significantly different for Unifrac  
+- Pipeline seq run results 
+    - Mess 
+
+
+
 Mean pairwise distance was greater for qiime De-novo, open and closed reference pipelines for JHU1 (lower quality and greater variability) relative to the other sequencing runs for all metrics excluding weighted UniFrac (Fig. \@ref(fig:techMeanDist)).
 QIIME _de novo_ had high mean pairwise distance across sequencing runs for unweighted UniFrac and low for weighted Unifrac. 
 The low weighted UniFrac for QIIME _de novo_ is potentially due to large number of singletons in the dataset, ~120K out of ~180K total features. 
