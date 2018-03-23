@@ -14,7 +14,7 @@ Biological versus technical variation results section, comparison of pairwise di
 ```{r bioVtechSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
 load.project()
-## load required libraries
+source("src/plot_color_definitions.R")
 ```
 
 ```{r bioVtechMunge, warning=FALSE, message=FALSE, echo = FALSE}
