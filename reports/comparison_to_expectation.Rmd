@@ -33,7 +33,11 @@ auc_dat <- auc_summary %>%
     filter(!(method %in% c("rare2000","rare10000", "UQ","RLE"))) %>% 
     summarise(med_auc = median(auc)) %>% 
     ungroup() %>%
-    mutate(pipe = if_else(pipe == "deblur", "qiimeDeblur",pipe),
+    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
+                          if_else(pipe == "qiimeOpenRef", "q_open", 
+                                  if_else(pipe == "qiimeClosedRef", "q_closed",
+                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
+                                          pipe)))),
            pipe = factor(pipe)) %>% 
     mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
                             "Phylogenetic","Taxonomic"),
@@ -42,7 +46,8 @@ auc_dat <- auc_summary %>%
 ```
 
 
-```{r compToExpAUC, message = FALSE, warning = FALSE, echo = FALSE, fig.cap = "Comparison of median AUC for clustering results across pipelines and normalization methods for four beta diversity metrics. Grey line indicates, the median AUC for unnormalized, raw, count table values. Points above the grey line are normalization methods that improve performance and below are methods that decrease performance."}
+```{r compToExpAUC, message = FALSE, warning = FALSE, echo = FALSE, fig.cap = "Comparison of median AUC for clustering results across pipelines and normalization methods for four beta diversity metrics. Grey line indicates, the median AUC for unnormalized, raw, count table values. Points above the grey line are normalization methods that improve performance and below are methods that decrease performance.", fig.height=4, fig.width=6}
+
 auc_dat %>% filter(method != "RAW") %>% 
     ggplot(aes(x = pipe)) + 
     geom_blank() +

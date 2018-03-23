@@ -13,6 +13,9 @@ output:
 library(ProjectTemplate)
 load.project()
 
+# library(ggridges)
+# library(ggpubr)
+
 library(ggthemes)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
@@ -96,8 +99,14 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     facet_grid(pipe~metric, scales = "free_x") + theme_bw()
 ```
 
-```{r techMeanDist, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data."}
-tech_art_df %>% filter(normalization == "RAW") %>% 
+```{r techMeanDist, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data.", fig.height=4, fig.width=6}
+tech_art_df %>% mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
+                          if_else(pipe == "qiimeOpenRef", "q_open", 
+                                  if_else(pipe == "qiimeClosedRef", "q_closed",
+                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
+                                          pipe)))),
+           pipe = factor(pipe)) %>% 
+    filter(normalization == "RAW") %>% 
     ggplot() + 
     geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
                  outlier.size = 0.5) + 
@@ -110,7 +119,7 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     scale_fill_manual(values = run_colors)
 ```
 
-```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean weighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=6, fig.width=12}
+```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean weighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=4, fig.width=10}
 norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15", 
                     "CSS", "RLE", "TMM", "TSS", "UQ") 
 tech_art_df_for_plot_RAW <- tech_art_df %>% 
@@ -126,6 +135,12 @@ tech_art_df_for_plot<-merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW,
                             by=c("pipe","metric","f_type","weight"))
 
 tech_art_df_for_plot %>% 
+    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
+                          if_else(pipe == "qiimeOpenRef", "q_open", 
+                                  if_else(pipe == "qiimeClosedRef", "q_closed",
+                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
+                                          pipe)))),
+           pipe = factor(pipe)) %>%
     filter(weight=="Weighted") %>%
     mutate(normalization = factor(normalization, 
                        levels = norm_level_ord, ordered = T)) %>% 
