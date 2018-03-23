@@ -1,21 +1,14 @@
 # Before sending to Hector
-## Statistical Models
-- technical artifacts - Nate
+
+## Statistical Models / Analysis
 - bio v. technical variation - mixed effects linear model with varpart   
 
-## Analysis
-- batch effects - Jackie
-- incorporate signal-to-noise - Nate
-
 ## Manuscript
-- revise methods - Nate
+- revise results with 
+    - signal to noise
+    - tech art stats
 - revise discussion - Nate
   + For discussion — look up reareq15 stats - Jackie (phyloseq colSum)
-- clean-up figures and tables
-    Change deblur and qiime pipelines to qXYZ
-    Fig 1- resize to fit
-    Table 1- add number of singletons - Jackie (phyloseq rowSum == 1)
-    Fig 4- split into two (weighted and unweighted), add lines for raw interquartile range and median values, generate for other seq runs (JHU 1&2 and NIST2) to add to supplemental— are there any major differences (esp with rarefaction for poorer quality runs) - Jakie
 - Review draft - Jackie Friday
 
 
@@ -30,6 +23,9 @@
         - Bio v. Technical 
         - Signal/noise - Nate
     - Technical artifacts norm method plot for other sequencing runs
+    - Fig 4: weighted and unweighted metrics and figures for the other seq runs
+    - Example PCA to show bio v. tech 
+
 - Look into QIIME default parameters
 
 ## Coding and Reproducibility
@@ -38,6 +34,9 @@
 - consistent variable names
 - faster manuscript build
 - long term: using drake for munging https://ropensci.org/blog/2018/02/06/drake/
+
+## Notes
+- Look into adding PCR plate and lab effect to varpart 
 
 ## Backing up
 using rsync to backup repo to remote repository
