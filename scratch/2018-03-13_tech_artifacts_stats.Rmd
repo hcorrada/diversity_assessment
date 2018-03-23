@@ -1,0 +1,201 @@
+---
+title: "Technical Artifacts Stats"
+author: "Nate Olson"
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
+---
+
+```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+library(ggfortify)
+## load required libraries
+```
+
+
+```{r}
+qual_df <- seq_qual_comparisons %>% 
+    mutate(read_dir = paste0(read_dir, "_qual")) %>% 
+    select(-sd_quality, -cov_quality) %>% 
+    spread(read_dir, mean_quality) %>% 
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), remove = FALSE,extra = "merge")
+
+tech_art_df <- seq_char_comparisons %>% 
+    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
+    left_join(qual_df) %>% 
+    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+                            "Phylogenetic","Taxonomic"),
+           weight = if_else(metric %in% c("unifrac","jaccard"),
+                            "Unweighted", "Weighted")) 
+
+tech_info_df <- tech_art_df %>% 
+    filter(normalization == "RAW") %>% 
+    select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>% 
+    distinct() 
+
+
+norm_impact <- tech_art_df %>% 
+    select(biosample_id, t_fctr, seq_run_id, pipe, normalization, metric, mean_dist) %>% 
+    spread(normalization, mean_dist) %>% 
+    gather(normalization, mean_dist, -biosample_id, -t_fctr, -seq_run_id, -pipe, -metric, -RAW) %>% 
+    mutate(dist_change = mean_dist - RAW) %>% 
+    filter(!is.na(dist_change)) %>% 
+    group_by(metric, pipe, normalization, seq_run_id) %>% 
+    summarise(dist_change = median(dist_change)) 
+```
+## Fitting linear model
+
+```{r}
+tech_art_fit <- tech_art_df %>% filter(normalization == "RAW") %>% 
+    rename(dist_method = metric) %>% 
+    # mutate(fit_dist = if_else(dist_method == "wunifrac", log(mean_dist), mean_dist)) %>% 
+    group_by(dist_method) %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lm(mean_dist ~ 0 + pipe*seq_run_id, data = .))) 
+
+tech_art_tukey <- tech_art_fit %>% mutate(anova_fit = map(fit, aov), 
+                   tukey_fit = map(anova_fit, TukeyHSD),
+                   tidy_tukey = map(tukey_fit, broom::tidy)) %>% 
+    unnest(tidy_tukey) 
+```
+
+## Raw Stats
+```{r}
+tech_art_fit %>% mutate(aov_fit = map(fit, aov), 
+                   tidy_aov = map(aov_fit, broom::tidy)) %>% 
+    unnest(tidy_aov) %>% 
+    mutate(sumsq = round(sumsq, 3),
+           meansq = round(meansq, 3),
+           statistic = round(statistic, 1)) %>% 
+    knitr::kable()
+```
+
+```{r}
+tech_art_tukey %>% 
+    ## Excluding significant
+    filter(adj.p.value > 0.001) %>% ## Using conservative value in place of multiple test correction ...
+    ## Excluding inter pipe run comparisons 
+    filter(term != "pipe:seq_run_id") %>% 
+    mutate(estimate = round(estimate, 3),
+           conf.low = round(conf.low, 3),
+           conf.high = round(conf.high, 3)) %>%
+    knitr::kable()
+```
+
+```{r}
+tech_art_fit %>% mutate(tidy_fit = map(fit, broom::tidy)) %>% 
+    unnest(tidy_fit) 
+```
+
+
+```{r}
+bare_pipes <- c("deblur","mothur","dada")
+qiime_pipes <- paste0("qiime", c("OpenRef","ClosedRef","DeNovo"))
+pipe_vars <- c(bare_pipes, qiime_pipes)
+
+tech_art_fit %>% mutate(tidy_fit = map(fit, broom::tidy)) %>% 
+    unnest(tidy_fit) %>%
+    mutate(term = str_replace(term, "pipe","")) %>% 
+    filter(term %in% pipe_vars) %>%
+    ggplot() +
+    geom_point(aes(x = term, y = estimate)) +
+    geom_linerange(aes(x = term, ymin = estimate - 2*std.error, ymax = estimate + 2*std.error)) +
+    facet_wrap(~dist_method, ncol = 1, scales = "free_y") +
+    theme_bw() +
+    labs(x = "Bioinformatic pipeline", y = "Estimate")
+```
+
+```{r}
+tech_art_tukey %>% 
+    filter(term == "pipe") %>% 
+    mutate(p_val = case_when(adj.p.value < 0.001 ~ "p < 0.001",
+                             adj.p.value < 0.01 ~ "p < 0.01",
+                             adj.p.value < 0.05 ~ "p < 0.05",
+                             TRUE ~ "NS")) %>% 
+    ggplot() + 
+    geom_hline(aes(yintercept = 0), linetype = 2) + 
+    geom_linerange(aes(x = comparison, ymin = conf.low, ymax = conf.high, color = p_val)) + 
+    geom_point(aes(x = comparison, y = estimate, color = p_val)) + 
+    facet_wrap(~dist_method) +
+    coord_flip() + 
+    theme_bw()
+```
+
+```{r}
+tech_art_fit %>% mutate(anova_fit = map(fit, aov), 
+                   tukey_fit = map(anova_fit, TukeyHSD),
+                   tidy_tukey = map(tukey_fit, broom::tidy)) %>% 
+    unnest(tidy_tukey) %>% 
+        filter(grepl("dada.*dada",comparison) |
+           grepl("mothur.*mothur",comparison) |
+           grepl("qiimeDeNovo.*qiimeDeNovo",comparison) |
+           grepl("deblur.*deblur",comparison) |
+           grepl("qiimeOpenRef.*qiimeOpenRef",comparison) |
+           grepl("qiimeClosedRef.*qiimeClosedRef",comparison)) %>% 
+    mutate(pipe = str_extract(comparison, "[:alpha:]*(?=:)"),
+           comp_run = str_replace_all(comparison, paste0(pipe,":"),""),
+           comp_run = str_replace_all(comp_run, "_run","")) %>% 
+    separate(comp_run, c("A","B"), sep = "-",remove = FALSE) %>% 
+    mutate(p_val = case_when(adj.p.value < 0.001 ~ "p < 0.001",
+                             adj.p.value < 0.01 ~ "p < 0.01",
+                             adj.p.value < 0.05 ~ "p < 0.05",
+                             TRUE ~ "NS")) %>%
+
+    ggplot() +
+    geom_hline(aes(yintercept = 0), linetype = 2) +
+    geom_linerange(aes(x = comp_run, ymin = conf.low, ymax = conf.high, color = p_val)) +
+    geom_point(aes(x = comp_run, y = estimate, color = p_val)) +
+    facet_grid(pipe~dist_method, scale = "free_y") +
+    coord_flip() +
+    theme_bw()
+```
+
+
+### Fit Summary Statistics 
+```{r}
+tech_art_fit %>% mutate(glance_fit = map(fit, broom::glance)) %>% 
+    unnest(glance_fit) %>% 
+    select(-data, -fit) %>% 
+    gather(metric, value, -dist_method) %>% 
+    spread(dist_method, value) %>% 
+    knitr::kable(digits = 3)
+```
+
+### Diagnostic Plots
+```{r}
+tech_art_fit %>% 
+    mutate(diag_plots = map2(fit, dist_method, ~{autoplot(.x) + ggtitle(.y)})) %>% 
+    {print(.$diag_plots)}
+```
+
+```{r}
+norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15",
+                    "CSS", "RLE", "TMM", "TSS", "UQ")
+tech_art_norm_fit <- tech_art_df %>% 
+    ungroup() %>% 
+    mutate(normalization = factor(normalization, levels = norm_level_ord, ordered = T)) %>%
+    filter(seq_run_id %in% c("nist_run1")) %>%
+    rename(dist_method = metric) %>% 
+    group_by(dist_method, pipe) %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lm(mean_dist~normalization, data = .)))
+```
+
+```{r}
+tech_art_norm_fit %>% mutate(glance_fit = map(fit, broom::glance)) %>% 
+    unnest(glance_fit) %>% 
+    select(-data, -fit) %>% 
+    gather(metric, value, -dist_method, -pipe) %>%
+    spread(dist_method, value) %>%
+    knitr::kable(digits = 3)
+```
+
+```{r}
+tech_art_norm_fit %>% 
+    mutate(plot_lab = paste(dist_method, pipe)) %>% 
+    mutate(diag_plots = map2(fit, plot_lab, ~{autoplot(.x) + ggtitle(.y)})) %>% 
+    {print(.$diag_plots)}
+```
+

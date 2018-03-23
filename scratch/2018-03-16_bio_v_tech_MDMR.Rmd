@@ -1,0 +1,149 @@
+---
+title: "Bio v Tech Mixed Effects Analysis"
+author: "Nate Olson"
+date: "3/16/2018"
+output: html_document
+---
+
+Using betadisper to calculate distance from centroid for each biosample then fitting a mixed effects model to characterize technical and biological variation components. 
+
+__TODO__
+* Write up summary for Hector and Nate to make sure approach is sound 
+* Run on all data  
+* Generate summary plot showing how variance components change by pipeline, normalization methods, and distance metrics. 
+
+```{r setup, include=FALSE}
+library(ProjectTemplate)
+load.project()
+library(vegan)
+library(lme4)
+library(broom) 
+```
+
+Functions for analysis 
+```{r}
+varcomp_lmer <- function(object){
+    ## Modified code from HLMdiag::varcomp.mer to use group names
+    vc <- lme4::VarCorr(fit)
+    sig <- attr(vc, "sc")
+    
+    
+    vc.mat <- bdiag(vc)
+    vc.vec <- diag(vc.mat)
+    vc.names <- names(vc) 
+    
+    res <- c(sig^2, vc.vec)
+    names(res) <- c("sigma2", vc.names)
+    return(res)
+}
+
+
+subset_dist <- function(dist_dat, sample_names){
+    
+    ## convert to matrix for subsetting
+    dist_as_mat <- as.matrix(dist_dat) 
+    
+    ## subset distance matrix
+    col_set <- colnames(dist_as_mat) %in% sample_names 
+    row_set <- rownames(dist_as_mat) %in% sample_names 
+    
+    subset_mat <- dist_as_mat[row_set, col_set]
+    
+    ## return dist object 
+    as.dist(subset_mat)
+}
+```
+
+## Prepare data for analysis 
+Example dataset DADA2 pipeline with Bray Curtis
+
+```{r}
+## Distance data
+dada_bray <- readRDS("data/diversity_data/dada_RAW_bray.rds")
+dist_obj <- dada_bray$result 
+
+
+## Sample metadata
+mgtstBiosample <- mgtstMetadata %>% 
+    filter(biosample_id != "NTC", t_fctr %in% c(0,20)) 
+
+mgtstBiosample <- mgtstBiosample %>% 
+    mutate(col = str_remove(pos, "[:alpha:]"),
+           col = as.numeric(col)) %>% 
+    mutate(plate_half = if_else(col < 7, "A","B"),
+           pcr_plate_half = paste(pcr_16S_plate, plate_half, sep = "_"),
+           pcr_plate_half = factor(pcr_plate_half))
+
+dist_obj <- subset_dist(dist_obj, mgtstBiosample$sample_id)
+
+## Calculating sample distance from dataset centroid
+betadispresults <- betadisper(dist_obj, 
+                              rep(1, nrow(mgtstBiosample)), 
+                              type = "centroid") 
+mgtstBiosample$betadisp_dist <- betadispresults$distances
+
+## Fitting mixed effects linear model
+fit <- lmer(betadisp_dist ~ 1 + (1 | biosample_id / t_fctr ) + 
+                (1  | seq_lab/ seq_run / pcr_16S_plate/ pcr_plate_half), 
+            data = mgtstBiosample)
+
+## Annotating sample data with model fit data
+aug_df <- broom::augment(fit, mgtstBiosample)
+```
+
+Model fit statistics
+```{r}
+broom::glance(fit)
+```
+
+## Distances distribution
+```{r}
+mgtstBiosample %>% ggplot() + 
+    ggridges::geom_density_ridges(aes(x = betadisp_dist, y = pcr_plate_half)) + 
+    theme_bw() + 
+    labs(x = "Distance from Centroid", y = "PCR Plate Half")
+```
+
+
+```{r}
+ggplot(aug_df) + geom_point(aes(x = betadisp_dist, y = .resid)) + theme_bw() + 
+    labs(x = "Distance from Centroid", y = "Residual")
+```
+
+```{r}
+ggplot(aug_df) + 
+    geom_qq(aes(sample = scale(.resid))) +
+    geom_abline(aes(intercept = 0, slope = 1)) + 
+    theme_bw() + 
+    ggtitle("QQ-Plot")
+```
+
+
+```{r}
+ggplot(aug_df) + 
+    geom_point(aes(x = .fitted, y = .resid)) + 
+    theme_bw() + 
+    labs(x = "Fitted Values", y = "Residuals")
+```
+
+```{r}
+data.frame(rand_var = varcomp_lmer(fit)) %>% 
+    rownames_to_column(var = "group") %>% 
+    mutate(varcent = rand_var/sum(rand_var) * 100,
+           varcent = round(varcent, 2)) 
+```
+
+
+## Next steps
+- apply method to all dist objects  
+    - for each dist object 
+        - subset dist  
+        - get distances  
+        - plot dist distribution 
+        - fit model 
+        - model diagnostic plots 
+        - model stats 
+        - generate varcomp_df 
+- generate summary figures 
+- identify conclusions 
+- draft method description 

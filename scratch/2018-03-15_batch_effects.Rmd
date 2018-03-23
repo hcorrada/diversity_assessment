@@ -1,0 +1,183 @@
+---
+title: "Bio v Tech Stats"
+author: "Nate Olson"
+date: "3/15/2018"
+output: html_document
+---
+
+```{r}
+library(ProjectTemplate)
+load.project()
+library(ggthemes)
+library(stringr)
+source("src/plot_color_definitions.R")
+```
+
+```{r}
+bio_v_tech_dat <- biol_v_tech_variation[[3]]
+```
+
+
+Excluding JHU Run 1, low quality and high variability. 
+```{r fig.height = 4}
+bio_v_tech_dat %>% filter(normalization == "RAW") %>% 
+    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b)) %>% 
+    ggplot(aes(x = variation_label, y = value, color = variation, fill = variation)) + 
+    geom_tufteboxplot() + 
+    facet_grid(pipe~metric) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
+          legend.position = "bottom") + 
+    labs(x = "Variation Type", y = "Beta Diversity", 
+         fill = "Variation Source", color = "Variation Source")
+```
+
+```{r}
+sample_anno <- bio_v_tech_dat %>% 
+    ungroup() %>% 
+    separate(sample_a, c("seq_lab_a", "seq_run_a", "plate_a", "pos_a")) %>%
+    mutate(row_a = str_sub(pos_a, 1, 1), 
+           col_a = str_sub(pos_a, 2)) %>%
+    separate(sample_b, c("seq_lab_b", "seq_run_b", "plate_b", "pos_b")) %>%
+    mutate(row_b = str_sub(pos_b, 1, 1),
+           col_b = str_sub(pos_b, 2)) %>% 
+    mutate(same_pcr = if_else(plate_a == plate_b & pos_a == pos_b, 1, 0),
+           within_plate_pcr_rep = if_else(plate_a == plate_b & row_a == row_b & col_a != col_b, 1, 0),
+           pcr_plate_rep = if_else(plate_a != plate_b & pos_a == pos_b, 1, 0)) 
+
+```
+
+batch effects look at differences between lab and run for the same pcr
+```{r}
+sample_anno %>% 
+    filter(same_pcr == 1, pipe == "dada", 
+           normalization == "RAW", metric == "bray") %>% 
+    mutate(same_seq_run = as.numeric(same_seq_run)) %>% 
+    mutate(run_comp = paste(seq_lab_a, seq_run_a, seq_lab_b, seq_run_b)) %>% 
+    mutate(run_comp = factor(run_comp)) %>% 
+    ggplot() + 
+    geom_line(aes(x = run_comp, y = value, group = paste(plate_a, pos_a), color = plate_a)) + 
+    coord_flip()
+    
+```
+
+
+```{r}
+sample_anno %>% 
+    filter(same_pcr == 1, normalization == "RAW") %>% 
+    mutate(same_seq_run = as.numeric(same_seq_run)) %>% 
+    mutate(run_comp = paste(seq_lab_a, seq_run_a, seq_lab_b, seq_run_b)) %>% 
+    mutate(run_comp = factor(run_comp)) %>% 
+    ggplot() + 
+    geom_line(aes(x = run_comp, y = value, group = paste(plate_a, pos_a), color = plate_a)) + 
+    geom_boxplot(aes(x = run_comp, y = value)) + 
+    facet_grid(pipe~metric) + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0))
+```
+
+
+```{r}
+batch_effects_dat <- sample_anno %>% 
+    filter(same_pcr == 1, normalization == "RAW") %>% 
+    filter(same_pcr == 1, normalization == "RAW") %>% 
+    mutate(same_seq_run = as.numeric(same_seq_run)) %>% 
+    mutate(run_comp = paste(seq_lab_a, seq_run_a, seq_lab_b, seq_run_b)) %>% 
+    mutate(run_comp = factor(run_comp))
+```
+
+```{r}
+batch_effects_fit <- batch_effects_dat %>% 
+    group_by(metric, pipe) %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lm(value~run_comp, data = .))) 
+
+batch_effects_tukey <- batch_effects_fit %>% mutate(anova_fit = map(fit, aov), 
+                   tukey_fit = map(anova_fit, TukeyHSD),
+                   tidy_tukey = map(tukey_fit, broom::tidy)) %>% 
+    unnest(tidy_tukey) 
+```
+
+```{r}
+batch_effects_fit
+```
+
+## Diagnostics
+```{r}
+batch_effects_fit %>% 
+    mutate(glance_fit = map(fit, broom::glance)) %>% 
+    rename(dist_method = metric) %>% 
+    unnest(glance_fit) %>% 
+    select(-data, -fit) %>% 
+    gather(metric, value, -dist_method, -pipe) %>% 
+    spread(dist_method, value) %>% 
+    knitr::kable(digits = 3)
+```
+
+```{r}
+batch_effects_fit %>% 
+    mutate(diag_plots = map2(fit, dist_method, ~{autoplot(.x) + ggtitle(.y)})) %>% 
+    {print(.$diag_plots)}
+```
+
+
+```{r}
+broom::glance(fit)
+```
+
+```{r}
+summary(fit)
+```
+
+```{r}
+TukeyHSD(aov(fit)) %>% broom::tidy() %>% filter(adj.p.value < 0.05)
+```
+
+Mixed effects model
+d ~ (1 | individual / exposure) + (1 | lab / run)
+
+If we want to include inter-individual comparisons
+1 | individual 
+1 | exposure  
+
+
+```{r}
+biol_v_tech_variation_comparison_map %>% spread(variable, value)
+```
+
+
+```{r}
+bio_v_tech_dat %>%
+    filter(metric == "bray") %>%
+    filter(normalization == "RAW") %>%
+    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b))
+```
+
+
+```{r}
+library(lme4)
+test_dat <- bio_v_tech_dat %>% 
+    filter(metric == "bray") %>% 
+    filter(normalization == "RAW") %>% 
+    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b)) %>% 
+    filter(sample_individual == TRUE)
+fit <- lmer(value ~ pipe + (1 | same_individual) + ( 1 | same_pcr_product) + (1 | same_seq_lab / same_seq_run), data = test_dat)
+```
+
+```{r}
+plot(fit)
+```
+
+```{r}
+qqnorm(resid(fit))
+```
+
+
+
+
+```{r}
+varcomp.mer(fit)
+```
+
+```{r}
+summary(fit)
+```
