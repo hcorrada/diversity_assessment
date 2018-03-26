@@ -1,0 +1,334 @@
+---
+title: "Bio v. Tech Analysis"
+author: "Nate Olson"
+date: '`r Sys.Date()`'
+output:
+  bookdown::html_document2: 
+    toc: FALSE
+---
+```{r}
+library(ProjectTemplate)
+load.project()
+library(ggfortify)
+library(ggthemes)
+library(stringr)
+source("src/plot_color_definitions.R")
+```
+
+## Comparison of biological and technical factors 
+
+Figure 
+
+```{r}
+bio_v_tech_dat <- biol_v_tech_variation[[3]] %>% 
+    filter(normalization == "RAW") %>% 
+    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b))
+```
+
+
+Excluding JHU Run 1, low quality and high variability. 
+```{r fig.height = 5}
+bio_v_tech_dat %>% 
+    ggplot(aes(x = variation_label, y = value, color = variation, fill = variation)) + 
+    geom_tufteboxplot() + 
+    facet_grid(pipe~metric) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
+          legend.position = "bottom") + 
+    labs(x = "Variation Type", y = "Beta Diversity", 
+         fill = "Variation Source", color = "Variation Source")
+```
+
+
+### Fitting linear model
+
+```{r}
+bio_v_tech_fit <- bio_v_tech_dat %>% 
+    rename(dist_method = metric) %>% 
+    group_by(dist_method, pipe) %>% 
+    nest() %>% 
+    mutate(fit = map(data, ~lm(value ~ variation + variation_label, data = .))) 
+
+bio_v_tech_anova <- bio_v_tech_fit %>% 
+    mutate(anova_fit = map(fit, anova), 
+           tidy_anova = map(anova_fit, broom::tidy)) %>% 
+    unnest(tidy_anova) 
+
+bio_v_tech_tukey <- bio_v_tech_fit %>% 
+    mutate(anova_fit = map(fit, aov), 
+           tukey_fit = map(anova_fit, TukeyHSD),
+           tidy_tukey = map(tukey_fit, broom::tidy)) %>% 
+    unnest(tidy_tukey) 
+```
+
+
+### Model Results
+Seq runs are significantly different for all pipelines/ metrics 
+```{r}
+bio_v_tech_anova  %>% knitr::kable()
+```
+
+```{r fig.height = 6}
+comp1_levels <- c("biological","technical",
+                  "btw_labs","w/in_lab_runs", 
+                  "w/in_lab_pcr","btw_time", 
+                  "w/in_subj_btw_time")
+
+comp2_levels <- c("biological","technical",
+                "btw_subj_w/in_time", "btw_labs", "w/in_subj_btw_time", 
+                "btw_time", "w/in_lab_pcr", "w/in_lab_runs")
+
+bio_v_tech_tukey %>% 
+    mutate(adj.p.value = adj.p.value * 384) %>% 
+    mutate(adj.p.value = if_else(adj.p.value > 0.06, 0.06, adj.p.value)) %>%
+    mutate(pos_neg = if_else(estimate > 0, "comp1>comp2", "comp2>comp1")) %>% 
+    separate(comparison, c("comp1","comp2"), sep = "-",remove = FALSE) %>% 
+    mutate(comp1 = factor(comp1, levels = comp1_levels)) %>%
+    mutate(comp2 = factor(comp2, levels = comp2_levels)) %>%
+    # mutate(estimate = if_else(adj.p.value < 0.05, estimate, NaN)) %>% 
+    filter(comparison != "technical-biological") %>%
+    ggplot() + 
+    geom_raster(aes(x = comp1, y = comp2, fill = adj.p.value)) + 
+    geom_text(aes(x = comp1, y = comp2, label = round(estimate,2), color = pos_neg)) + 
+    facet_grid(pipe~dist_method) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom") + 
+    scale_fill_gradient(low = "black", high = "grey90")
+```
+
+```{r}
+bio_v_tech_tukey %>% 
+    mutate(adj.p.value = adj.p.value * 384) %>% 
+    mutate(pos_neg = if_else(estimate > 0, "comp1>comp2", "comp1<comp2")) %>% 
+    # separate(comparison, c("comp1","comp2"), sep = "-",remove = FALSE) %>% 
+    # mutate(comparison = str_remove_all(comparison, "ist_run|hu_run")) %>% 
+    # mutate(estimate = if_else(adj.p.value < 0.05, estimate, NaN)) %>% 
+    filter(comparison == "technical-biological") %>%
+    ggplot() + 
+    geom_raster(aes(x = comparison, y = pipe, fill = log10(adj.p.value))) + 
+    geom_text(aes(x = comparison, y = pipe, label = round(estimate,2), color = pos_neg)) + 
+    facet_grid(.~dist_method) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom")
+```
+
+__NOTES__  
+_Methods_  
+* Fit independent linear models to d~value ~ variation + variation_label for each pipeline and metric.  
+* Used TukeyHSD to test for pairwise distances between runs.  
+
+_Results_  
+*  For raw count data
+    - biological factors are significantly greater source of variation than technical sources for all pipeline and diversity metrics. 
+        + Magnitude of difference varies by pipeline and metric, though general trends oberved
+    - For individual sources of variation
+        + between labs largest individual source of variation 
+            * excluding within subject bwetween time for wunif dada 
+            * No significante for all 
+        + Followed by within lab runs and between subject within time 
+            - No significant difference for deblur (Unifrac and jaccard) Denovo (wunifrac)
+    - PCR replicates smallest pairwise distance for nearly all pipelines and metrics
+        + Significant for most 
+* For deblur and Unweighted metrics nad qiime de novo weighted unifrac beta diversity between different factors were not significantly different though observed trends were consistent with other pipelines and metrics. 
+
+_Interpretation_   
+* Combined sources of biological variation had greater beta diversity between samples compared to technical sources of variation.
+* Individual technical sources of variation were often greater than individual biological sources of varation. 
+* Lack of significant difference - due to feature and data characteristics (high rate of phylogenetically closesly related features for qiime de novo), not sure about Deblur intrepretation. 
+
+
+_Potential analysis improvements_   
+* Better presentation of Tukey results
+* Using lm bio v. tech results for bio - tech plot  
+* Better model fit?
+
+### Raw Stats
+```{r}
+bio_v_tech_fit %>% mutate(aov_fit = map(fit, aov), 
+                   tidy_aov = map(aov_fit, broom::tidy)) %>% 
+    unnest(tidy_aov) %>% 
+    mutate(sumsq = round(sumsq, 3),
+           meansq = round(meansq, 3),
+           statistic = round(statistic, 1)) %>% 
+    knitr::kable()
+```
+
+### Fit Summary Statistics 
+```{r}
+bio_v_tech_fit %>% mutate(glance_fit = map(fit, broom::glance)) %>% 
+    unnest(glance_fit) %>% 
+    select(-data, -fit) %>% 
+    gather(metric, value, -dist_method, -pipe) %>% 
+    spread(dist_method, value) %>% 
+    filter(metric %in% c("adj.r.squared","AIC","p.value")) %>% 
+    knitr::kable(digits = 3)
+```
+
+### Diagnostic Plots
+```{r}
+bio_v_tech_fit %>% 
+    mutate(diag_plots = map2(fit, paste(pipe, dist_method), ~{autoplot(.x) + ggtitle(.y)})) %>% 
+    {print(.$diag_plots)}
+```
+
+
+## Norm impact
+Using varpart compare variation in data attributed to different biological and technical factors.
+Evaluate stats - lack of or singificance when normalized relative to raw. 
+
+```{r bioVtechPlot2, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for un-normalized data."}
+# norm_method_set <- c("RAW", "rare5000", "rareq15", "RLE", "TMM")
+varpart_trim <- varpart_stats %>% 
+    filter(effect == "conditional", 
+           # normalization %in% norm_method_set, 
+           metric %in% c("bray", "wunifrac")) #%>%
+    # mutate(normalization = factor(normalization, 
+    #                               levels = norm_method_set, 
+    #                               ordered = T))
+
+varpart_trim_raw <- varpart_trim %>% filter(normalization == "RAW")
+varpart_trim_norm <- varpart_trim %>% filter(normalization != "RAW")
+
+ggplot(varpart_trim_norm) +
+    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization),
+             stat = "identity", position = "dodge", width = 0.5) +
+    geom_point(data = varpart_trim_raw,
+               aes(x = metric, y = Adj.R.square, color = significance), 
+shape = "-", size = 8) +
+    facet_grid(feature~pipe, scales = "free_y", space = "free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    xlab("") + ylab("Adjusted R^2") +
+    theme(legend.position = "bottom") + 
+    scale_fill_manual(values = norm_colors)
+
+``` 
+
+__NOTES__  
+_Methods_  
+* Used variation partitioning to estimate the proportion of total observed variation due to sequencing run, biological replicates, and time points. 
+ 
+_Results_  
+* All rarefaction levels reduced variation attributed to sequencing runs
+    - No longer significant for ??? 
+* Increase in seq run variation after RLE and TMM
+* Rareq15, RLE, and TMM decrease bio for some
+* CSS and TSS - minimal to no change 
+
+
+_Interpretation_   
+* 
+
+
+_Potential analysis improvements_   
+* Better figures 
+* p value multiple comparisons correction
+
+```{r}
+# norm_method_set <- c("RAW", "rare5000", "rareq15", "RLE", "TMM")
+varpart_trim <- varpart_stats %>% 
+    filter(effect == "conditional", 
+           # normalization %in% norm_method_set, 
+           metric %in% c("jaccard", "unifrac"))# %>%
+    # mutate(normalization = factor(normalization, 
+    #                               levels = norm_method_set, 
+    #                               ordered = T))
+
+varpart_trim_raw <- varpart_trim %>% filter(normalization == "RAW")
+varpart_trim_norm <- varpart_trim %>% filter(normalization != "RAW")
+
+ggplot(varpart_trim_norm) +
+    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization, color = significance),
+             stat = "identity", position = "dodge", width = 0.5) +
+    geom_point(data = varpart_trim_raw,
+               aes(x = metric, y = Adj.R.square, color = significance), 
+               shape = "-", size = 8) +
+    facet_grid(pipe~feature, scales = "free_x", space = "free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    xlab("") + ylab("Adjusted R^2") +
+    theme(legend.position = "bottom") + 
+    scale_fill_manual(values = norm_colors)
+```
+
+__NOTES__  
+_Methods_  
+* Used variation partitioning to estimate the proportion of total observed variation due to sequencing run, biological replicates, and time points. 
+ 
+_Results_  
+* All rarefaction levels reduced variation attributed to sequencing runs
+    - No longer significant for deblur and mothur 
+    - Only still significant source for variation for data
+* All rarefaction levels saw increased variation attributed to subject.
+* Minimal change titration 
+similar results for the two unweighted metrics
+* Closed reference, open reference, and de novo subject variation greater than seq run after normalization but not without. 
+
+
+_Interpretation_   
+* 
+
+
+_Potential analysis improvements_   
+* Better figures 
+* p value multiple comparisons correction
+
+
+## Norm Impact no jhu1
+```{r bioVtechPlot2noJHU, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for un-normalized data."}
+# norm_method_set <- c("RAW", "rare5000", "rareq15", "RLE", "TMM")
+varpart_trim <- varpart_stats_no_jhu1 %>% 
+    filter(effect == "conditional", 
+           # normalization %in% norm_method_set, 
+           metric %in% c("bray", "wunifrac")) #%>%
+    # mutate(normalization = factor(normalization, 
+    #                               levels = norm_method_set, 
+    #                               ordered = T))
+
+varpart_trim_raw <- varpart_trim %>% filter(normalization == "RAW")
+varpart_trim_norm <- varpart_trim %>% filter(normalization != "RAW")
+
+ggplot(varpart_trim_norm) +
+    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization),
+             stat = "identity", position = "dodge", width = 0.5) +
+    geom_point(data = varpart_trim_raw,
+               aes(x = metric, y = Adj.R.square, color = significance), 
+shape = "-", size = 8) +
+    facet_grid(feature~pipe, scales = "free_y", space = "free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    xlab("") + ylab("Adjusted R^2") +
+    theme(legend.position = "bottom") + 
+    scale_fill_manual(values = norm_colors)
+
+``` 
+
+
+```{r}
+# norm_method_set <- c("RAW", "rare5000", "rareq15", "RLE", "TMM")
+varpart_trim <- varpart_stats_no_jhu1 %>% 
+    filter(effect == "conditional", 
+           # normalization %in% norm_method_set, 
+           metric %in% c("jaccard", "unifrac"))# %>%
+    # mutate(normalization = factor(normalization, 
+    #                               levels = norm_method_set, 
+    #                               ordered = T))
+
+varpart_trim_raw <- varpart_trim %>% filter(normalization == "RAW")
+varpart_trim_norm <- varpart_trim %>% filter(normalization != "RAW")
+
+ggplot(varpart_trim_norm) +
+    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization, color = significance),
+             stat = "identity", position = "dodge", width = 0.5) +
+    geom_point(data = varpart_trim_raw,
+               aes(x = metric, y = Adj.R.square, color = significance), 
+               shape = "-", size = 8) +
+    facet_grid(pipe~feature, scales = "free_x", space = "free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    xlab("") + ylab("Adjusted R^2") +
+    theme(legend.position = "bottom") + 
+    scale_fill_manual(values = norm_colors)
+```

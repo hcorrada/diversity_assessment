@@ -85,8 +85,8 @@ tech_art_tukey %>%
 ```
 
 ```{r}
-tech_art_fit %>% mutate(tidy_fit = map(fit, broom::tidy)) %>% 
-    unnest(tidy_fit) 
+# tech_art_fit %>% mutate(tidy_fit = map(fit, broom::tidy)) %>% 
+#     unnest(tidy_fit) 
 ```
 
 
@@ -151,6 +151,7 @@ tech_art_fit %>% mutate(anova_fit = map(fit, aov),
     coord_flip() +
     theme_bw()
 ```
+
 
 
 ### Fit Summary Statistics 

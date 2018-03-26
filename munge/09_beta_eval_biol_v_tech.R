@@ -335,3 +335,10 @@ ProjectTemplate::cache('biol_v_tech_variation',
 ProjectTemplate::cache('varpart_stats', 
                        {get_varpart_stats(mgtstMetadata)},
                        depends = c("mgtstMetadata"))
+
+mgtstMetadata_no_jhu1 <- mgtstMetadata %>% 
+    filter(!(seq_lab == "jhu" & seq_run == "1")) 
+
+ProjectTemplate::cache('varpart_stats_no_jhu1', 
+                       {get_varpart_stats(mgtstMetadata)},
+                       depends = c("mgtstMetadata"))

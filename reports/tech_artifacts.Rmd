@@ -12,6 +12,7 @@ output:
 ```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
 load.project()
+source("src/plot_color_definitions.R")
 
 # library(ggridges)
 # library(ggpubr)
@@ -108,6 +109,7 @@ tech_art_df %>% mutate(pipe = if_else(pipe == "deblur", "q_deblur",
            pipe = factor(pipe)) %>% 
     filter(normalization == "RAW") %>% 
     ggplot() + 
+    # geom_violin(aes(x = pipe, y = mean_dist), fill = "grey60") +
     geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
                  outlier.size = 0.5) + 
     facet_grid(f_type~weight) + theme_bw() + 
@@ -119,7 +121,7 @@ tech_art_df %>% mutate(pipe = if_else(pipe == "deblur", "q_deblur",
     scale_fill_manual(values = run_colors)
 ```
 
-```{r techNormImpactALL, fig.cap = "Impact of normalization method on mean weighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=4, fig.width=10}
+```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=4, fig.width=10}
 norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15", 
                     "CSS", "RLE", "TMM", "TSS", "UQ") 
 tech_art_df_for_plot_RAW <- tech_art_df %>% 
@@ -130,7 +132,8 @@ tech_art_df_for_plot_RAW <- tech_art_df %>%
               RAW_first_quartile=as.numeric(as.character(summary(mean_dist)[2])),
               RAW_third_quartile=as.numeric(as.character(summary(mean_dist)[5])))
 
-tech_art_df_for_plot <- tech_art_df %>% ungroup() %>% filter(normalization!="RAW", seq_run_id=="nist_run1")
+tech_art_df_for_plot <- tech_art_df %>% ungroup() %>% 
+    filter(normalization!="RAW", seq_run_id=="nist_run1")
 tech_art_df_for_plot<-merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW, 
                             by=c("pipe","metric","f_type","weight"))
 
@@ -162,7 +165,7 @@ tech_art_df_for_plot %>%
 ```
 
 
-```{r techNormImpactALL2, fig.cap = "Impact of normalization method on mean unweighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=6, fig.width=12, eval=F}
+```{r techNormImpactUnweighted, fig.cap = "Impact of normalization method on mean unweighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=4, fig.width=10}
 
 tech_art_df_for_plot %>% 
     filter(weight=="Unweighted") %>%
@@ -183,23 +186,23 @@ tech_art_df_for_plot %>%
 ```
 
 
-We evaluated differences in beta diversity between PCR replicates between the four sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 
-Higher pairwise distances for NIST runs indicate diversity metrics negatively impacted by larger variation in total abundance across PCR replicates. 
-Whereas higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are less robust to sequencing errors. 
+We evaluated differences in beta diversity between PCR replicates across sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 
+Higher pairwise distances for NIST runs indicate diversity metrics negatively impacted by larger variation in total abundance across PCR replicates (Fig. \@ref(fig:seqCharPlot)A). 
+Whereas higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are less robust to sequencing errors (Fig. \@ref(fig:seqCharPlot)B & C). A linear model was first used to test for significant differences in PCR replicates beta diversity by pipeline and sequencing run for raw count data. 
+Pipeline, sequencing run, and interaction between the two were significant for the four distance metrics (Supplemental Results??). 
+Tukey honest significant differences was used to test for significant pairwise differences (Supplemental Results??). 
 
-- Pipeline, sequencing run, and interactions all significants for the four distance metrics  
-- Mothur, dada, and deblur lower mean pairwise distance compared to other pipelines, for all metrics excluding Jaccard, opposite trend. 
-- Mothur and qiime Closed ref not significantly different for Unifrac  
-- Pipeline seq run results 
-    - Mess 
-
-
-
-Mean pairwise distance was greater for qiime De-novo, open and closed reference pipelines for JHU1 (lower quality and greater variability) relative to the other sequencing runs for all metrics excluding weighted UniFrac (Fig. \@ref(fig:techMeanDist)).
-QIIME _de novo_ had high mean pairwise distance across sequencing runs for unweighted UniFrac and low for weighted Unifrac. 
-The low weighted UniFrac for QIIME _de novo_ is potentially due to large number of singletons in the dataset, ~120K out of ~180K total features. 
+<!-- Not sure about reporting statistical significance, what multiple comparison correction should I use  -->
+Nearly all pipeline comparisons were significantly different except for for Bray Curtis (unweighted taxonomic), where the QIIME _de novo_, closed-reference, and open-reference were not significantly different from eachother, as well as mothur and DADA2 were not significantly different from eachother. 
+Overall Mothur, dada, and deblur had lower mean pairwise distances compared to the QIIME open-reference, closed-reference, and _de novo_ results were other pipelines for three of the four diversity metrics. 
+For weighted UniFrac QIIME _de novo_ mean pairwise distances was similar to the Mothur, DADA2, and Deblur results. 
+The low weighted UniFrac for QIIME _de novo_ is potentially due to large number of singletons in the dataset, ~120K out of ~180K total features (Table \@ref(tab:pipeCharTbl)). 
 These singletons are likely sequencing errors and therefore closely related to other taxa therefore minimally impact the weighted unifrac results.  
-DADA2 pairwise distances were greater for NIST1 and NIST2 (which had greater variability in library size) compared to the JHU2 run which had the lowest pairwise distance.  
+DADA2 pairwise distances were significantly greater for NIST1 and NIST2 (which had greater variability in library size) compared to the JHU2 run which had the lowest pairwise distance.  
 Mean pairwise distances were consistent across the JHU runs for Mothur and DADA2, suggesting they are better able to account for sequencing errors than other pipelines evaluated in this study. 
 Conversely, the Deblur pipeline had the highest number of failed samples for JHU1, suggesting it is less robust to sequencing errors compared to the other pipelines (Table \@ref(tab:pipeCharTbl)).  
 
+__Impact of normalization methods on technical artifacts.__ 
+- Compared results across normalization methods for NIST run 1, low error rate, high total abundance COV (Fig. \@ref(fig:seqCharPlot)). 
+- Methods had minimal impact, TMM and RLE tended to lower pairwise dist, rare15 increased (Fig. \@ref(fig:techNormImpactWeighted))
+- Unweighted 

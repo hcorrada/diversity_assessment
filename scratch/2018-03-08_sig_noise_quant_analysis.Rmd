@@ -101,7 +101,7 @@ Within the diversity metrics, mothur and dada were significantly different from 
 Pairwise significant differences between indivduals was only observed for Bray-Curtis. 
 Sequencing run differences were only observed for phylogenetic metrics. 
 For weighted unifrac there was a library effect. 
-Batch effects were observed, primarily between sequencing labs rather than between within lab runs, though most differences were comparisons to low quality JHU run. 
+
 
 ### Summary Plot 
 ```{r warning = FALSE, fig.cap = "The area under the curve (AUC) varied by pipeline, run, and diversity metric. Points indicate the AUC for each individual with grey lines representing the range of AUC values for a pipeline and sequencing run."}

@@ -8,6 +8,7 @@ output: html_document
 ```{r}
 library(ProjectTemplate)
 load.project()
+library(ggfortify)
 library(ggthemes)
 library(stringr)
 source("src/plot_color_definitions.R")
@@ -69,10 +70,10 @@ sample_anno %>%
     mutate(run_comp = paste(seq_lab_a, seq_run_a, seq_lab_b, seq_run_b)) %>% 
     mutate(run_comp = factor(run_comp)) %>% 
     ggplot() + 
-    geom_line(aes(x = run_comp, y = value, group = paste(plate_a, pos_a), color = plate_a)) + 
     geom_boxplot(aes(x = run_comp, y = value)) + 
     facet_grid(pipe~metric) + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0))
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) 
 ```
 
 
@@ -97,8 +98,15 @@ batch_effects_tukey <- batch_effects_fit %>% mutate(anova_fit = map(fit, aov),
     unnest(tidy_tukey) 
 ```
 
+
 ```{r}
-batch_effects_fit
+batch_effects_tukey %>% separate(comparison, c("run_comp1","run_comp2"), sep = "-") %>% 
+    ggplot() + 
+    geom_raster(aes(x = run_comp2, y = run_comp1, fill = estimate)) + 
+    facet_grid(metric~pipe) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+    scale_fill_gradient2()
 ```
 
 ## Diagnostics
@@ -115,69 +123,7 @@ batch_effects_fit %>%
 
 ```{r}
 batch_effects_fit %>% 
-    mutate(diag_plots = map2(fit, dist_method, ~{autoplot(.x) + ggtitle(.y)})) %>% 
+    mutate(diag_plots = map2(fit, metric, ~{autoplot(.x) + ggtitle(.y)})) %>% 
     {print(.$diag_plots)}
 ```
 
-
-```{r}
-broom::glance(fit)
-```
-
-```{r}
-summary(fit)
-```
-
-```{r}
-TukeyHSD(aov(fit)) %>% broom::tidy() %>% filter(adj.p.value < 0.05)
-```
-
-Mixed effects model
-d ~ (1 | individual / exposure) + (1 | lab / run)
-
-If we want to include inter-individual comparisons
-1 | individual 
-1 | exposure  
-
-
-```{r}
-biol_v_tech_variation_comparison_map %>% spread(variable, value)
-```
-
-
-```{r}
-bio_v_tech_dat %>%
-    filter(metric == "bray") %>%
-    filter(normalization == "RAW") %>%
-    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b))
-```
-
-
-```{r}
-library(lme4)
-test_dat <- bio_v_tech_dat %>% 
-    filter(metric == "bray") %>% 
-    filter(normalization == "RAW") %>% 
-    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b)) %>% 
-    filter(sample_individual == TRUE)
-fit <- lmer(value ~ pipe + (1 | same_individual) + ( 1 | same_pcr_product) + (1 | same_seq_lab / same_seq_run), data = test_dat)
-```
-
-```{r}
-plot(fit)
-```
-
-```{r}
-qqnorm(resid(fit))
-```
-
-
-
-
-```{r}
-varcomp.mer(fit)
-```
-
-```{r}
-summary(fit)
-```
