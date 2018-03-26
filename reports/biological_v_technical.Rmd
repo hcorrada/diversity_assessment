@@ -44,41 +44,6 @@ biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highl
 
 ```
 
-```{r bioVtechPlot0, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Heatmaps indicating mean beta diversity of un-normalized PCR replicates sequenced at the same lab (J1-J2 or N1-N2) or at different labs (J[1-2]-N[1-2]) for each pipline and metric.", fig.height=4, fig.width=8}
-
-replicate_variation <- biol_v_tech_variation[[3]] %>% 
-    filter(same_pcr_product==TRUE) 
-
-replicate_variation$replicate_samples<-gsub(replicate_variation$sample_a, pattern="[a-z]*_run[0-9]_", replacement="")
-replicate_variation$label<-paste0(replicate_variation$sample_a, replicate_variation$sample_b)
-replicate_variation$label<-gsub(replicate_variation$label, pattern="_[0-9]-[A-Z][0-9]*", replacement = "-")
-replicate_variation$label<-gsub(replicate_variation$label, pattern="-$", replacement = "")
-replicate_variation$label<-gsub(replicate_variation$label, pattern="jhu_run", replacement = "J")
-replicate_variation$label<-gsub(replicate_variation$label, pattern="nist_run", replacement = "N")
-replicate_variation$label<-factor(replicate_variation$label, 
-                                  levels= c("J1-J2", 
-                                  "N1-N2","J1-N1",
-                                  "J1-N2", "J2-N1", "J2-N2"), ordered = T)
-
-replicate_variation %>% 
-        mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
-                          if_else(pipe == "qiimeOpenRef", "q_open", 
-                                  if_else(pipe == "qiimeClosedRef", "q_closed",
-                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
-                                          pipe)))),
-           pipe = factor(pipe)) %>% 
-    select(pipe, metric, label, value, normalization) %>% 
-    group_by(pipe, metric, label, normalization) %>% 
-    summarize(mean_val=mean(value)) %>%
-    filter(normalization=="RAW") %>%
-    ggplot() + 
-    geom_tile(aes(x = label, y = pipe, fill = mean_val)) + theme_bw() + 
-    facet_grid(~metric)+
-    theme(axis.text.x = element_text(angle = -45, hjust = 0),
-          legend.position = "bottom") + scale_fill_distiller(palette = "Blues")+ 
-        labs(x = "Replicate Comparison", y = "Pipeline", fill = "Mean Pairwise Diversity")
-
-```
 
 ```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological (subject and titration level) and technical variation (sequencing lab and run) (pairwise distance between replicates.) Grey line indicates the mean differences for diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method.", fig.height=4, fig.width=6}
 
