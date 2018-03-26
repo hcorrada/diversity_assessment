@@ -64,9 +64,9 @@ For our assessment we used a dataset consisting of two-sample titrations of DNA 
 ```{r bioVtech, child="reports/biological_v_technical.Rmd"}
 ```
 
-## Comparison to Expectation
+## Signal to Noise
 
-```{r compToExp, child="reports/comparison_to_expectation.Rmd"}
+```{r compToExp, child="reports/signal_to_noise.Rmd"}
 ```
 
 # Discussion

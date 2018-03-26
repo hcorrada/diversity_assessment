@@ -1,0 +1,197 @@
+---
+title: "Signal to Noise Ratio"
+author: "Nate Olson"
+date: '`r Sys.Date()`'
+output:
+  bookdown::pdf_document2: 
+    toc: FALSE
+---
+
+
+```{r signalToNoiseSetup, message = FALSE, warning = FALSE, echo = FALSE}
+library(ProjectTemplate)
+load.project()
+source("src/plot_color_definitions.R")
+library(lme4)
+library(ggpubr)
+```
+
+
+```{r signalToNoiseMunge, echo = FALSE, message = FALSE, warning = FALSE}
+sig_noise_df <- bind_rows(
+        sig_noise_bray_df,
+        sig_noise_jaccard_df,
+        sig_noise_unifrac_df,
+        sig_noise_wunifrac_df)
+
+sig_noise_df <- sig_noise_df %>% 
+    rowwise() %>% 
+    mutate(mean_noise = mean(c(mean_rep_dist, mean_pre_dist),na.rm = TRUE), 
+           median_noise = mean(c(mean_rep_dist, mean_pre_dist), na.rm = TRUE),
+            mean_sig_noise = mean_dist/mean_noise,
+           median_sig_noise = median_dist/median_noise)
+
+auc_summary <- sig_noise_df %>% 
+    filter(method == "RAW") %>% 
+    mutate(t_eval = 2^-t_fctr) %>% 
+    group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>% 
+    summarise(n_t = n(), 
+              auc = -pracma::trapz(x = t_eval, y = median_sig_noise))
+
+### Raw model fit
+auc_fit <- auc_summary %>% 
+    ungroup() %>% 
+    mutate(seq_run = as.numeric(seq_run),
+           seq_run_num = if_else(seq_lab == "jhu", seq_run, 2 + seq_run),
+           seq_run_num = factor(seq_run_num)) %>% 
+    group_by(dist_method) %>%
+    nest() %>%
+    mutate(fit = map(data, ~lm(log10(auc) ~ pipe + seq_run_num + biosample_id, data = .)))
+
+### Calculating Normalization Effect and Fitting Regression Model
+norm_effect_auc_df <- sig_noise_df %>%
+    mutate(t_eval = 2^-t_fctr) %>%
+    group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>%
+    summarise(auc = -pracma::trapz(x = t_eval, y = median_sig_noise))
+
+unweighted_levels <- c("RAW", "rare2000", "rare5000", "rare10000", "rareq15")
+weighted_levels <- c(unweighted_levels, "CSS","TSS","UQ","RLE","TMM")
+
+norm_effect_auc_fit <- norm_effect_auc_df %>%
+    ungroup() %>%
+    mutate(seq_run = as.numeric(seq_run),
+           seq_run_num = if_else(seq_lab == "jhu", seq_run, 2 + seq_run),
+           seq_run_num = factor(seq_run_num)) %>%
+    mutate(method = factor(method, levels = weighted_levels)) %>%
+    filter(seq_run == 1, seq_lab == "nist") %>% 
+    group_by(dist_method, pipe) %>%
+    nest() %>%
+    mutate(fit = map(data, ~lmer(log10(auc) ~ method + (1 | biosample_id), data = .)))
+```
+
+
+```{r sigalToNoiseRawPlot, warning = FALSE, echo = FALSE, message = FALSE, fig.cap = "The weighted average signal to noise varied by pipeline, run, and diversity metric. Points indicate the signal to noise for each individual with grey lines representing the range of values for a pipeline and sequencing run."}
+auc_summary %>% 
+    ungroup() %>% 
+    mutate(seq_lab_run = paste(seq_lab, seq_run)) %>% 
+        mutate(pipe = if_else(pipe == "deblur", "qiimeDeblur",pipe),
+           pipe = factor(pipe)) %>% 
+    mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
+                            "Phylogenetic","Taxonomic"),
+           weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
+                            "Unweighted", "Weighted")) %>% 
+    
+    mutate(x_offset = if_else(seq_lab == "jhu", -0.3  + 0.1 * seq_run, 0.1 * seq_run),
+           x_pos = as.numeric(pipe) + x_offset) %>% 
+    ggplot() + 
+    geom_blank(aes(x = pipe)) + 
+    geom_line(aes(x = x_pos, y = auc,group = paste(pipe,seq_lab_run)), color = "grey60") + 
+    geom_point(aes(x = x_pos, y = auc, color = seq_lab_run, shape = biosample_id)) + 
+    facet_grid(weight~f_type, scales = "free_y") +
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+    labs(x = "Pipeline", y = "Signal/Noise", color = "Seq Run", shape = "Individual")
+```
+
+```{r signalToNoiseNormEffect, echo = FALSE, message = FALSE, warning = FALSE}
+tidy_ne <- function(fit){
+    tidy_fit_df <- broom::tidy(fit) %>% 
+    rename(normalization = term) %>% 
+    mutate(normalization = if_else(normalization == "(Intercept)",
+                                   "RAW", 
+                                   str_remove(normalization, "method"))) %>%
+    filter(group == "fixed")
+
+    confint_dat <- confint(fit)
+    
+    fit_est_df <- as.data.frame(confint_dat) %>% 
+        rownames_to_column(var = "normalization") %>% 
+        filter(!grepl("sig", normalization)) %>% 
+        gather("conf_int","est", -normalization) %>% 
+        spread(normalization, est) %>%
+        rename(RAW = `(Intercept)`) %>%
+        gather("normalization","est", -conf_int, -RAW) %>% 
+        mutate(est = RAW + est) %>% 
+        mutate(normalization = str_remove(normalization, "method")) %>%
+        spread(normalization, est) %>% 
+        gather("normalization","est", -conf_int) %>% 
+        mutate(conf_int = if_else(conf_int == "2.5 %", "lci","uci")) %>% 
+        spread(conf_int, est) 
+    
+    mod_betas <- fit@beta
+    normalization <- rownames(confint_dat)[-c(1:2)]
+    est <- c(mod_betas[1], mod_betas[1] + mod_betas[-1])
+    data_frame(normalization, est)  %>%
+        mutate(normalization = if_else(normalization == "(Intercept)",
+                                       "RAW", 
+                                       str_remove(normalization, "method"))) %>%
+        left_join(fit_est_df) %>% 
+        mutate(est = 10^est, lci = 10^lci, uci = 10^uci) %>% 
+        left_join(tidy_fit_df)
+}
+
+sig_to_noise_ne_df <- norm_effect_auc_fit %>% 
+    mutate(tidy_fit = map(fit, tidy_ne)) %>% 
+    unnest(tidy_fit)
+```
+
+
+```{r signalToNoiseNormEffectPlot, echo = FALSE, message = FALSE, warning = FALSE, fig.cap = "Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data for (A) weighted and  (B) unweighted beta diversity metrics. Estimates calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods.", fig.height = 8, fig.width = 6}
+sig_to_noise_ne_df <- sig_to_noise_ne_df %>% 
+    mutate(metric = str_remove(dist_method, "_dist")) %>% 
+    mutate(t_stat = if_else(abs(statistic) > 2, ">2","<2"))
+
+raw_sig_noise_weighted <- sig_to_noise_ne_df %>% 
+    filter(normalization == "RAW", metric %in% c("bray","wunifrac")) 
+raw_sig_noise_unweighted <- sig_to_noise_ne_df %>% 
+    filter(normalization == "RAW", metric %in% c("jaccard","unifrac")) 
+
+
+sig_noise_ne_weighted <- sig_to_noise_ne_df %>% 
+    filter(normalization != "RAW", metric %in% c("bray","wunifrac")) %>%
+    ggplot() + 
+    geom_point(aes(x = normalization, y = est, shape = t_stat, color = normalization)) + 
+    geom_linerange(aes(x = normalization, ymin = lci, ymax = uci, color = normalization)) + 
+    geom_hline(data = raw_sig_noise_weighted, aes(yintercept = est)) + 
+    geom_hline(data = raw_sig_noise_weighted, aes(yintercept = uci), linetype = 2) + 
+    geom_hline(data = raw_sig_noise_weighted, aes(yintercept = lci), linetype = 2) +  
+    theme_bw() +
+    labs(x = "Normalization Method", y = "Signal/Noise Estimate") + 
+    facet_grid(pipe~metric, scales = "free")  + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+    scale_color_manual(values = norm_colors) 
+
+sig_noise_ne_unweighted <- sig_to_noise_ne_df %>% 
+    filter(normalization != "RAW", metric %in% c("jaccard","unifrac")) %>%
+    ggplot() + 
+    geom_point(aes(x = normalization, y = est, shape = t_stat, color = normalization)) + 
+    geom_linerange(aes(x = normalization, ymin = lci, ymax = uci, color = normalization)) + 
+    geom_hline(data = raw_sig_noise_unweighted, aes(yintercept = est)) + 
+    geom_hline(data = raw_sig_noise_unweighted, aes(yintercept = uci), linetype = 2) + 
+    geom_hline(data = raw_sig_noise_unweighted, aes(yintercept = lci), linetype = 2) + 
+    theme_bw() +
+    labs(x = "Normalization Method", y = "Signal/Noise Estimate") + 
+    facet_grid(pipe~metric, scales = "free") + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    scale_color_manual(values = norm_colors)
+
+
+ggarrange(sig_noise_ne_weighted, sig_noise_ne_unweighted, 
+          ncol = 2, nrow = 1, labels = "AUTO", 
+          legend = "bottom", common.legend = TRUE)
+```
+
+
+* (Fig. \@ref(fig:sigalToNoiseRawPlot)) 
+    - Low signal to noise ratio for unweighted metrics 
+    - Data pre-processed using QIIME consistently had values around 1, indicating the magnitude of the signal (biological differences) was comparable to the noise (differences between PCR replicates). 
+    - All around 1 for unweighted taxonomic
+    - DADA2 and Mothur higher signal to noise ratio differences for JHU runs compared to NIST runs. 
+        + Especially for weighted phylogenetic  
+* (Fig. \@ref(fig:sigalToNoiseNormEffectPlot)) - Normalization methods for NIST 1
+    - Weighted metrics 
+        + For most methods normalization methods did not have a significant impact on signal to noise. 
+        + TSS increased signal to noise
+        + UQ, RLE, and TMM decreased signal to noise relative to RAW
+        + Rareq 15 frequently lowered signal to noise 
+        + For unweighted - rare ofeten improve but only significantly for DADA2 and UniFrac 2000 and 5000. 

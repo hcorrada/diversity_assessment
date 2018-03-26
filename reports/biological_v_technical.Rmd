@@ -49,7 +49,8 @@ biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highl
 
 ```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological (subject and titration level) and technical variation (sequencing lab and run) (pairwise distance between replicates.) Grey line indicates the mean differences for diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method.", fig.height=4, fig.width=6, eval = FALSE}
 
-raw_bio_v_tech <- biol_v_tech_variation_summary_higherlevel %>% filter(normalization == "RAW") %>% 
+raw_bio_v_tech <- biol_v_tech_variation_summary_higherlevel %>% 
+    filter(normalization == "RAW") %>% 
     ungroup() 
 
 biol_v_tech_variation_summary_higherlevel %>% 
@@ -134,53 +135,17 @@ ggarrange(varpart_weighted_plot, varpart_unweighted_plot,
 ``` 
 
 We next looked at how different pipelines and normalization methods captured diversity differences between our biological and technical replicates. 
-Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric (Fig. \@ref(fig:bioVtechPlot1)). 
+Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric for raw count data (Fig. \@ref(fig:bioVtechRaw)). 
 Overall, as expected, the mean diversity observed between biological replicates was greater than that between technical replicates. 
-Generally, greater differences between biological and technical replicates were observed using taxonomic metrics, rather than phylogenetic metrics (with the exception of mothur for weighted phylogenetic metrics).
-For weighted metrics, TMM decreased the difference relative to raw counts indicating that for beta diversity analysis these normalization methods reduce the power to distingush true biological differences from technical variability or noise. 
-For unweighted metrics, normalization by rarefaction produced consistent differences in variation accross most subsampling depths. 
-The three QIIME pipelines, however, identified smaller differences between biological and technical replicates when subsampled to the 15th quantile. 
-This inconsistency is most likely due to greater sample loss in these pipelines at this subsampling level [?? is this true]. 
+The magnitude of the difference varied by diversity metric and pipeline. 
+The difference in beta diversity between biological replicates and technical replicates was greater for DADA2, mothur, and Deblur, compared to QIIME open-ref, close-ref, and de novo pipelines. 
+The difference was greater for weighted than unweighted beta diversity metrics for all pipelines. 
 
-We also used variation partitioning to determine the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run. 
-Accross all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechPlot2)). 
+We also used variation partitioning to evalute the impact of different normalization methods on the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run. 
+Accross all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechVarpart)). 
 In our unnormalized pipelines, sequencing run accounts for a greater proprotion of the explained variance, highlighting the overall importance of normalizing our datasets. 
 Effective normalization methods decrease the technical variability in the data without decreasing the biological variability. 
-Rarefaction normalization methods generally show increased amounts of variation explained by biological factors rather than technical artifacts. 
+For both weighted and unweighted metrics rarefaction normalization methods generally show increased amounts of variation explained by biological factors rather than technical artifacts. 
 The non-rarefaction normalization methods do not reduce the impacts of technical arifacts as effectively, especially for the QIIME pipelines. 
-RLE and TMM consistently increase the technical variability and often decrease the amount of variability in the data attributed to biological factors (Fig. \@ref(fig:bioVtechPlot2)).  
-
-
-__NOTES__
-_Bio v. tech Box_
-*  For raw count data
-    - biological factors are significantly greater source of variation than technical sources for all pipeline and diversity metrics. 
-        + Magnitude of difference varies by pipeline and metric, though general trends oberved
-    - For individual sources of variation
-        + between labs largest individual source of variation 
-            * excluding within subject bwetween time for wunif dada 
-            * No significante for all 
-        + Followed by within lab runs and between subject within time 
-            - No significant difference for deblur (Unifrac and jaccard) Denovo (wunifrac)
-    - PCR replicates smallest pairwise distance for nearly all pipelines and metrics
-        + Significant for most 
-* For deblur and Unweighted metrics nad qiime de novo weighted unifrac beta diversity between different factors were not significantly different though observed trends were consistent with other pipelines and metrics. 
-
-_Interpretation_   
-* Combined sources of biological variation had greater beta diversity between samples compared to technical sources of variation.
-* Individual technical sources of variation were often greater than individual biological sources of varation. 
-* Lack of significant difference - due to feature and data characteristics (high rate of phylogenetically closesly related features for qiime de novo), not sure about Deblur intrepretation. 
-
-_Results VARPART_   
-* All rarefaction levels reduced variation attributed to sequencing runs
-    - No longer significant for ??? 
-* Increase in seq run variation after RLE and TMM
-* Rareq15, RLE, and TMM decrease bio for some
-* CSS and TSS - minimal to no change 
-* All rarefaction levels reduced variation attributed to sequencing runs
-    - No longer significant for deblur and mothur 
-    - Only still significant source for variation for data
-* All rarefaction levels saw increased variation attributed to subject.
-* Minimal change titration 
-similar results for the two unweighted metrics
-* Closed reference, open reference, and de novo subject variation greater than seq run after normalization but not without. 
+RLE and TMM consistently increase the technical variability and often decrease the amount of variability in the data attributed to biological factors (Fig. \@ref(fig:bioVtechRaw)A).  
+For the QIIME closed reference, open reference, and _de novo_ pipelines and taxonomic beta diversity metrics subject variation greater than sequencing run after normalization (excluding TMM, RLE, UQ and CSS) but not without. 
