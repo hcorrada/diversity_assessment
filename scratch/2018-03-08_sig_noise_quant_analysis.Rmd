@@ -2,7 +2,9 @@
 title: "Signal to noise quantitative analysis"
 author: "Nate Olson"
 date: "3/8/2018"
-output: html_document
+output: 
+    html_document:
+        toc: TRUE
 ---
 
 ```{r message = FALSE, warning = FALSE}
@@ -194,7 +196,6 @@ norm_effect_auc_df %>%
     filter(dist_method %in% c("jaccard_dist", "unifrac_dist")) %>% 
     ggplot() + 
     geom_boxplot(aes(x = method, y = auc, color = seq_lab_run)) + 
-    geom_hline(aes(yintercept = 0), linetype = 2, color = "grey40") + 
     facet_grid(pipe~dist_method, scales = "free") +     
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
@@ -209,7 +210,6 @@ norm_effect_auc_df %>%
     # filter(!is.na(auc)) %>% 
     ggplot() + 
     geom_boxplot(aes(x = method, y = auc, color = seq_lab_run)) + 
-    geom_hline(aes(yintercept = 0), linetype = 2, color = "grey40") + 
     facet_grid(pipe~dist_method, scales = "free") +     
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
@@ -257,7 +257,9 @@ auc_fit %>% mutate(glance_fit = map(fit, broom::glance)) %>%
 
 ### Diagnostic Plots
 ```{r}
-map2(auc_fit$fit, auc_fit$dist_method, ~print(autoplot(.x) + ggtitle(.y))) 
+auc_fit %>% 
+    mutate(diag_plots = map2(fit, dist_method, ~{autoplot(.x) + ggtitle(.y)})) %>% 
+    {print(.$diag_plots)}
 ```
 
 
@@ -275,6 +277,8 @@ norm_effect_auc_fit %>% mutate(glance_fit = map(fit, broom::glance)) %>%
 
 ### Diagnostic Plots
 ```{r}
-plot_fit <- norm_effect_auc_fit %>% mutate(plot_lab = paste(pipe, dist_method))
-map2(plot_fit$fit, plot_fit$plot_lab, ~print(autoplot(.x) + ggtitle(.y))) 
+norm_effect_auc_fit %>% 
+    mutate(plot_lab = paste(pipe, dist_method)) %>% 
+    mutate(diag_plots = map2(fit, plot_lab, ~{autoplot(.x) + ggtitle(.y)})) %>% 
+    {print(.$diag_plots)}
 ```
