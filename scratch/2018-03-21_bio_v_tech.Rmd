@@ -21,8 +21,8 @@ Figure
 
 ```{r}
 bio_v_tech_dat <- biol_v_tech_variation[[3]] %>% 
-    filter(normalization == "RAW") %>% 
-    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b))
+    filter(normalization == "RAW") #%>% 
+    #filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b))
 ```
 
 
@@ -47,7 +47,7 @@ bio_v_tech_fit <- bio_v_tech_dat %>%
     rename(dist_method = metric) %>% 
     group_by(dist_method, pipe) %>% 
     nest() %>% 
-    mutate(fit = map(data, ~lm(value ~ variation + variation_label, data = .))) 
+    mutate(fit = map(data, ~lm(log(value) ~ variation + variation_label, data = .))) 
 
 bio_v_tech_anova <- bio_v_tech_fit %>% 
     mutate(anova_fit = map(fit, anova), 
@@ -81,11 +81,11 @@ comp2_levels <- c("biological","technical",
 bio_v_tech_tukey %>% 
     mutate(adj.p.value = adj.p.value * 384) %>% 
     mutate(adj.p.value = if_else(adj.p.value > 0.06, 0.06, adj.p.value)) %>%
-    mutate(pos_neg = if_else(estimate > 0, "comp1>comp2", "comp2>comp1")) %>% 
+    mutate(pos_neg = if_else(estimate > 0, "comp1>comp2", "comp2>comp1")) %>%
     separate(comparison, c("comp1","comp2"), sep = "-",remove = FALSE) %>% 
     mutate(comp1 = factor(comp1, levels = comp1_levels)) %>%
     mutate(comp2 = factor(comp2, levels = comp2_levels)) %>%
-    # mutate(estimate = if_else(adj.p.value < 0.05, estimate, NaN)) %>% 
+    mutate(estimate = if_else(adj.p.value < 0.05, estimate, NaN)) %>%
     filter(comparison != "technical-biological") %>%
     ggplot() + 
     geom_raster(aes(x = comp1, y = comp2, fill = adj.p.value)) + 
@@ -96,6 +96,11 @@ bio_v_tech_tukey %>%
           legend.position = "bottom") + 
     scale_fill_gradient(low = "black", high = "grey90")
 ```
+
+```{r}
+bio_v_tech_tukey
+```
+
 
 ```{r}
 bio_v_tech_tukey %>% 
