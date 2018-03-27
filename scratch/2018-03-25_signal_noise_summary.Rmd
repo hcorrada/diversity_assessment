@@ -32,7 +32,8 @@ sig_noise_df <- sig_noise_df %>%
     mutate(mean_noise = mean(c(mean_rep_dist, mean_pre_dist),na.rm = TRUE), 
            median_noise = mean(c(mean_rep_dist, mean_pre_dist), na.rm = TRUE),
             mean_sig_noise = mean_dist/mean_noise,
-           median_sig_noise = median_dist/median_noise)
+           median_sig_noise = median_dist/median_noise) %>% 
+    filter(!is.na(median_sig_noise))
 ```
 
 ```{r}
@@ -96,7 +97,8 @@ library(lme4)
 norm_effect_auc_df <- sig_noise_df %>%
     mutate(t_eval = 2^-t_fctr) %>%
     group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>%
-    summarise(auc = -pracma::trapz(x = t_eval, y = median_sig_noise))
+    summarise(auc = -pracma::trapz(x = t_eval, y = median_sig_noise)) %>% 
+    filter(auc != 0)
 
 unweighted_levels <- c("RAW", "rare2000", "rare5000", "rare10000", "rareq15")
 weighted_levels <- c(unweighted_levels, "CSS","TSS","UQ","RLE","TMM")
@@ -113,113 +115,10 @@ norm_effect_auc_fit <- norm_effect_auc_df %>%
     mutate(fit = map(data, ~lmer(log10(auc) ~ method + (1 | biosample_id), data = .)))
 ```
 
-```{r}
-fit <- norm_effect_auc_fit$fit[[1]]
-dat <- norm_effect_auc_fit$data[[1]]
-```
 
 
-
-```{r}
-summary(fit)
-```
-
-```{r}
-plot(fit)
-```
-
-```{r}
-aug_df <- broom::augment(fit, dat)
-```
-
-
-```{r}
-ggplot(aug_df) + geom_point(aes(x = log10(auc), y = .resid)) + theme_bw() + 
-    labs(x = "Signal to Noise", y = "Residual")
-```
-
-
-```{r}
-ggplot(aug_df) + 
-    geom_qq(aes(sample = scale(.resid))) +
-    geom_abline(aes(intercept = 0, slope = 1)) + 
-    theme_bw() + 
-    ggtitle("QQ-Plot")
-```
-
-```{r}
-ggplot(aug_df) + 
-    geom_point(aes(x = .fitted, y = .resid)) + 
-    theme_bw() + 
-    labs(x = "Fitted Values", y = "Residuals")
-```
-
-```{r}
-summary(fit)
-```
-
-```{r}
-broom::tidy(fit) %>% 
-    rename(normalization = term) %>% 
-    mutate(normalization = if_else(normalization == "(Intercept)",
-                                   "RAW", 
-                                   str_remove(normalization, "method"))) %>%
-    filter(group == "fixed")
-    
-```
-
-```{r}
-tidy_fit_df <- broom::tidy(fit) %>% 
-    dplyr::rename(normalization = term) %>% 
-    mutate(normalization = if_else(normalization == "(Intercept)",
-                                   "RAW", 
-                                   str_remove(normalization, "method"))) %>%
-    filter(group == "fixed")
-
-confint_dat <- confint(fit)
-
-fit_est_df <- as.data.frame(confint_dat) %>% 
-    rownames_to_column(var = "normalization") %>% 
-    filter(!grepl("sig", normalization)) %>% 
-    gather("conf_int","est", -normalization) %>% 
-    spread(normalization, est) %>%
-    rename(RAW = `(Intercept)`) %>%
-    gather("normalization","est", -conf_int, -RAW) %>% 
-    mutate(est = RAW + est) %>% 
-    mutate(normalization = str_remove(normalization, "method")) %>%
-    spread(normalization, est) %>% 
-    gather("normalization","est", -conf_int) %>% 
-    mutate(conf_int = if_else(conf_int == "2.5 %", "lci","uci")) %>% 
-    spread(conf_int, est) 
-
-rownames(confint_dat)[-c(1:2)]
-rownames(confint_dat) 
-fit_est_df
-mod_betas <- fit@beta
-normalization <- rownames(confint_dat)[-c(1:2)]
-est <- c(mod_betas[1], mod_betas[1] + mod_betas[-1])
-sig_noise_est <- data_frame(normalization, est)  %>%
-    mutate(normalization = if_else(normalization == "(Intercept)",
-                                   "RAW", 
-                                   str_remove(normalization, "method"))) %>%
-    left_join(fit_est_df) %>% 
-    mutate(est = 10^est, lci = 10^lci, uci = 10^uci) %>% 
-    left_join(tidy_fit_df)
-```
-
-```{r fig.cap = "Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data. Estimates calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods. T-statistic indicate difference of normalized counts from raw counts for each method."}
-raw_sig_noise <- sig_noise_est %>% filter(normalization == "RAW")
-sig_noise_est %>% filter(normalization != "RAW") %>% 
-    ggplot() + 
-    geom_point(aes(x = normalization, y = est)) + 
-    geom_linerange(aes(x = normalization, ymin = lci, ymax = uci)) + 
-    geom_hline(data = raw_sig_noise, aes(yintercept = est)) + 
-    geom_hline(data = raw_sig_noise, aes(yintercept = uci), linetype = 2) + 
-    geom_hline(data = raw_sig_noise, aes(yintercept = lci), linetype = 2) + 
-    geom_text(aes(x = normalization, y = 0.75*min(lci), label = round(statistic,2))) + 
-    theme_bw() +
-    labs(x = "Normalization Method", y = "Signal/Noise Estimate")
-```
+Figure caption
+Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data. Estimates calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods. T-statistic indicate difference of normalized counts from raw counts for each method.
 
 ```{r}
 ne_fig <- function(sig_noise_est){
@@ -262,12 +161,7 @@ tidy_ne <- function(fit){
         mutate(conf_int = if_else(conf_int == "2.5 %", "lci","uci")) %>% 
         spread(conf_int, est) 
     
-    rownames(confint_dat)[-c(1:2)]
-    rownames(confint_dat) 
-    fit_est_df
     mod_betas <- fit@beta
-    mod_betas
-    normalization
     normalization <- rownames(confint_dat)[-c(1:2)]
     est <- c(mod_betas[1], mod_betas[1] + mod_betas[-1])
     data_frame(normalization, est)  %>%
@@ -319,9 +213,6 @@ lmer_diag_plots <- function(fit, dat, pipe, metric) {
 }
 ```
 
-```{r}
-lmer_diag_plots(fit,dat, "DADA2", "Bray")
-```
 
 ```{r}
 norm_effect_auc_fit %>% 
@@ -355,3 +246,60 @@ _Interpretation_
 
 _Potential analysis improvements_   
 
+
+## 
+```{r}
+norm_effect_auc_df
+```
+5,300 with NAs - due to sample loss...
+```{r}
+# sig_noise_df %>%
+#     mutate(t_eval = 2^-t_fctr) %>% 
+#     filter(!is.na(median_sig_noise)) %>%
+#     group_by(pipe, method, dist_method, seq_lab, seq_run, biosample_id) %>%
+#     # filter(pipe == "dada", method == "rare10000", 
+#            # dist_method == "jaccard_dist", seq_run == 1, seq_lab == "jhu") 
+#     summarise(auc = -pracma::trapz(x = t_eval, y = median_sig_noise))
+```
+
+
+Missing values due to NA's 
+### Sanity Checks for mixed effects models with outliers
+```{r}
+out_check <- norm_effect_auc_fit %>% 
+    filter(pipe == "qiimeDeNovo", dist_method == "wunifrac_dist")
+fit <- out_check$fit[[1]]
+dat <- out_check$data[[1]]
+aug_df <- broom::augment(fit, dat)
+ggplot(aug_df) +
+        geom_qq(aes(sample = scale(.resid), color = biosample_id)) +
+        geom_abline(aes(intercept = 0, slope = 1)) +
+        theme_bw() + 
+        labs(x = "Theoretical Quantiles", y = "Center-Scaled Residuals")
+```
+
+```{r}
+aug_df %>% ggplot() + 
+    geom_jitter(aes(x = biosample_id, y = auc, color = method)) + 
+    scale_color_manual(values = norm_colors)
+```
+
+
+```{r}
+out_check <- norm_effect_auc_fit %>% 
+    filter(pipe == "qiimeOpenRef", dist_method == "wunifrac_dist")
+fit <- out_check$fit[[1]]
+dat <- out_check$data[[1]]
+aug_df <- broom::augment(fit, dat)
+ggplot(aug_df) +
+        geom_qq(aes(sample = scale(.resid), color = biosample_id)) +
+        geom_abline(aes(intercept = 0, slope = 1)) +
+        theme_bw() + 
+        labs(x = "Theoretical Quantiles", y = "Center-Scaled Residuals")
+```
+
+```{r}
+aug_df %>% ggplot() + 
+    geom_jitter(aes(x = biosample_id, y = auc, color = method)) + 
+    scale_color_manual(values = norm_colors)
+```
