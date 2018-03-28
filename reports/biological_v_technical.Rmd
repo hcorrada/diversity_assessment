@@ -74,18 +74,39 @@ biol_v_tech_variation_summary_higherlevel %>%
 ```{r bioVtechRaw, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, distribution is beta diversity between technical replicates and biological treatments (subject  and timepoint)."}
 bio_v_tech_dat <- biol_v_tech_variation[[3]] %>% 
     filter(normalization == "RAW") %>% 
-    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b))
+    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b)) %>% 
+    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+                        "Phylogenetic","Taxonomic"),
+            weight = if_else(metric %in% c("unifrac","jaccard"),
+                        "Unweighted", "Weighted")) 
 
-bio_v_tech_dat %>% 
-    ggplot(aes(x = variation_label, y = value, color = variation, fill = variation)) + 
+weighted <- bio_v_tech_dat %>% filter(weight == "Weighted" ) %>% 
+    ggplot(aes(x = variation_label, y = value, 
+               color = variation, fill = variation)) + 
     geom_tufteboxplot() + 
-    facet_grid(metric~pipe, scales = "free_y") + 
+    facet_grid(f_type~pipe, scales = "free_y") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
+          legend.position = "bottom") + 
+    labs(x = "Variation Type", y = "Beta Diversity", 
+         fill = "Variation Source", color = "Variation Source") 
+    
+
+unweighted <- bio_v_tech_dat %>% filter(weight == "Unweighted" ) %>% 
+    ggplot(aes(x = variation_label, y = value, 
+               color = variation, fill = variation)) + 
+    geom_tufteboxplot() + 
+    facet_grid(f_type~pipe, scales = "free_y") + 
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0), 
           legend.position = "bottom") + 
     labs(x = "Variation Type", y = "Beta Diversity", 
          fill = "Variation Source", color = "Variation Source")
 
+ggarrange(weighted + rremove("xlab") + rremove("x.text"), 
+          unweighted, 
+          ncol = 1, nrow = 2, 
+          labels = "AUTO", common.legend = TRUE, legend = "bottom", heights = c(0.35,0.65))
 ```
 
 ```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for un-normalized data.", fig.width = 6, fig.height = 8}
@@ -96,12 +117,13 @@ varpart_weighted <- varpart_stats %>%
 varpart_weighted_raw <- varpart_weighted %>% filter(normalization == "RAW")
 varpart_weighted_norm <- varpart_weighted %>% filter(normalization != "RAW")
 
-varpart_weighted_plot <- ggplot(varpart_weighted_norm) +
-    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization),
+weighted <- ggplot(varpart_weighted_norm) +
+    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
              stat = "identity", position = "dodge", width = 0.5) +
     geom_point(data = varpart_weighted_raw,
-               aes(x = metric, y = Adj.R.square), shape = "-", size = 8) +
-    facet_grid(pipe~feature, scales = "free_y", space = "free") +
+               aes(x = feature, y = Adj.R.square), 
+               shape = "-", size = 8) +
+    facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
@@ -115,21 +137,21 @@ varpart_unweighted <- varpart_stats %>%
 varpart_unweighted_raw <- varpart_unweighted %>% filter(normalization == "RAW")
 varpart_unweighted_norm <- varpart_unweighted %>% filter(normalization != "RAW")
 
-varpart_unweighted_plot <- ggplot(varpart_unweighted_norm) +
-    geom_bar(aes(x = metric, y = Adj.R.square, fill = normalization),
+unweighted <- ggplot(varpart_unweighted_norm) +
+    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
              stat = "identity", position = "dodge", width = 0.5) +
     geom_point(data = varpart_unweighted_raw,
-               aes(x = metric, y = Adj.R.square), 
+               aes(x = feature, y = Adj.R.square), 
                shape = "-", size = 8) +
-    facet_grid(pipe~feature, scales = "free_x", space = "free") +
+    facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
     theme(legend.position = "bottom") + 
     scale_fill_manual(values = norm_colors) 
 
-ggarrange(varpart_weighted_plot, varpart_unweighted_plot, 
-          ncol = 2, nrow = 1,
+ggarrange(weighted, unweighted, 
+          ncol = 1, nrow = 2,
           labels = "AUTO",common.legend = TRUE,
           legend = "bottom")
 ``` 

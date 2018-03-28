@@ -157,7 +157,7 @@ sig_noise_ne_weighted <- sig_to_noise_ne_df %>%
     geom_hline(data = raw_sig_noise_weighted, aes(yintercept = lci), linetype = 2) +  
     theme_bw() +
     labs(x = "Normalization Method", y = "Signal/Noise Estimate") + 
-    facet_grid(pipe~metric, scales = "free")  + 
+    facet_grid(metric~pipe, scales = "free")  + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
     scale_color_manual(values = norm_colors) 
 
@@ -171,13 +171,13 @@ sig_noise_ne_unweighted <- sig_to_noise_ne_df %>%
     geom_hline(data = raw_sig_noise_unweighted, aes(yintercept = lci), linetype = 2) + 
     theme_bw() +
     labs(x = "Normalization Method", y = "Signal/Noise Estimate") + 
-    facet_grid(pipe~metric, scales = "free") + 
+    facet_grid(metric~pipe, scales = "free") + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     scale_color_manual(values = norm_colors)
 
 
 ggarrange(sig_noise_ne_weighted, sig_noise_ne_unweighted, 
-          ncol = 2, nrow = 1, labels = "AUTO", 
+          ncol = 1, nrow = 2, labels = "AUTO", 
           legend = "bottom", common.legend = TRUE)
 ```
 
