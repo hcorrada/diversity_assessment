@@ -27,7 +27,8 @@ qual_df <- seq_qual_comparisons %>%
     mutate(read_dir = paste0(read_dir, "_qual")) %>% 
     select(-sd_quality, -cov_quality) %>% 
     spread(read_dir, mean_quality) %>% 
-    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), remove = FALSE,extra = "merge")
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), 
+             remove = FALSE, extra = "merge")
 
 tech_art_df <- seq_char_comparisons %>% 
     select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
@@ -116,7 +117,7 @@ tech_art_df %>% mutate(pipe = if_else(pipe == "deblur", "q_deblur",
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
           legend.position = "bottom") + 
     labs(x = "Bioinformatic Pipeline", 
-         y = "Mean Beta Diversity", 
+         y = "PCR Replicate Beta Diversity", 
          fill = "Sequncing Run") + 
     scale_fill_manual(values = run_colors)
 ```
@@ -124,18 +125,20 @@ tech_art_df %>% mutate(pipe = if_else(pipe == "deblur", "q_deblur",
 ```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted (A) and unweighted (B) beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=8, fig.width=7}
 norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15", 
                     "CSS", "RLE", "TMM", "TSS", "UQ") 
+
 tech_art_df_for_plot_RAW <- tech_art_df %>% 
     ungroup() %>% 
-    filter(normalization=="RAW" & seq_run_id=="nist_run1") %>% 
+    filter(normalization == "RAW" & seq_run_id == "nist_run1") %>% 
     group_by(pipe,metric,f_type,weight) %>%
-    summarize(RAW_median= as.numeric(as.character(summary(mean_dist)[3])),
-              RAW_first_quartile=as.numeric(as.character(summary(mean_dist)[2])),
-              RAW_third_quartile=as.numeric(as.character(summary(mean_dist)[5])))
+    summarize(RAW_median = median(mean_dist),
+              RAW_first_quartile = quantile(mean_dist, probs = 0.25),
+              RAW_third_quartile = quantile(mean_dist, probs = 0.75))
 
 tech_art_df_for_plot <- tech_art_df %>% ungroup() %>% 
-    filter(normalization!="RAW", seq_run_id=="nist_run1")
-tech_art_df_for_plot<-merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW, 
-                            by=c("pipe","metric","f_type","weight"))
+    filter(normalization != "RAW", seq_run_id == "nist_run1")
+
+tech_art_df_for_plot <- merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW, 
+                            by = c("pipe","metric","f_type","weight"))
 
 weighted_tech_art_norm_eff <- tech_art_df_for_plot %>% 
     mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
@@ -144,49 +147,67 @@ weighted_tech_art_norm_eff <- tech_art_df_for_plot %>%
                                           if_else(pipe == "qiimeDeNovo", "q_denovo",
                                           pipe)))),
            pipe = factor(pipe)) %>%
-    filter(weight=="Weighted") %>%
+    filter(weight == "Weighted") %>% 
+    # filter(!(normalization %in% c("RLE","rare2000", "rare10000", "UQ"))) %>% 
     mutate(normalization = factor(normalization, 
                        levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
-    ggplot() + 
+     ggplot(aes(x = normalization)) +
+        geom_blank() + 
+        geom_ribbon(aes(x = as.numeric(normalization) - 1, 
+                        ymin = RAW_first_quartile, 
+                        ymax = RAW_third_quartile),
+                    fill = "grey90") + 
+        geom_line(aes(x = normalization, y = RAW_median, 
+                  group = interaction(pipe, f_type)),
+                  color = "white") +
+    # geom_line(aes(x = normalization, y = RAW_first_quartile, 
+    #               group = interaction(pipe, f_type)),
+    #           linetype = "dashed", color = "grey60") +
+    # geom_line(aes(x = normalization, y = RAW_third_quartile, 
+    #               group = interaction(pipe, f_type)), 
+    #           linetype = "dashed", color = "grey60") +
     geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, 
-                          group=interaction(normalization,pipe)), position = position_dodge(), size=1) + 
-    geom_line(aes(x=normalization, y=RAW_median, group=interaction(pipe, f_type)))+
-    geom_line(aes(x=normalization, y=RAW_first_quartile, group=interaction(pipe, f_type)),linetype="dashed")+
-    geom_line(aes(x=normalization, y=RAW_third_quartile, group=interaction(pipe, f_type)), linetype="dashed")+
+                          group = interaction(normalization,pipe)), 
+                      position = position_dodge(), size = 1) + 
     facet_grid(f_type~pipe,scales = "free", space = "free") + 
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0), 
           legend.position = "none") + 
-    labs(x = "Normalization", 
-         y = "Mean Beta Diversity", 
-         color = "Pipeline") + 
-    scale_color_manual(values = norm_colors) 
+    labs(x = "Normalization", y = "Mean Beta Diversity", color = "Pipeline") + 
+    scale_color_manual(values = norm_colors)  
 
 unweighted_tech_art_norm_eff <- tech_art_df_for_plot %>% 
-    filter(weight=="Unweighted") %>%
+    filter(weight == "Unweighted") %>%
     mutate(normalization = factor(normalization, 
                        levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
-    ggplot() + 
+    ggplot(aes(x = normalization)) +
+        geom_blank() + 
+        geom_ribbon(aes(x = as.numeric(normalization) - 1, 
+                        ymin = RAW_first_quartile, 
+                        ymax = RAW_third_quartile),
+                    fill = "grey90") + 
+        geom_line(aes(x = normalization, y = RAW_median, 
+                  group = interaction(pipe, f_type)), color = "white") +
+    # geom_line(aes(x = normalization, y = RAW_first_quartile, 
+    #               group = interaction(pipe, f_type)),
+    #           linetype = "dashed", color = "grey60") +
+    # geom_line(aes(x = normalization, y = RAW_third_quartile, 
+    #               group = interaction(pipe, f_type)), 
+    #           linetype = "dashed", color = "grey60") +
     geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, 
-                          group=interaction(normalization,pipe)), position = position_dodge(), size=1) + 
-    geom_line(aes(x=normalization, y=RAW_median, group=interaction(pipe, f_type)))+
-    geom_line(aes(x=normalization, y=RAW_first_quartile, group=interaction(pipe, f_type)),linetype="dashed")+
-    geom_line(aes(x=normalization, y=RAW_third_quartile, group=interaction(pipe, f_type)), linetype="dashed")+
+                          group = interaction(normalization,pipe)), 
+                      position = position_dodge(), size = 1) + 
     facet_grid(f_type~pipe,scales = "free", space = "free") + 
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0), legend.position = "none") + 
-    labs(x = "Normalization", y = "Mean Beta Diversity", 
-         color = "Pipeline") +scale_color_manual(values=norm_colors) 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
+          legend.position = "none") + 
+    labs(x = "Normalization", y = "Mean Beta Diversity", color = "Pipeline") + 
+    scale_color_manual(values = norm_colors) 
 
-ggarrange(weighted_tech_art_norm_eff, unweighted_tech_art_norm_eff,ncol = 1, nrow = 2, labels = "AUTO")
-```
-
-
-```{r techNormImpactUnweighted, fig.cap = "Impact of normalization method on mean unweighted beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=4, fig.width=10}
-
-
+ggarrange(weighted_tech_art_norm_eff, unweighted_tech_art_norm_eff,
+          ncol = 1, nrow = 2, labels = "AUTO")
 ```
 
 
