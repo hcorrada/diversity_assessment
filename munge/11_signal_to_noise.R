@@ -99,11 +99,6 @@ run_signal_to_noise <- function(dist_methods, mgtstMetadata){
         filter(!is.null(dist_obj)) %>% 
         select(-dist_results)
     
-    if (dist_methods == "jaccard") {
-        beta_df <- beta_df %>% 
-            mutate(dist_obj = map(dist_obj, ~(1 - .)))
-    }
-    
     ## within pair distance summary
     within_dist_summary_df <- beta_df %>%
         mutate(pair_df = map(dist_obj, 
