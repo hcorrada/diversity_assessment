@@ -1,5 +1,5 @@
 ---
-title: "Bio v Tech Stats"
+title: "Batch Effects Stats"
 author: "Nate Olson"
 date: "3/15/2018"
 output: html_document
