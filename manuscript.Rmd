@@ -41,9 +41,12 @@ Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-auth
 ``` 
 
 # Results 
+```{r experimentalDesign, echo = FALSE, fig.cap = "Stand-in figure."}
+knitr::include_graphics("img/experimental_design.png")
+```
 
 The beta diversity assessment framework includes three components; (1) evaluating beta diversity between PCR replicates for sequencing runs with different error rates and library sizes, (2) difference in beta diversity between biological and technical replicates, and (3) ability to differentiate between PCR replicates from unmixed pre-exposure samples and post-exposure samples as well as the unmixed post-exposure samples.  
-For our assessment we used a dataset consisting of two-sample titrations of DNA extracts from five vaccine trial participant stool samples collected before and after exposure to pathogenic _E. coli_ ( __Experimental Design Figure__ ). 
+For our assessment we used a dataset consisting of two-sample titrations of DNA extracts from five vaccine trial participant stool samples collected before and after exposure to pathogenic _E. coli_ (Fig. \@ref(fig:experimentalDesign)). 
 
 ## Dataset Characteristics  
 
@@ -54,7 +57,7 @@ For our assessment we used a dataset consisting of two-sample titrations of DNA 
 ## Excluding for now, not sure how it fits into the narrative
 ```
 
-## Technical Artifacts
+## PCR Repeatability
 ```{r techArt, child="reports/tech_artifacts.Rmd"}
 ```
 
