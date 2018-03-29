@@ -18,11 +18,11 @@ Sequencing libraries were prepared at independent laboratories using the same pr
 Resulting in four sequence datasets with varying sequence quality and library size variability.
 For the first laboratory (JHU) the base quality scores were lower than expected and the instrument was re-calibrated before the second run resulting in improved quality scores.
 For the second laboratory (NIST) the total run throughput was lower than expected, the pool library was re-optimized for resulting in increased throughput and lower sample to sample read count variability.  
-Sequence data characterization was performed using the savR [@savR] and ShortRead Bioconductor R packages [__REF__].
+Sequence data characterization was performed using the savR [@savR] and ShortRead Bioconductor R packages [@ShortRead].
 
 ## Bioinformatic Pipelines  
 Data from the four sequencing runs was processed using 6 bioinformatic pipelines including the QIIME open reference, closed reference, de novo, and deblur pipelines, as well as the Mothur de novo and DADA2 sequence inference pipelines.
-Code used to run the bioinformatic pipelines is available at https://github.com/nate-d-olson/mgtst\_pipelines/, on the multirun branch.
+Code used to run the bioinformatic pipelines is available at https://github.com/nate-d-olson/mgtst_pipelines/, on the multirun branch.
 The Mothur pipeline uses the OptiClust algorithm for de novo clustering [@Westcott2017].
 Preprocessing includes merging and quality filtering paired-end reads followed by aligning sequences to the SILVA reference alignment [@Schloss2009].
 Taxonomic classification was performed using the Mothur implementation of the RDP bayesian classifier [@Wang2007].
@@ -61,35 +61,51 @@ For our feature-level Beta-diversity assessment the Bray-Curtis weighted and Jac
 - Three assessment components, (1) beta-diversity repeatability, 
 (2) differences in beta diversity between individuals and treatments, 
 and (3) ability to distinguish between groups of samples with varying levels of similarity. 
+Standard linear models were used to test for significance using the R `lm` function. 
+Mixed effects models were used to take into account repeated measures were fit using the R `lmer` in the lme4 package [@lme4]. 
+Model fit was evaluated based on model statistics, AIC, BIC, and logLik, as well as diagnostic plots.
+Tukey Honest Significant Differences test was used for multiple comparison testing using the `TukeyHSD` function.  
 
 ### Beta-Diversity Repeatability
 - To assess beta-diversity repeatability we compared beta-diversity values between PCR replicates within the four sequencing runs. 
 - Sequencing runs different characteristics, variance in sample total abundance and sequence quality 
 - Compared mean beta diversity between PCR replicates for across pipelines for the four beta diversity metrics. 
-- Used a linear model and Tukey Honest Significant Differences to test for differences between pipelines and across sequencing runs for each of the diversity metrics calculated for the raw count data. 
-    - Equation: $\bar{D_i} = P_j\Beta_0 + S_k\Beta_1 + P*S\Beta_2$ 
-        - $D_{ijk}$ mean diversity metric for sample $i$, pipeline $j$, and sequencing run $k$   
-        - $P_j$ - bioinformatic pipeline   
-        - $S_k$ - sequencing run  
-    - R: `lm(mean_dist~pipe*seq_run_id, data = dat)`
+- Linear model used to quantify differences between pipelines and across sequencing runs for each of the diversity metrics calculated for the raw count data. 
+    - R model equation  `mean_dist~pipe*seq_run_id`, `mean_dist` is the mean beta-diversity between the four PCR replicates, `pipe` is bioinformatic pipeline, and `seq_run_id` is sequencing run number (note does not account for lab effect). 
+
 - Evaluated the impact of normalization methods for NIST run 1.  
-- Used a linear model to and TukeyHSD to quantify the impact of different normalization methods on sample to sample variability. 
-    - Indendent models fit for each diversity metric-pipeline combination. 
-    - R: `lm(mean_dist~normalization, data = dat)`
-- Model fit was evaluated based on model statistics, AIC, BIC, and logLik, as well as diagnostic plots. 
+- Linear model used to quantify normalization method impact on PCR repeatability. 
+    - Independent models fit for each diversity metric-pipeline combination. 
+    - R model equation `mean_dist~normalization`.
 
 ### Beta Diversity Between Individuals and Treatments
 - To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.  
-- Used __XYZ model__ to test for significance.  
-- Used variation partitioning (__REF__) to quantify how technical and biological factors contribute to the total observed variation.  
+- Linear model used to quantify differences in beta diversity between biological and technical sources of variability.
+    - R model equation `log(value) ~ variation + variation_label`, `value` is the beta diversity between replicates, `variation_label` is the variation source, and `variation` is the type of variation. 
+    - Variation labels 
+        - btw_subject_w/in_time: between subjects within treatment (pre- and post-exposure), within sequencing run
+        - w/in_subj_btw_time: within subject between treatments, within sequencing run
+        - btw_time: across subjects between treatments, within sequencing run
+        - w/in_lab_pcr: with subject, treatment and lab, between sequencing runs?? (check)
+        - w/in_lab_runs: within subject, treatment, lab, and sequencing runs (4 pcr replicates)
+        - btw_labs: within subject, treatment, across sequencing labs
+
+- Used variation partitioning [@borcard1992partialling] to quantify how technical and biological factors contribute to the total observed variation. 
+- Variation partition was calculated using the Vegan R package [@vegan]. 
+- Tested whether sources of variation significantly contributed to the overall variation using `drda` and `anova` [@vegan]. 
 
 
-### Differentiation Power  
 
-- We assessed the impact of bioinformatic pipeline and normalization methods on beta-diversity metrics using a similar approach used in [@Reynolds2006;@McMurdie2014].  
+### Signal to Noise Ratio  
+
+- Relationship between beta diversity between titrations (signal) and PCR replicates.  
 - This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.  
-- To summarize performance across titration comparisons, area under the curve was calculated using the trapazoid method (__R package ref__).  
-- Use __XYZ model__ to test for significance.  
+- Signal was measured as the median beta diversity between pre-exposure PCR replicates and PCR replicates for each titration and post-exposure samples. 
+- Noise was measured as the mean of the median beta diversity between pre-exposure PCR replicates and median beta diversity between PCR replicates for the samples being compared to the pre-exposure samples. 
+- A weighted average of the signal to noise was calculated as the area under the curve (using the `trapz` function) of the signal/noise ratio and the proportion of pre-exposure sample in the in titration being compared [@pracma].  
+- A linear model was used to quantify the differences in the signal to noise ratio between sequencing runs for each bioinformatic pipeline and diversity metric `log10(auc) ~ pipe + seq_run_num + biosample_id`.
+- A mixed effects model was used to quantify the impact of different normalization methods on the signal to noise ratio for NIST run 1, `log10(auc) ~ method + (1 | biosample_id)`. 
+- Independent linear models were fit for each bioinformatic pipeline and diversity metric. 
 
 
 
