@@ -54,52 +54,6 @@ norm_impact <- tech_art_df %>%
     summarise(dist_change = median(dist_change)) 
         
 ```
-  
-```{r techTotalAbuCOV, fig.cap = "A. Distribution of the coefficienct of variation of total abundance for PCR replicates by bioinformatic pipeline and sequencing run across B. Mean read quality score for PCR replicates across sequencing runs for forward and reverse reads.", eval = FALSE}
-
-cov_plot<-ggplot(tech_info_df) +
-    geom_boxplot(aes(x = reorder(interaction(pipe, seq_run_id), cov_total_abu, FUN=median), 
-                     y = cov_total_abu, fill=seq_run_id)) +
-    labs(x = "Pipeline", y = "COV(Total Abundance)") + 
-    theme_bw() + 
-    coord_flip() +
-    theme(axis.text.x=element_text(angle = 45, hjust = 1)) +
-    scale_fill_manual(values=run_colors)
-
-#tech_info_df_summary<-tech_info_df %>% group_by(seq_run_id, pipe) %>% summarize(mean_cov_total_abu=mean(cov_total_abu))
-# 
-# cov_plot<-ggplot(tech_info_df_summary, aes(x = pipe, y = mean_cov_total_abu, group=seq_run_id, color=seq_run_id)) + 
-#     geom_point() + geom_line()+
-#     labs(x = "Sequencing Run", y = "Mean COV(Total Abundance)") + theme_bw()+
-#     theme(axis.text.x=element_text(angle = 45, hjust = 1))
-
-read_qual_plot<-tech_info_df %>% 
-    select(biosample_id, t_fctr, seq_run_id, R1_qual, R2_qual) %>% 
-    distinct() %>% 
-    gather("read_dir","mean_qual", -biosample_id, -t_fctr, -seq_run_id) %>% 
-    ggplot() + 
-    geom_boxplot(aes(x = seq_run_id, y = mean_qual, 
-                     group=interaction(seq_run_id,read_dir), fill = read_dir), 
-                 position=position_dodge()) + 
-    labs(x = "Sequencing Run", y = "Mean Quality Score", fill = "Read Direction") + 
-    theme_bw()+ 
-    theme(axis.text.x=element_text(angle = 45, hjust = 1)) + 
-    scale_fill_manual(values=c("black", "darkgray"))
-
-ggarrange(cov_plot, read_qual_plot)
-
-```
-
-```{r techMeanDist_version1, message = FALSE, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data.", eval = FALSE}
-tech_art_df %>% filter(normalization == "RAW") %>% 
-    ggplot() + 
-    geom_density_ridges(aes(x = mean_dist, y = seq_run_id), 
-                         stat = "binline",
-                        draw_baseline = FALSE,
-                        scale = 1,
-                    alpha = 0.5) + 
-    facet_grid(pipe~metric, scales = "free_x") + theme_bw()
-```
 
 ```{r techMeanDist, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data.", fig.height=4, fig.width=6}
 tech_art_df %>% mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
