@@ -165,37 +165,30 @@ ggarrange(weighted_tech_art_norm_eff, unweighted_tech_art_norm_eff,
 ```
 
 
-We evaluated differences in beta diversity between PCR replicates across sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in per sample total abundance. 
-Higher pairwise distances for NIST runs indicate diversity metrics negatively impacted by larger variation in total abundance across PCR replicates (Fig. \@ref(fig:seqCharPlot)A). 
-Whereas, higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are less robust to sequencing errors (Fig. \@ref(fig:seqCharPlot)B & C). A linear model was used to test for significant differences in PCR replicates beta diversity by pipeline and sequencing run for raw count data. 
-Pipeline, sequencing run, and interaction between the two were significant for the four distance metrics (Supplemental Results??). 
-Tukey honest significant differences was used to test for significant pairwise differences (Supplemental Results??). 
+We evaluated differences in beta diversity between PCR replicates across sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in sample total feature abundance. 
+Higher pairwise distances for NIST run 1 indicates diversity metrics were negatively impacted by larger variation in total abundance across PCR replicates (Fig. \@ref(fig:seqCharPlot)A). 
+Whereas, higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are negatively impacted by sequencing errors (Fig. \@ref(fig:seqCharPlot)B & C). A linear model was used to test for significant differences in PCR replicates beta diversity by pipeline and sequencing run for raw count data. 
 
-<!-- Not sure about reporting statistical significance, what multiple comparison correction should I use  -->
-Nearly all pipeline comparisons were significantly different except for for Bray Curtis (unweighted taxonomic), where the QIIME _de novo_, closed-reference, and open-reference were not significantly different from eachother, as well as mothur and DADA2 were not significantly different from eachother. 
-<!-- Overall Mothur, dada, and deblur had lower mean pairwise distances compared to the QIIME open-reference, closed-reference, and _de novo_ results were other pipelines for three of the four diversity metrics.  -->
-<!-- For weighted UniFrac QIIME _de novo_ mean pairwise distances was similar to the Mothur, DADA2, and Deblur results.  -->
-<!-- The low weighted UniFrac for QIIME _de novo_ is potentially due to large number of singletons in the dataset, ~120K out of ~180K total features (Table \@ref(tab:pipeCharTbl)).  -->
-<!-- These singletons are likely sequencing errors and therefore closely related to other taxa therefore minimally impact the weighted unifrac results.   -->
-DADA2 pairwise distances were significantly greater for NIST1 and NIST2 (which had greater variability in library size) compared to the JHU2 run which had the lowest pairwise distance.  
 Mean pairwise distances were consistent across the JHU runs for Mothur and DADA2, suggesting they are better able to account for sequencing errors than other pipelines evaluated in this study. 
 Conversely, the Deblur pipeline had the highest number of failed samples for JHU1, suggesting it is less robust to sequencing errors compared to the other pipelines (Table \@ref(tab:pipeCharTbl)).   
 
-* Across pipelines NIST 1 and NIST 2 greater PCR replicate difference  
 * QIIME pipelines less robust to lower seq quality  
-* Expected lower diff for NIST 2 compared to JHU2 but consistent results with NIST 1, not sure why. Potentially due to higher R2 seq quality…  
-* Unaccounted for lab effect????  
-* Deblur failed for JHU1  
-* Lack of difference in pcr dist for JHU1 and JHU2 with mothur and dada, similar repeat between low and high quality runs????  
+* Across pipelines NIST 1 and NIST 2 greater PCR replicate difference   
+* Expected lower diff for NIST 2 compared to JHU2 but consistent results with NIST 1, not sure why.  
+    * Potentially due to higher R2 seq quality…   
+    * Unaccounted for lab effect????   
+
+* Greater variability for unweighted taxa 
+* higher pcr rep beta diversity for unweighted  
+* similar pattern for runs and pipelines between unweighted metrics 
 
 
 
-
-__Impact of normalization methods on technical artifacts.__ 
+__Impact of normalization methods on PCR replicate beta diversity.__ 
 
 - Compared results across normalization methods for NIST run 1, low error rate, high total abundance COV (Fig. \@ref(fig:seqCharPlot)).   
 - Methods had minimal impact, TMM and RLE tended to lower pairwise dist, rare15 increased (Fig. \@ref(fig:techNormImpactWeighted))  
-* CSS no significant difference for Bray, Weighted UniFrac significant decrease for deblur and open ref but higher for DADA
+* CSS no significant difference for Bray, Weighted UniFrac significant decrease for deblur and open ref but higher for DADA2.
 * No difference for UQ  
 * TSS lower for Bray excluding deblur and dada, lower for Open ref and bray for Wunifrac  
 * Rarefaction  
