@@ -10,7 +10,7 @@ output:
 ```{r seqPipeCharSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
 load.project()
-
+source("src/plot_color_definitions.R")
 ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>% 
     set_names(str_replace(basename(.), "_ps.rds", "")) %>% 
     map(readRDS)
@@ -25,8 +25,9 @@ error_plot <- ggplot(phix_error_df) +
     geom_smooth(aes(x = base_position, y = errorrate, color = ds, linetype = read)) +
     theme_bw() +
     labs(x = "Amplicon Base Position", y = "PhiX Error Rate", color = "Dataset") +
-    scale_color_manual(values=run_colors)+
-    theme(legend.direction = "horizontal", legend.position = "bottom", legend.box = "vertical")
+    scale_color_manual(values = run_colors) +
+    theme(legend.direction = "horizontal", 
+          legend.position = "bottom", legend.box = "vertical")
 ```
 
 ```{r seqCharCount}
@@ -46,7 +47,8 @@ n_read_plot <- r1_seq_char_df %>% filter(biosample_id != "NTC") %>%
         theme_bw() + labs(x = "Sequencing Lab", 
                           y = "Library Size", 
                           color = "Sequencing Run") +
-        theme(legend.position = "bottom")+scale_color_manual(values=run_colors)
+        theme(legend.position = "bottom") + 
+        scale_color_manual(values = run_colors)
 ```
 
  
@@ -56,7 +58,8 @@ qual_df <- seq_qual_comparisons %>%
     mutate(read_dir = paste0(read_dir, "_qual")) %>% 
     select(-sd_quality, -cov_quality) %>% 
     spread(read_dir, mean_quality) %>% 
-    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), remove = FALSE,extra = "merge")
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), 
+             remove = FALSE,extra = "merge")
 
 tech_art_df <- seq_char_comparisons %>% 
     select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
@@ -89,9 +92,12 @@ fit_est_df <- as.data.frame(confint_dat) %>%
     mutate(seq_run_id = str_replace(run_id, "_run",""))
 
 cov_plot <- ggplot(fit_est_df) + 
-    geom_pointrange(aes(x = seq_run_id, y = est, ymin = lci, ymax = uci, color=seq_run_id)) + 
+    geom_pointrange(aes(x = seq_run_id, y = est, ymin = lci, 
+                        ymax = uci, color = seq_run_id)) + 
     labs(x = "Sequencing Run", y = "Total Abundance COV") +
-    theme_bw() + scale_color_manual(values=run_colors) + theme(legend.position="none")
+    theme_bw() + 
+    scale_color_manual(values = run_colors) + 
+    theme(legend.position = "none")
 ```
 
 ```{r qualFit}
@@ -104,14 +110,21 @@ seq_qual_dat <- seq_char_df %>%
 
 seq_qual_plot <- seq_qual_dat %>% 
     ggplot() + 
-    geom_boxplot(aes(x = seq_run_id, y = quality, color = read_dir))  + theme_bw() + 
+    geom_boxplot(aes(x = seq_run_id, y = quality, color = read_dir))  + 
+    theme_bw() + 
     labs(x = "Sequencing Run", y = "Mode Read Base Quality Score", color = "Read Direction") + 
-    theme(legend.position = "bottom")+scale_color_manual(values=c("black", "darkgray"))
+    theme(legend.position = "bottom") + 
+    scale_color_manual(values = c("black", "darkgray"))
 ```
 
 
-```{r seqCharPlot, fig.cap = "A. Coeffient of variation in total abundance by sequencing run estimate and 95\\% confidence interval obtined using a mixed effects linear model. B. PhiX error rate relative to 16S rRNA amplicon base position for initial and the four sequencing runs. C. Distribution of mode read quality score by sequencing run. ", fig.height=4, fig.width=10}
-ggarrange(cov_plot, error_plot, seq_qual_plot, labels = "AUTO", ncol = 3)
+```{r seqCharPlot, fig.cap = "Sequencing quality and sample total abundance variation for the four sequencing runs used in this study. The same set of 192 PCRs were sequenced in all four runs. Independent sequencing libraries were generated at the two sequencing laboratories (JHU and NIST). (A) Sequencing run total abundance coeffient of variation estimate and 95\\% confidence interval calculated using a mixed effects linear model. (B) PhiX error rate relative to 16S rRNA amplicon base position for the four sequencing runs. (C) Distribution of mode read quality score by sequencing run.", fig.height=4, fig.width=10}
+seqCharPlot <- ggarrange(cov_plot, error_plot, seq_qual_plot, labels = "AUTO", ncol = 3)
+seqCharPlot
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+ggsave("img/seqCharPlot.png", seqCharPlot, width = 7.5, height = 3.5)
 ```
 
 
@@ -150,11 +163,11 @@ pipe_char_summary %>%
                     Sparsity = sparsity, 
                     `Total Abundance` = total_abu_summary, 
                     `Pass Rate` = pass_rate_summary) %>% 
-      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. Four pipelines, de novo, open reference, closed reference, and deblur (sequence inference), used the sample sequence pre-processing methods. DADA2 is a denoising sequence inference pipeline and mothur is a de-novo clustering pipeline. No template controls were excluded from summary statistics. Sparsity is the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2) in the count. Singletons is the total number of OTUs comprised of a single read in a single sample. Sample coverage is the median and range (minimum - maximum) per sample total feature abundance. Filter rate is the proportion of reads that were removed while processing the sequencing data for each bioinformatic pipeline.", booktabs = TRUE)
+      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. No template controls were excluded from summary statistic calculations. Sparsity is defined as the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2), rows in the count table. Singletons is the total number of features only observed once in a single sample. Total Abundance is the median and range (minimum - maximum) per sample total feature abundance. Pass Rate is the median and range for the proportion of reads removed while processing a sample's sequence data through a bioinformatic pipeline.", booktabs = TRUE)
 ```
 
 
-```{r abuDist}
+```{r abuDist, eval = FALSE}
 get_rad_df <- function(ps, sample_name) {
     x_abu <- prune_samples(sample_name, ps) %>%
         {prune_taxa(taxa_sums(.) > 0, .)} %>%
@@ -212,11 +225,13 @@ rare_plot_df <- tibble(ps_obj = ps_list) %>%
 
 ```
 
-```{r rarePlot, fig.cap = "Rarefaction curves for example sample across pipelines and sequencing runs.", fig.height=6, fig.width=8} 
-ggarrange(plotlist = rare_plot_df$rare_plot,labels = "AUTO", legend = "right",common.legend = TRUE, nrow=3, ncol=2)
+```{r rarePlot, fig.cap = "Rarefaction curves for an example sample across pipelines (A-F) and sequencing runs (line color).", fig.height=6, fig.width=8} 
+ggarrange(plotlist = rare_plot_df$rare_plot,
+          labels = "AUTO", legend = "right", 
+          common.legend = TRUE, nrow = 3, ncol = 2)
 ```
 
-```{r prevDF}
+```{r prevDF, eval = FALSE}
 ## Code modified from Callahan F1000
 get_prevdf <- function(ps){
     prevdf <- apply(X = otu_table(ps), 
@@ -251,24 +266,28 @@ prev_smooth <- ggplot(pipe_prev_df, aes(TotalAbundance, PrevFrac)) +
 ggarrange(prev_facet, prev_smooth, labels = "AUTO")
 ```
 
-Bioinformatic pipelines and normalization methods are used reduce the impact of noise in marker gene sequencing data due to sequencing errors and differences in the library size between samples. 
-Sequencing data for the two-sample titration dataset was obtained from four replicate sequencing runs with different sequence quality and library size variability (Fig. \@ref(fig:seqCharPlot), _Supplemental DADA2 qual plot_). The sequence data was processed using six different bioinformatic pipelines, DADA2, mothur, Deblur, and QIIME - _de novo_, open-reference, closed-reference. 
-The NIST runs had but greater variabiltiy in library size (Fig. \@ref(fig:seqCharPlot)A). 
-Good separation between sample and no template control library size for JHU but not NIST samples.  
-However, total abundance is lower for samples compared to no template controls for most sequencing runs and samples. 
-Though a few no template controls have values within the sample range.  (see pipe characterization total abundance and pass rate plots). 
-After processing the sequence data with the six bioinformatic pipelines the coefficint of variation total abundance between PCR replicates was lower for JHU and NIST run 2 compared to the first runs (Fig. \@ref(fig:seqCharPlot)B).  
-The first JHU run had higher PhiX error rates compared to the other sequencing runs especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)C). 
-The read base quality was lower for the reverse read than the forward reads, the reverse read quality score was higher for the two nist runs compared to the JHU runs (Fig. \@ref(fig:seqCharPlot)C). 
-The forward reads from NIST run 1 had the best read quality score followed by JHU run 2.  
-JHU run 2 had low read quality and high total abundance COV, NIST run 1 had higher quality and total abundance COV, NIST and JHU second runs had lower COV, but JHU had lower read 2 quality and NIST run had lower forward read quality. 
-The differences in sequence quality and total abundance variabiltiy between sequencing runs allows us to evaluate how well bioinformatic pipelines and normalization methods handle low quality reads and variability between samples.
+
+Sequencing data for the two-sample titration dataset was obtained from four replicate sequencing runs with different sequence quality and library size variability (Fig. \@ref(fig:seqCharPlot), _Supplemental DADA2 qual plot_). 
+For both sequencing laboratories (JHU and NIST) the first runs had higher variability in feature total abundance between samples than the second runs (Fig. \@ref(fig:seqCharPlot)A). 
+Sequencing error rate and base quality scores also varied by sequencing run. 
+The first JHU run had higher PhiX error rates compared to the other sequencing runs especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)B). 
+Read base quality was lower for the reverse read than the forward reads for all four sequencing runs (Fig. \@ref(fig:seqCharPlot)C).
+Sequence data from the two NIST runs had higher quality scores compared to the JHU runs, excluding JHU2 forward reads (Fig. \@ref(fig:seqCharPlot)C). 
+Overall JHU run 1 had low read quality and high total abundance COV, NIST run 1 had higher quality and total abundance COV, whereas the NIST and JHU second runs had lower COV and higher quality. 
+By comparing the results for the first JHU run to the other runs we can evaluate how well the bioinformatic pipelines handle low quality reads. 
+Similarly we can use data from the NIST run 1 to evaluate how well normalization methods are able to account for differences in total abundance between samples. 
 
 
-The six bioinformatic pipelines evaluated employ different pre-processing, clustering, and quality filtering methods, as a result the features and count tables generated by the pipelines exhibit different characteristics in terms of the number of features, total abundance, and proportion of sequences passing quality control (Table \@ref(tab:pipeCharTbl)). 
-Rarefaction curves are in ecology to determine how well a community has been sampled [@Gotelli2001,@Chao2014]. 
+The six bioinformatic pipelines evaluated employ different pre-processing, clustering, and quality filtering methods, as a result the features and count tables generated by the pipelines exhibit different characteristics in terms of the number of features, total abundance, and proportion of sequences passing quality control (Table \@ref(tab:pipeCharTbl)).  
+
+- differences in number of features  
+- sparsity  
+- number of samples  
+- Large number of singletons for qiime de novo  
+
+Rarefaction curves are in ecology to determine how well a community has been sampled [@Gotelli2001;@Chao2014]. 
 Measurement methods prone to errors, such as marker-gene sequencing, will never reach the asympotote if errors are not appropriately accounted for in sample processing [@Chiu2016]. 
-Sequence inference methods have lower species diversity estimates  and reach asympotote, whereas _de novo_, open-reference, and closed-reference methods do not (Fig. \@ref(fig:rarePlot)). 
+Sequence inference methods have lower species diversity estimates and reach asympotote, whereas _de novo_, open-reference, and closed-reference methods do not (Fig. \@ref(fig:rarePlot)). 
 Based on the rarefaction curve slopes the QIIME _de novo_ pipeline had the highest rate of artifacts, due to not filtering singletons. 
 The sequence inference methods, DADA2 and Deblur plateau around the same level. 
 However, DADA2 asymptotes were inconsistent across sequencing runs, indicating artificial plateaus for the lower throughput and lower quality runs. 
