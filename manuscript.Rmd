@@ -62,15 +62,17 @@ For our assessment we used a dataset consisting of two-sample titrations of DNA 
 ```
 
 
+## Signal to Noise
+
+```{r compToExp, child="reports/signal_to_noise.Rmd"}
+```
+
+
 ## Biological v. Technical Variation
 
 ```{r bioVtech, child="reports/biological_v_technical.Rmd"}
 ```
 
-## Signal to Noise
-
-```{r compToExp, child="reports/signal_to_noise.Rmd"}
-```
 
 # Discussion
 ```{r discussion, child="docs/discussion.Rmd", warning=FALSE, message=FALSE, echo = FALSE}

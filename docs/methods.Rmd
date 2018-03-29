@@ -78,6 +78,20 @@ Tukey Honest Significant Differences test was used for multiple comparison testi
     - Independent models fit for each diversity metric-pipeline combination. 
     - R model equation `mean_dist~normalization`.
 
+
+### Beta Diversity Signal to Noise Ratio  
+
+- Relationship between beta diversity between titrations (signal) and PCR replicates.  
+- This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.  
+- Signal was measured as the median beta diversity between pre-exposure PCR replicates and PCR replicates for each titration and post-exposure samples. 
+- Noise was measured as the mean of the median beta diversity between pre-exposure PCR replicates and median beta diversity between PCR replicates for the samples being compared to the pre-exposure samples. 
+- A weighted average of the signal to noise was calculated as the area under the curve (using the `trapz` function) of the signal/noise ratio and the proportion of pre-exposure sample in the in titration being compared [@pracma].  
+- A linear model was used to quantify the differences in the signal to noise ratio between sequencing runs for each bioinformatic pipeline and diversity metric `log10(auc) ~ pipe + seq_run_num + biosample_id`.
+- A mixed effects model was used to quantify the impact of different normalization methods on the signal to noise ratio for NIST run 1, `log10(auc) ~ method + (1 | biosample_id)`. 
+- Independent linear models were fit for each bioinformatic pipeline and diversity metric. 
+
+
+
 ### Beta Diversity Between Individuals and Treatments
 - To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.  
 - Linear model used to quantify differences in beta diversity between biological and technical sources of variability.
@@ -93,19 +107,4 @@ Tukey Honest Significant Differences test was used for multiple comparison testi
 - Used variation partitioning [@borcard1992partialling] to quantify how technical and biological factors contribute to the total observed variation. 
 - Variation partition was calculated using the Vegan R package [@vegan]. 
 - Tested whether sources of variation significantly contributed to the overall variation using `drda` and `anova` [@vegan]. 
-
-
-
-### Signal to Noise Ratio  
-
-- Relationship between beta diversity between titrations (signal) and PCR replicates.  
-- This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.  
-- Signal was measured as the median beta diversity between pre-exposure PCR replicates and PCR replicates for each titration and post-exposure samples. 
-- Noise was measured as the mean of the median beta diversity between pre-exposure PCR replicates and median beta diversity between PCR replicates for the samples being compared to the pre-exposure samples. 
-- A weighted average of the signal to noise was calculated as the area under the curve (using the `trapz` function) of the signal/noise ratio and the proportion of pre-exposure sample in the in titration being compared [@pracma].  
-- A linear model was used to quantify the differences in the signal to noise ratio between sequencing runs for each bioinformatic pipeline and diversity metric `log10(auc) ~ pipe + seq_run_num + biosample_id`.
-- A mixed effects model was used to quantify the impact of different normalization methods on the signal to noise ratio for NIST run 1, `log10(auc) ~ method + (1 | biosample_id)`. 
-- Independent linear models were fit for each bioinformatic pipeline and diversity metric. 
-
-
 
