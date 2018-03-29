@@ -167,30 +167,6 @@ pipe_char_summary %>%
 ```
 
 
-```{r abuDist, eval = FALSE}
-get_rad_df <- function(ps, sample_name) {
-    x_abu <- prune_samples(sample_name, ps) %>%
-        {prune_taxa(taxa_sums(.) > 0, .)} %>%
-        otu_table() %>%
-        as.vector() %>%
-        sort(decreasing = TRUE)
-    
-    data_frame(rank = 1:length(x_abu), abund = x_abu)
-}
-
-rad_df <- ps_list %>% map_df(get_rad_df, "nist_run1_1-A1", .id = "pipe")
-```
-
-
-```{r abuDistPlot, eval=FALSE, fig.cap = "Species abundance curves for example sample."}
-rad_df %>% mutate(pipe = str_replace(pipe, "_ps.rds","")) %>% 
-ggplot() + geom_point(aes(x = rank, y = abund)) + 
-    scale_y_log10() + 
-    theme_bw() + 
-    labs(x = "Feature Rank", y = "Abundance") + 
-    facet_wrap(~pipe, scales = "free_x")
-```
-
 
 ```{r rareCurve}
 ps_iNEXT <- function(ps){
@@ -231,41 +207,6 @@ ggarrange(plotlist = rare_plot_df$rare_plot,
           common.legend = TRUE, nrow = 3, ncol = 2)
 ```
 
-```{r prevDF, eval = FALSE}
-## Code modified from Callahan F1000
-get_prevdf <- function(ps){
-    prevdf <- apply(X = otu_table(ps), 
-                MARGIN = ifelse(taxa_are_rows(ps), yes = 1, no = 2),
-                FUN = function(x){sum(x > 0)})
-
-    # Add taxonomy and total read counts to this data.frame
-    data.frame(Prevalence = prevdf, 
-               TotalAbundance = taxa_sums(ps), 
-               tax_table(ps)) %>% 
-        mutate(PrevFrac = Prevalence / nsamples(ps))
-}
-
-
-pipe_prev_df <- ps_list %>% map_df(get_prevdf, .id = "pipe")
-```
-
-
-```{r prevPlot, eval=FALSE, fig.cap="Feature prevalence distribution by pipeline. A) 2D histogram with the relationship between feature total abundance across all samples and sequencing runs"}
-prev_facet <- ggplot(pipe_prev_df, aes(TotalAbundance, PrevFrac)) +
-    geom_hex() +
-    scale_x_log10() + 
-    facet_wrap(~pipe) + 
-    labs(x = "Total Abundance", y = "Prevalence [Frac. Samples]") + 
-    theme_bw()
-
-prev_smooth <- ggplot(pipe_prev_df, aes(TotalAbundance, PrevFrac)) + 
-    geom_smooth(aes(color = pipe)) + 
-    scale_x_log10() +
-    labs(x = "Total Abundance", y = "Prevalence [Frac. Samples]") + 
-    theme_bw()
-ggarrange(prev_facet, prev_smooth, labels = "AUTO")
-```
-
 
 Sequencing data for the two-sample titration dataset was obtained from four replicate sequencing runs with different sequence quality and library size variability (Fig. \@ref(fig:seqCharPlot), _Supplemental DADA2 qual plot_). 
 For both sequencing laboratories (JHU and NIST) the first runs had higher variability in feature total abundance between samples than the second runs (Fig. \@ref(fig:seqCharPlot)A). 
@@ -292,14 +233,4 @@ Based on the rarefaction curve slopes the QIIME _de novo_ pipeline had the highe
 The sequence inference methods, DADA2 and Deblur plateau around the same level. 
 However, DADA2 asymptotes were inconsistent across sequencing runs, indicating artificial plateaus for the lower throughput and lower quality runs. 
 Mothur and Deblur rarefaction curves were consistent across sequencing runs. 
-The QIIME open reference, closed reference, and de novo rarefaction curves were influenced by both sequence quality and library size. 
-    
-
-<!-- Excluding for now not sure contributes to narrative -->
-<!-- * Prevalence (Fig. \@ref(fig:prevPlot))   -->
-<!--     - DADA2 slope starts later than other pipelines   -->
-<!--     - mothur starts to plateu ...  -->
-<!--     - qiime de-novo, open and closed ref hump?   -->
-<!-- Species abundance curves are fundamentally different between pipelines, indicating that the features generated using represent different biological units and therefore should be interpreted as such (Fig. \@ref(fig:abuDistPlot)) -->
-
-
+The QIIME open reference, closed reference, and de novo rarefaction curves were influenced by both sequence quality and library size.  
