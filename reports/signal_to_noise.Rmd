@@ -80,7 +80,6 @@ auc_summary %>%
                             "Phylogenetic","Taxonomic"),
            weight = if_else(dist_method %in% c("unifrac_dist","jaccard_dist"),
                             "Unweighted", "Weighted")) %>% 
-    
     mutate(x_offset = if_else(seq_lab == "jhu", -0.3  + 0.1 * seq_run, 0.1 * seq_run),
            x_pos = as.numeric(pipe) + x_offset) %>% 
     ggplot() + 
@@ -88,7 +87,7 @@ auc_summary %>%
     geom_line(aes(x = x_pos, y = auc,group = paste(pipe,seq_lab_run)), color = "grey60") + 
     geom_point(aes(x = x_pos, y = auc, color = seq_lab_run, shape = biosample_id)) + 
     facet_grid(weight~f_type, scales = "free_y") +
-    scale_color_manual(values = run_colors)
+    scale_color_manual(values = run_colors) + 
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
           legend.position = "bottom") + 
