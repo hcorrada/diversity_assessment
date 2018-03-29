@@ -1,0 +1,20 @@
+Microbial communities, microbiomes, play an critical role in human and ecosystem health.
+16S rRNA marker-gene sequencing is the most commonly used methods for characterizing microbiomes.
+Beta diversity metrics are commonly used to analyze microbial communities, previously developed for macro-ecology, characterize overall community similarity.
+The impact of sequence characteristics such as sequencing errors and differences in the number of reads generated per sample, library size, on beta-diversity analysis is not well understood.
+Bioinformatic pipelines and normalization methods are used to account for sequencing errors and library size differences.
+In the following study we assessed the impact of sequence characteristics on beta-diversity analysis, and how well different bioinformatic pipelines and normalization methods affect this impact.
+For this assessment we used a novel dataset consisting of stool samples from a vaccine trial participants, were samples collected before and after exposure to the pathogen were mixed following a two-sample titration.
+Multiple levels of replicates were included in the study, biological replicates (five vaccine trial participants) and technical replicates included PCR, sequencing library, and sequencing runs.
+The sequencing data were processed using six bioinformatic pipelines; DADA2 (sequence inference), Mothur (_de novo_), Deblur (QIIME 1 preprocessing), QIIME _de novo_, QIIME open-reference, and QIIME closed-reference.
+Normalization methods including multiple rarefying level, total sum scaling (TSS), cumulative sum scaling (CSS), upper quartile (UQ), trimmed mean of M values (TMM), and relative log expression (RLE).
+The assessment framework developed for this study consists of three components.
+(1) Beta-diversity repeatability for PCR replicates.
+(2) Difference in beta diversity between biological (e.g. different individuals) and technical factors (e.g. different sequencing runs).
+(3) Ability to differentiate groups of samples with varying levels of similarity, using titrations.
+The assessment results varied by pipeline, and normalization method.
+Mothur and DADA2 were less susceptible to sequencing errors.
+Ability of normalization methods to account for differences in sequencing depth varied by beta diversity metric and to less of an extent pipeline.
+Normalization methods TMM and RLE, developed for microarray and RNAseq data, are not appropriate for marker-gene survey beta-diversity analysis.
+For unweighted metrics, rarefying to 10,000 reads improved results whereas rarefying to the 85th percentile worsened results.
+While low error rates and consistent library size are ideal, we show that for beta-diversity analysis some bioinformatic pipelines and normalization methods are robust to lower quality sequence data.
