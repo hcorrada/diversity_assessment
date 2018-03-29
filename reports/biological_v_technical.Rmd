@@ -23,13 +23,20 @@ library(ggpubr)
 
 ```{r bioVtechMunge, warning=FALSE, message=FALSE, echo = FALSE}
 ## Pre-processing data for figure(s)
-biol_v_tech_variation_summary_highlevel <- biol_v_tech_variation[[3]] %>%  
-    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
-                          if_else(pipe == "qiimeOpenRef", "q_open", 
-                                  if_else(pipe == "qiimeClosedRef", "q_closed",
-                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
-                                          pipe)))),
-           pipe = factor(pipe)) %>%
+bio_v_tech_dat <- biol_v_tech_variation[[3]] %>% 
+    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+                        "Phylogenetic","Taxonomic"),
+            weight = if_else(metric %in% c("unifrac","jaccard"),
+                        "Unweighted", "Weighted")) %>% 
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
+                        pipe == "qiimeOpenRef" ~ "q_open", 
+                        pipe == "qiimeClosedRef" ~ "q_closed",
+                        pipe == "qiimeDeNovo"~ "q_denovo",
+                        TRUE ~ pipe),
+           pipe = factor(pipe))
+
+
+biol_v_tech_variation_summary_highlevel <- bio_v_tech_dat %>%  
     group_by(variation, pipe, normalization, metric, normalization_type) %>%
     summarise(mean_value = mean(value), 
               stdev = sd(value), 
@@ -72,15 +79,10 @@ biol_v_tech_variation_summary_higherlevel %>%
 
 
 ```{r bioVtechRaw, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, distribution is beta diversity between technical replicates and biological treatments (subject  and timepoint)."}
-bio_v_tech_dat <- biol_v_tech_variation[[3]] %>% 
-    filter(normalization == "RAW") %>% 
-    filter(!grepl("jhu_run1", sample_a), !grepl("jhu_run1", sample_b)) %>% 
-    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
-                        "Phylogenetic","Taxonomic"),
-            weight = if_else(metric %in% c("unifrac","jaccard"),
-                        "Unweighted", "Weighted")) 
 
-weighted <- bio_v_tech_dat %>% filter(weight == "Weighted" ) %>% 
+
+weighted <- bio_v_tech_dat %>% 
+    filter(weight == "Weighted", normalization == "RAW") %>% 
     ggplot(aes(x = variation_label, y = value, 
                color = variation, fill = variation)) + 
     geom_tufteboxplot() + 
@@ -92,7 +94,8 @@ weighted <- bio_v_tech_dat %>% filter(weight == "Weighted" ) %>%
          fill = "Variation Source", color = "Variation Source") 
     
 
-unweighted <- bio_v_tech_dat %>% filter(weight == "Unweighted" ) %>% 
+unweighted <- bio_v_tech_dat %>% 
+    filter(weight == "Unweighted", normalization == "RAW") %>% 
     ggplot(aes(x = variation_label, y = value, 
                color = variation, fill = variation)) + 
     geom_tufteboxplot() + 
@@ -106,13 +109,22 @@ unweighted <- bio_v_tech_dat %>% filter(weight == "Unweighted" ) %>%
 ggarrange(weighted + rremove("xlab") + rremove("x.text"), 
           unweighted, 
           ncol = 1, nrow = 2, 
-          labels = "AUTO", common.legend = TRUE, legend = "bottom", heights = c(0.35,0.65))
+          labels = "AUTO", common.legend = TRUE, 
+          legend = "bottom", heights = c(0.35,0.65))
 ```
 
 ```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for un-normalized data.", fig.width = 6, fig.height = 8}
+varpart_stats <- varpart_stats %>% 
+        mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
+                        pipe == "qiimeOpenRef" ~ "q_open", 
+                        pipe == "qiimeClosedRef" ~ "q_closed",
+                        pipe == "qiimeDeNovo"~ "q_denovo",
+                        TRUE ~ pipe),
+           pipe = factor(pipe))
+
 varpart_weighted <- varpart_stats %>% 
     filter(effect == "conditional", 
-           metric %in% c("bray", "wunifrac"))
+           metric %in% c("bray", "wunifrac")) 
 
 varpart_weighted_raw <- varpart_weighted %>% filter(normalization == "RAW")
 varpart_weighted_norm <- varpart_weighted %>% filter(normalization != "RAW")

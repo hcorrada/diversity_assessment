@@ -195,7 +195,10 @@ rare_plot_df <- tibble(ps_obj = ps_list) %>%
                                           pipe)))),
            pipe = factor(pipe)) %>%
     mutate(inext_dat = map(ps_obj, ps_iNEXT),
-           rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) + theme_bw() + ggtitle(.y)+
+           rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) + 
+                   labs(x = "Sampling Depth", y = "Feature Diversity") + 
+                   theme_bw() + 
+                   ggtitle(.y) +
                    scale_color_manual(values=run_colors2)})) %>%
     select(-ps_obj, -inext_dat)
 

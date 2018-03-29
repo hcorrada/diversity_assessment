@@ -88,8 +88,10 @@ auc_summary %>%
     geom_line(aes(x = x_pos, y = auc,group = paste(pipe,seq_lab_run)), color = "grey60") + 
     geom_point(aes(x = x_pos, y = auc, color = seq_lab_run, shape = biosample_id)) + 
     facet_grid(weight~f_type, scales = "free_y") +
+    scale_color_manual(values = run_colors)
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom") + 
     labs(x = "Pipeline", y = "Signal/Noise", color = "Seq Run", shape = "Individual")
 ```
 

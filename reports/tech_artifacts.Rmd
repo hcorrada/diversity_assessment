@@ -36,7 +36,13 @@ tech_art_df <- seq_char_comparisons %>%
     mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
                             "Phylogenetic","Taxonomic"),
            weight = if_else(metric %in% c("unifrac","jaccard"),
-                            "Unweighted", "Weighted")) 
+                            "Unweighted", "Weighted")) %>% 
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
+                            pipe == "qiimeOpenRef" ~ "q_open", 
+                            pipe == "qiimeClosedRef" ~ "q_closed",
+                            pipe == "qiimeDeNovo"~ "q_denovo",
+                            TRUE ~ pipe),
+           pipe = factor(pipe))
 
 tech_info_df <- tech_art_df %>% 
     filter(normalization == "RAW") %>% 
@@ -56,15 +62,8 @@ norm_impact <- tech_art_df %>%
 ```
 
 ```{r techMeanDist, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data.", fig.height=4, fig.width=6}
-tech_art_df %>% mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
-                          if_else(pipe == "qiimeOpenRef", "q_open", 
-                                  if_else(pipe == "qiimeClosedRef", "q_closed",
-                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
-                                          pipe)))),
-           pipe = factor(pipe)) %>% 
-    filter(normalization == "RAW") %>% 
+tech_art_df %>% filter(normalization == "RAW") %>% 
     ggplot() + 
-    # geom_violin(aes(x = pipe, y = mean_dist), fill = "grey60") +
     geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
                  outlier.size = 0.5) + 
     facet_grid(f_type~weight) + theme_bw() + 
@@ -94,17 +93,10 @@ tech_art_df_for_plot <- tech_art_df %>% ungroup() %>%
 tech_art_df_for_plot <- merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW, 
                             by = c("pipe","metric","f_type","weight"))
 
-weighted_tech_art_norm_eff <- tech_art_df_for_plot %>% 
-    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
-                          if_else(pipe == "qiimeOpenRef", "q_open", 
-                                  if_else(pipe == "qiimeClosedRef", "q_closed",
-                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
-                                          pipe)))),
-           pipe = factor(pipe)) %>%
+weighted <- tech_art_df_for_plot %>%
     filter(weight == "Weighted") %>% 
-    # filter(!(normalization %in% c("RLE","rare2000", "rare10000", "UQ"))) %>% 
     mutate(normalization = factor(normalization, 
-                       levels = norm_level_ord, ordered = T)) %>% 
+                                  levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
      ggplot(aes(x = normalization)) +
         geom_blank() + 
@@ -126,15 +118,16 @@ weighted_tech_art_norm_eff <- tech_art_df_for_plot %>%
                       position = position_dodge(), size = 1) + 
     facet_grid(f_type~pipe,scales = "free", space = "free") + 
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
-          legend.position = "none") + 
-    labs(x = "Normalization", y = "Mean Beta Diversity", color = "Pipeline") + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+    labs(x = "Normalization", 
+         y = "PCR Replicate Beta Diversity", 
+         color = "Bioinformatic Pipeline") + 
     scale_color_manual(values = norm_colors)  
 
-unweighted_tech_art_norm_eff <- tech_art_df_for_plot %>% 
+unweighted <- tech_art_df_for_plot %>% 
     filter(weight == "Unweighted") %>%
-    mutate(normalization = factor(normalization, 
-                       levels = norm_level_ord, ordered = T)) %>% 
+    mutate(normalization = factor(normalization,
+                                  levels = norm_level_ord, ordered = T)) %>% 
     filter(seq_run_id %in% c("nist_run1")) %>% 
     ggplot(aes(x = normalization)) +
         geom_blank() + 
@@ -150,18 +143,20 @@ unweighted_tech_art_norm_eff <- tech_art_df_for_plot %>%
     # geom_line(aes(x = normalization, y = RAW_third_quartile, 
     #               group = interaction(pipe, f_type)), 
     #           linetype = "dashed", color = "grey60") +
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, 
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, shape = metric,
                           group = interaction(normalization,pipe)), 
                       position = position_dodge(), size = 1) + 
     facet_grid(f_type~pipe,scales = "free", space = "free") + 
     theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
-          legend.position = "none") + 
-    labs(x = "Normalization", y = "Mean Beta Diversity", color = "Pipeline") + 
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
+    labs(x = "Normalization", 
+         y = "PCR Replicate Beta Diversity", 
+         color = "Bioinformatic Pipeline") + 
     scale_color_manual(values = norm_colors) 
 
-ggarrange(weighted_tech_art_norm_eff, unweighted_tech_art_norm_eff,
-          ncol = 1, nrow = 2, labels = "AUTO")
+ggarrange(weighted, unweighted,
+          ncol = 1, nrow = 2, labels = "AUTO",
+          common.legend = TRUE)
 ```
 
 
