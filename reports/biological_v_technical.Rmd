@@ -3,13 +3,9 @@ title: "Biological versus Technical Variability"
 author: "Jackie Meisel"
 date: '`r Sys.Date()`'
 output:
-  bookdown::pdf_document2: 
+  bookdown::pdf_document2:
     toc: FALSE
 ---
-<!-- differences between beta diversity metrics  -->
-<!--
-Biological versus technical variation results section, comparison of pairwise distances between biological and technical replicates and partitioning total variation into biological and technical components. 
--->
 
 ```{r bioVtechSetup, warning=FALSE, message=FALSE, echo = FALSE}
 library(ProjectTemplate)
@@ -23,55 +19,55 @@ library(ggpubr)
 
 ```{r bioVtechMunge, warning=FALSE, message=FALSE, echo = FALSE}
 ## Pre-processing data for figure(s)
-bio_v_tech_dat <- biol_v_tech_variation[[3]] %>% 
-    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+bio_v_tech_dat <- biol_v_tech_variation[[3]] %>%
+    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"),
                         "Phylogenetic","Taxonomic"),
             weight = if_else(metric %in% c("unifrac","jaccard"),
-                        "Unweighted", "Weighted")) %>% 
-    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
-                        pipe == "qiimeOpenRef" ~ "q_open", 
+                        "Unweighted", "Weighted")) %>%
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
+                        pipe == "qiimeOpenRef" ~ "q_open",
                         pipe == "qiimeClosedRef" ~ "q_closed",
                         pipe == "qiimeDeNovo"~ "q_denovo",
                         TRUE ~ pipe),
            pipe = factor(pipe))
 
 
-biol_v_tech_variation_summary_highlevel <- bio_v_tech_dat %>%  
+biol_v_tech_variation_summary_highlevel <- bio_v_tech_dat %>%
     group_by(variation, pipe, normalization, metric, normalization_type) %>%
-    summarise(mean_value = mean(value), 
-              stdev = sd(value), 
-              N = n(), 
+    summarise(mean_value = mean(value),
+              stdev = sd(value),
+              N = n(),
               se = stdev/sqrt(N))
 
 biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highlevel[, 1:6] %>%
     spread(variation, mean_value) %>%
-    mutate(mean_difference  = biological - technical) %>% 
-    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+    mutate(mean_difference  = biological - technical) %>%
+    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"),
                         "Phylogenetic","Taxonomic"),
             weight = if_else(metric %in% c("unifrac","jaccard"),
-                        "Unweighted", "Weighted")) 
+                        "Unweighted", "Weighted"))
 
 ```
 
 
 ```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological (subject and titration level) and technical variation (sequencing lab and run) (pairwise distance between replicates.) Grey line indicates the mean differences for diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method.", fig.height=4, fig.width=6, eval = FALSE}
 
-raw_bio_v_tech <- biol_v_tech_variation_summary_higherlevel %>% 
-    filter(normalization == "RAW") %>% 
-    ungroup() 
+raw_bio_v_tech <- biol_v_tech_variation_summary_higherlevel %>%
+    filter(normalization == "RAW") %>%
+    ungroup()
 
-biol_v_tech_variation_summary_higherlevel %>% 
-    filter(normalization != "RAW") %>% 
-    ggplot(aes(x = pipe)) + 
-        geom_blank() + 
-        geom_line(data = raw_bio_v_tech, 
-                  aes(x = as.numeric(pipe), y = mean_difference), color = "grey60") + 
+biol_v_tech_variation_summary_higherlevel %>%
+    filter(normalization != "RAW") %>%
+    ggplot(aes(x = pipe)) +
+        geom_blank() +
+        geom_line(data = raw_bio_v_tech,
+                  aes(x = as.numeric(pipe), y = mean_difference), color = "grey60") +
         geom_point(aes(x = pipe, y = mean_difference, fill = normalization),
-                   shape = 21) + 
-        theme_bw() + 
-        facet_grid(f_type~weight, scales = "free_y") + 
+                   shape = 21) +
+        theme_bw() +
+        facet_grid(f_type~weight, scales = "free_y") +
         theme(axis.text.x = element_text(angle = -45, hjust = 0),
-              legend.position = "bottom") + 
+              legend.position = "bottom") +
         labs(x = "Pipeline", y = "Biological - Technical", fill = "Normalization") +
     scale_fill_manual(values = norm_colors)
 
@@ -81,50 +77,50 @@ biol_v_tech_variation_summary_higherlevel %>%
 ```{r bioVtechRaw, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, distribution is beta diversity between technical replicates and biological treatments (subject  and timepoint)."}
 
 
-weighted <- bio_v_tech_dat %>% 
-    filter(weight == "Weighted", normalization == "RAW") %>% 
-    ggplot(aes(x = variation_label, y = value, 
-               color = variation, fill = variation)) + 
-    geom_tufteboxplot() + 
-    facet_grid(f_type~pipe, scales = "free_y") + 
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
-          legend.position = "bottom") + 
-    labs(x = "Variation Type", y = "Beta Diversity", 
-         fill = "Variation Source", color = "Variation Source") 
-    
-
-unweighted <- bio_v_tech_dat %>% 
-    filter(weight == "Unweighted", normalization == "RAW") %>% 
-    ggplot(aes(x = variation_label, y = value, 
-               color = variation, fill = variation)) + 
-    geom_tufteboxplot() + 
-    facet_grid(f_type~pipe, scales = "free_y") + 
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0), 
-          legend.position = "bottom") + 
-    labs(x = "Variation Type", y = "Beta Diversity", 
+weighted <- bio_v_tech_dat %>%
+    filter(weight == "Weighted", normalization == "RAW") %>%
+    ggplot(aes(x = variation_label, y = value,
+               color = variation, fill = variation)) +
+    geom_tufteboxplot() +
+    facet_grid(f_type~pipe, scales = "free_y") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom") +
+    labs(x = "Variation Type", y = "Beta Diversity",
          fill = "Variation Source", color = "Variation Source")
 
-ggarrange(weighted + rremove("xlab") + rremove("x.text"), 
-          unweighted, 
-          ncol = 1, nrow = 2, 
-          labels = "AUTO", common.legend = TRUE, 
+
+unweighted <- bio_v_tech_dat %>%
+    filter(weight == "Unweighted", normalization == "RAW") %>%
+    ggplot(aes(x = variation_label, y = value,
+               color = variation, fill = variation)) +
+    geom_tufteboxplot() +
+    facet_grid(f_type~pipe, scales = "free_y") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom") +
+    labs(x = "Variation Type", y = "Beta Diversity",
+         fill = "Variation Source", color = "Variation Source")
+
+ggarrange(weighted + rremove("xlab") + rremove("x.text"),
+          unweighted,
+          ncol = 1, nrow = 2,
+          labels = "AUTO", common.legend = TRUE,
           legend = "bottom", heights = c(0.35,0.65))
 ```
 
 ```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for un-normalized data.", fig.width = 6, fig.height = 8}
-varpart_stats <- varpart_stats %>% 
-        mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
-                        pipe == "qiimeOpenRef" ~ "q_open", 
+varpart_stats <- varpart_stats %>%
+        mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
+                        pipe == "qiimeOpenRef" ~ "q_open",
                         pipe == "qiimeClosedRef" ~ "q_closed",
                         pipe == "qiimeDeNovo"~ "q_denovo",
                         TRUE ~ pipe),
            pipe = factor(pipe))
 
-varpart_weighted <- varpart_stats %>% 
-    filter(effect == "conditional", 
-           metric %in% c("bray", "wunifrac")) 
+varpart_weighted <- varpart_stats %>%
+    filter(effect == "conditional",
+           metric %in% c("bray", "wunifrac"))
 
 varpart_weighted_raw <- varpart_weighted %>% filter(normalization == "RAW")
 varpart_weighted_norm <- varpart_weighted %>% filter(normalization != "RAW")
@@ -133,17 +129,17 @@ weighted <- ggplot(varpart_weighted_norm) +
     geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
              stat = "identity", position = "dodge", width = 0.5) +
     geom_point(data = varpart_weighted_raw,
-               aes(x = feature, y = Adj.R.square), 
+               aes(x = feature, y = Adj.R.square),
                shape = "-", size = 8) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
-    theme(legend.position = "bottom") + 
-    scale_fill_manual(values = norm_colors) 
+    theme(legend.position = "bottom") +
+    scale_fill_manual(values = norm_colors)
 
-varpart_unweighted <- varpart_stats %>% 
-    filter(effect == "conditional", 
+varpart_unweighted <- varpart_stats %>%
+    filter(effect == "conditional",
            metric %in% c("jaccard", "unifrac"))
 
 varpart_unweighted_raw <- varpart_unweighted %>% filter(normalization == "RAW")
@@ -153,33 +149,33 @@ unweighted <- ggplot(varpart_unweighted_norm) +
     geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
              stat = "identity", position = "dodge", width = 0.5) +
     geom_point(data = varpart_unweighted_raw,
-               aes(x = feature, y = Adj.R.square), 
+               aes(x = feature, y = Adj.R.square),
                shape = "-", size = 8) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
-    theme(legend.position = "bottom") + 
-    scale_fill_manual(values = norm_colors) 
+    theme(legend.position = "bottom") +
+    scale_fill_manual(values = norm_colors)
 
-ggarrange(weighted, unweighted, 
+ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2,
           labels = "AUTO",common.legend = TRUE,
           legend = "bottom")
-``` 
+```
 
-We next looked at how different pipelines and normalization methods captured diversity differences between our biological and technical replicates. 
-Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric for raw count data (Fig. \@ref(fig:bioVtechRaw)). 
-Overall, as expected, the mean diversity observed between biological replicates was greater than that between technical replicates. 
-The magnitude of the difference varied by diversity metric and pipeline. 
-The difference in beta diversity between biological replicates and technical replicates was greater for DADA2, mothur, and Deblur, compared to QIIME open-ref, close-ref, and de novo pipelines. 
-The difference was greater for weighted than unweighted beta diversity metrics for all pipelines. 
+We next looked at how different pipelines and normalization methods captured diversity differences between biological and technical replicates.
+Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric for raw count data (Fig. \@ref(fig:bioVtechRaw)).
+Overall, as expected, the mean diversity observed between biological replicates was greater than that between technical replicates.
+The magnitude of the difference varied by diversity metric and pipeline.
+The difference in beta diversity between biological replicates and technical replicates was greater for DADA2, mothur, and Deblur, compared to QIIME open-reference, close-reference, and _de novo_ pipelines.
+The difference was greater for weighted than unweighted beta diversity metrics for all pipelines.
 
-We also used variation partitioning to evalute the impact of different normalization methods on the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run. 
-Accross all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechVarpart)). 
-In our unnormalized pipelines, sequencing run accounts for a greater proprotion of the explained variance, highlighting the overall importance of normalizing our datasets. 
-Effective normalization methods decrease the technical variability in the data without decreasing the biological variability. 
-For both weighted and unweighted metrics rarefaction normalization methods generally show increased amounts of variation explained by biological factors rather than technical artifacts. 
-The non-rarefaction normalization methods do not reduce the impacts of technical arifacts as effectively, especially for the QIIME pipelines. 
-RLE and TMM consistently increase the technical variability and often decrease the amount of variability in the data attributed to biological factors (Fig. \@ref(fig:bioVtechRaw)A).  
-For the QIIME closed reference, open reference, and _de novo_ pipelines and taxonomic beta diversity metrics subject variation greater than sequencing run after normalization (excluding TMM, RLE, UQ and CSS) but not without. 
+We also used variation partitioning to evalute the impact of different normalization methods on the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run.
+Accross all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechVarpart)).
+In our unnormalized pipelines, sequencing run accounts for a greater proprotion of the explained variance, highlighting the overall importance of normalizing our datasets.
+Effective normalization methods decrease the technical variability in the data without decreasing the biological variability.
+For both weighted and unweighted metrics rarefaction normalization methods generally show increased amounts of variation explained by biological factors rather than technical artifacts.
+The non-rarefaction normalization methods do not reduce the impacts of technical arifacts as effectively, especially for the QIIME pipelines.
+RLE and TMM consistently increase the technical variability and often decrease the amount of variability in the data attributed to biological factors (Fig. \@ref(fig:bioVtechRaw)A).
+For the QIIME closed reference, open reference, and _de novo_ pipelines and taxonomic beta diversity metrics subject variation greater than sequencing run after normalization (excluding TMM, RLE, UQ and CSS) but not without.
