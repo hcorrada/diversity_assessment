@@ -73,8 +73,12 @@ norm_effect_auc_fit <- norm_effect_auc_df %>%
 ```{r sigalToNoiseRawPlot, warning = FALSE, echo = FALSE, message = FALSE, fig.cap = "The weighted average signal to noise varied by pipeline, run, and diversity metric. Points indicate the signal to noise for each individual with grey lines representing the range of values for a pipeline and sequencing run."}
 auc_summary %>% 
     ungroup() %>% 
-    mutate(seq_lab_run = paste(seq_lab, seq_run)) %>% 
-        mutate(pipe = if_else(pipe == "deblur", "qiimeDeblur",pipe),
+    mutate(seq_lab_run = paste0(seq_lab,"_run", seq_run)) %>% 
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
+                        pipe == "qiimeOpenRef" ~ "q_open", 
+                        pipe == "qiimeClosedRef" ~ "q_closed",
+                        pipe == "qiimeDeNovo"~ "q_denovo",
+                        TRUE ~ pipe),
            pipe = factor(pipe)) %>% 
     mutate(f_type = if_else(dist_method %in% c("unifrac_dist","wunifrac_dist"), 
                             "Phylogenetic","Taxonomic"),
@@ -140,7 +144,13 @@ sig_to_noise_ne_df <- norm_effect_auc_fit %>%
 ```{r signalToNoiseNormEffectPlot, echo = FALSE, message = FALSE, warning = FALSE, fig.cap = "Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data for (A) weighted and  (B) unweighted beta diversity metrics. Estimates calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods.", fig.height = 8, fig.width = 6}
 sig_to_noise_ne_df <- sig_to_noise_ne_df %>% 
     mutate(metric = str_remove(dist_method, "_dist")) %>% 
-    mutate(t_stat = if_else(abs(statistic) > 2, ">2","<2"))
+    mutate(t_stat = if_else(abs(statistic) > 2, ">2","<2")) %>% 
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
+                    pipe == "qiimeOpenRef" ~ "q_open", 
+                    pipe == "qiimeClosedRef" ~ "q_closed",
+                    pipe == "qiimeDeNovo"~ "q_denovo",
+                    TRUE ~ pipe),
+       pipe = factor(pipe))
 
 raw_sig_noise_weighted <- sig_to_noise_ne_df %>% 
     filter(normalization == "RAW", metric %in% c("bray","wunifrac")) 
