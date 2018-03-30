@@ -90,7 +90,8 @@ auc_summary %>%
     geom_blank(aes(x = pipe)) + 
     geom_line(aes(x = x_pos, y = auc,group = paste(pipe,seq_lab_run)), color = "grey60") + 
     geom_point(aes(x = x_pos, y = auc, color = seq_lab_run, shape = biosample_id)) + 
-    facet_grid(weight~f_type, scales = "free_y") +
+    facet_grid(weight~f_type) +
+    scale_y_continuous(trans = "log2") + 
     scale_color_manual(values = run_colors) + 
     theme_bw() + 
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
@@ -156,7 +157,8 @@ raw_sig_noise_weighted <- sig_to_noise_ne_df %>%
     filter(normalization == "RAW", metric %in% c("bray","wunifrac")) 
 raw_sig_noise_unweighted <- sig_to_noise_ne_df %>% 
     filter(normalization == "RAW", metric %in% c("jaccard","unifrac")) 
-
+## Adding shaded region 
+## annotate("rect", xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = mean(Average), fill = "blue", alpha = .1, color = NA)
 
 sig_noise_ne_weighted <- sig_to_noise_ne_df %>% 
     filter(normalization != "RAW", metric %in% c("bray","wunifrac")) %>%
@@ -192,17 +194,16 @@ ggarrange(sig_noise_ne_weighted, sig_noise_ne_unweighted,
           legend = "bottom", common.legend = TRUE)
 ```
 
-
-* (Fig. \@ref(fig:sigalToNoiseRawPlot)) 
-    - Low signal to noise ratio for unweighted metrics 
-    - Data pre-processed using QIIME consistently had values around 1, indicating the magnitude of the signal (biological differences) was comparable to the noise (differences between PCR replicates). 
-    - All around 1 for unweighted taxonomic
-    - DADA2 and Mothur higher signal to noise ratio differences for JHU runs compared to NIST runs. 
+* Signal to noise ratio was defined as the beta diversity between unmixed pre-exposure samples and the other samples in the titration series (signal) divided by the beta diversity between PCR replicates within the samples being compared. 
+* Signal to noise ratio for unweighted metrics around 1 for all pipelines and sequencing runs (Fig. \@ref(fig:sigalToNoiseRawPlot)).
+* Signal to noise ratios around 1 indicate that the magnitude of the signal (biological differences) was comparable to the noise (differences between PCR replicates). 
+* Only DADA2 and mothur signal to noise ratios were greater than the data pre-processed using the QIIME pipeline. 
+* DADA2 and Mothur higher signal to noise ratio differences for JHU runs compared to NIST runs. 
         + Especially for weighted phylogenetic  
-* (Fig. \@ref(fig:sigalToNoiseNormEffectPlot)) - Normalization methods for NIST 1
-    - Weighted metrics 
-        + For most methods normalization methods did not have a significant impact on signal to noise. 
-        + TSS increased signal to noise
-        + UQ, RLE, and TMM decreased signal to noise relative to RAW
-        + Rareq 15 frequently lowered signal to noise 
-        + For unweighted - rare ofeten improve but only significantly for DADA2 and UniFrac 2000 and 5000. 
+* Similar to PCR beta diversity repeatability we evaluated the how well normalization methods are able to account for differences in the sample total abundance by comparing the unnormalized to normalized count data signal to noise ration for the first NIST run (Fig. \@ref(fig:sigalToNoiseNormEffectPlot)).
+* Weighted metrics 
+    + For most methods normalization methods did not have a significant impact on signal to noise. 
+    + TSS increased signal to noise
+    + UQ, RLE, and TMM decreased signal to noise relative
+    + Rareq 15 frequently lowered signal to noise 
+* For unweighted - rare ofeten improve but only significantly for DADA2 and UniFrac 2000 and 5000. 
