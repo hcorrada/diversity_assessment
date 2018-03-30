@@ -3,7 +3,7 @@ title: "Technical Artifacts"
 author: "Nate Olson"
 date: '`r Sys.Date()`'
 output:
-  bookdown::pdf_document2: 
+  bookdown::pdf_document2:
     toc: FALSE
 ---
 
@@ -23,136 +23,136 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 ```{r techArtMunge}
 ## Pre-processing data for figure(s)
-qual_df <- seq_qual_comparisons %>% 
-    mutate(read_dir = paste0(read_dir, "_qual")) %>% 
-    select(-sd_quality, -cov_quality) %>% 
-    spread(read_dir, mean_quality) %>% 
-    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), 
+qual_df <- seq_qual_comparisons %>%
+    mutate(read_dir = paste0(read_dir, "_qual")) %>%
+    select(-sd_quality, -cov_quality) %>%
+    spread(read_dir, mean_quality) %>%
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"),
              remove = FALSE, extra = "merge")
 
-tech_art_df <- seq_char_comparisons %>% 
-    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
-    left_join(qual_df) %>% 
-    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"), 
+tech_art_df <- seq_char_comparisons %>%
+    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>%
+    left_join(qual_df) %>%
+    mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"),
                             "Phylogenetic","Taxonomic"),
            weight = if_else(metric %in% c("unifrac","jaccard"),
-                            "Unweighted", "Weighted")) %>% 
-    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur", 
-                            pipe == "qiimeOpenRef" ~ "q_open", 
+                            "Unweighted", "Weighted")) %>%
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
+                            pipe == "qiimeOpenRef" ~ "q_open",
                             pipe == "qiimeClosedRef" ~ "q_closed",
                             pipe == "qiimeDeNovo"~ "q_denovo",
                             TRUE ~ pipe),
            pipe = factor(pipe))
 
-tech_info_df <- tech_art_df %>% 
-    filter(normalization == "RAW") %>% 
-    select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>% 
-    distinct() 
+tech_info_df <- tech_art_df %>%
+    filter(normalization == "RAW") %>%
+    select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>%
+    distinct()
 
 
-norm_impact <- tech_art_df %>% 
-    select(biosample_id, t_fctr, seq_run_id, pipe, normalization, metric, mean_dist) %>% 
-    spread(normalization, mean_dist) %>% 
-    gather(normalization, mean_dist, -biosample_id, -t_fctr, -seq_run_id, -pipe, -metric, -RAW) %>% 
-    mutate(dist_change = mean_dist - RAW) %>% 
-    filter(!is.na(dist_change)) %>% 
-    group_by(metric, pipe, normalization, seq_run_id) %>% 
-    summarise(dist_change = median(dist_change)) 
-        
+norm_impact <- tech_art_df %>%
+    select(biosample_id, t_fctr, seq_run_id, pipe, normalization, metric, mean_dist) %>%
+    spread(normalization, mean_dist) %>%
+    gather(normalization, mean_dist, -biosample_id, -t_fctr, -seq_run_id, -pipe, -metric, -RAW) %>%
+    mutate(dist_change = mean_dist - RAW) %>%
+    filter(!is.na(dist_change)) %>%
+    group_by(metric, pipe, normalization, seq_run_id) %>%
+    summarise(dist_change = median(dist_change))
+
 ```
 
 ```{r techMeanDist, fig.cap = "Distribution of mean pairwise beta diversity for PCR replicates by sequencing run and pipeline for raw count data.", fig.height=4, fig.width=6}
-tech_art_df %>% filter(normalization == "RAW") %>% 
-    ggplot() + 
+tech_art_df %>% filter(normalization == "RAW") %>%
+    ggplot() +
     geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
-                 outlier.size = 0.5) + 
-    facet_grid(f_type~weight) + theme_bw() + 
+                 outlier.size = 0.5) +
+    facet_grid(f_type~weight) + theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
-          legend.position = "bottom") + 
-    labs(x = "Bioinformatic Pipeline", 
-         y = "PCR Replicate Beta Diversity", 
-         fill = "Sequncing Run") + 
+          legend.position = "bottom") +
+    labs(x = "Bioinformatic Pipeline",
+         y = "PCR Replicate Beta Diversity",
+         fill = "Sequncing Run") +
     scale_fill_manual(values = run_colors)
 ```
 
 ```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted (A) and unweighted (B) beta diversity between pcr replicates, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=8, fig.width=7}
-norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15", 
-                    "CSS", "RLE", "TMM", "TSS", "UQ") 
+norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15",
+                    "CSS", "RLE", "TMM", "TSS", "UQ")
 
-tech_art_df_for_plot_RAW <- tech_art_df %>% 
-    ungroup() %>% 
-    filter(normalization == "RAW" & seq_run_id == "nist_run1") %>% 
+tech_art_df_for_plot_RAW <- tech_art_df %>%
+    ungroup() %>%
+    filter(normalization == "RAW" & seq_run_id == "nist_run1") %>%
     group_by(pipe,metric,f_type,weight) %>%
     summarize(RAW_median = median(mean_dist),
               RAW_first_quartile = quantile(mean_dist, probs = 0.25),
               RAW_third_quartile = quantile(mean_dist, probs = 0.75))
 
-tech_art_df_for_plot <- tech_art_df %>% ungroup() %>% 
+tech_art_df_for_plot <- tech_art_df %>% ungroup() %>%
     filter(normalization != "RAW", seq_run_id == "nist_run1")
 
-tech_art_df_for_plot <- merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW, 
+tech_art_df_for_plot <- merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW,
                             by = c("pipe","metric","f_type","weight"))
 
 weighted <- tech_art_df_for_plot %>%
-    filter(weight == "Weighted") %>% 
-    mutate(normalization = factor(normalization, 
-                                  levels = norm_level_ord, ordered = T)) %>% 
-    filter(seq_run_id %in% c("nist_run1")) %>% 
+    filter(weight == "Weighted") %>%
+    mutate(normalization = factor(normalization,
+                                  levels = norm_level_ord, ordered = T)) %>%
+    filter(seq_run_id %in% c("nist_run1")) %>%
      ggplot(aes(x = normalization)) +
-        geom_blank() + 
-        geom_ribbon(aes(x = as.numeric(normalization) - 1, 
-                        ymin = RAW_first_quartile, 
+        geom_blank() +
+        geom_ribbon(aes(x = as.numeric(normalization) - 1,
+                        ymin = RAW_first_quartile,
                         ymax = RAW_third_quartile),
-                    fill = "grey90") + 
-        geom_line(aes(x = normalization, y = RAW_median, 
+                    fill = "grey90") +
+        geom_line(aes(x = normalization, y = RAW_median,
                   group = interaction(pipe, f_type)),
                   color = "white") +
-    # geom_line(aes(x = normalization, y = RAW_first_quartile, 
+    # geom_line(aes(x = normalization, y = RAW_first_quartile,
     #               group = interaction(pipe, f_type)),
     #           linetype = "dashed", color = "grey60") +
-    # geom_line(aes(x = normalization, y = RAW_third_quartile, 
-    #               group = interaction(pipe, f_type)), 
+    # geom_line(aes(x = normalization, y = RAW_third_quartile,
+    #               group = interaction(pipe, f_type)),
     #           linetype = "dashed", color = "grey60") +
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, 
-                          group = interaction(normalization,pipe)), 
-                      position = position_dodge(), size = 1) + 
-    facet_grid(f_type~pipe,scales = "free", space = "free") + 
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
-    labs(x = "Normalization", 
-         y = "PCR Replicate Beta Diversity", 
-         color = "Bioinformatic Pipeline") + 
-    scale_color_manual(values = norm_colors)  
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization,
+                          group = interaction(normalization,pipe)),
+                      position = position_dodge(), size = 1) +
+    facet_grid(f_type~pipe,scales = "free", space = "free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    labs(x = "Normalization",
+         y = "PCR Replicate Beta Diversity",
+         color = "Bioinformatic Pipeline") +
+    scale_color_manual(values = norm_colors)
 
-unweighted <- tech_art_df_for_plot %>% 
+unweighted <- tech_art_df_for_plot %>%
     filter(weight == "Unweighted") %>%
     mutate(normalization = factor(normalization,
-                                  levels = norm_level_ord, ordered = T)) %>% 
-    filter(seq_run_id %in% c("nist_run1")) %>% 
+                                  levels = norm_level_ord, ordered = T)) %>%
+    filter(seq_run_id %in% c("nist_run1")) %>%
     ggplot(aes(x = normalization)) +
-        geom_blank() + 
-        geom_ribbon(aes(x = as.numeric(normalization) - 1, 
-                        ymin = RAW_first_quartile, 
+        geom_blank() +
+        geom_ribbon(aes(x = as.numeric(normalization) - 1,
+                        ymin = RAW_first_quartile,
                         ymax = RAW_third_quartile),
-                    fill = "grey90") + 
-        geom_line(aes(x = normalization, y = RAW_median, 
+                    fill = "grey90") +
+        geom_line(aes(x = normalization, y = RAW_median,
                   group = interaction(pipe, f_type)), color = "white") +
-    # geom_line(aes(x = normalization, y = RAW_first_quartile, 
+    # geom_line(aes(x = normalization, y = RAW_first_quartile,
     #               group = interaction(pipe, f_type)),
     #           linetype = "dashed", color = "grey60") +
-    # geom_line(aes(x = normalization, y = RAW_third_quartile, 
-    #               group = interaction(pipe, f_type)), 
+    # geom_line(aes(x = normalization, y = RAW_third_quartile,
+    #               group = interaction(pipe, f_type)),
     #           linetype = "dashed", color = "grey60") +
     geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, shape = metric,
-                          group = interaction(normalization,pipe)), 
-                      position = position_dodge(), size = 1) + 
-    facet_grid(f_type~pipe,scales = "free", space = "free") + 
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = -45, hjust = 0)) + 
-    labs(x = "Normalization", 
-         y = "PCR Replicate Beta Diversity", 
-         color = "Bioinformatic Pipeline") + 
-    scale_color_manual(values = norm_colors) 
+                          group = interaction(normalization,pipe)),
+                      position = position_dodge(), size = 1) +
+    facet_grid(f_type~pipe,scales = "free", space = "free") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    labs(x = "Normalization",
+         y = "PCR Replicate Beta Diversity",
+         color = "Bioinformatic Pipeline") +
+    scale_color_manual(values = norm_colors)
 
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2, labels = "AUTO",
@@ -160,40 +160,32 @@ ggarrange(weighted, unweighted,
 ```
 
 
-We evaluated differences in beta diversity between PCR replicates across sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in sample total feature abundance. 
-Higher pairwise distances for NIST run 1 indicates diversity metrics were negatively impacted by larger variation in total abundance across PCR replicates (Fig. \@ref(fig:seqCharPlot)A). 
-Whereas, higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are negatively impacted by sequencing errors (Fig. \@ref(fig:seqCharPlot)B & C). A linear model was used to test for significant differences in PCR replicates beta diversity by pipeline and sequencing run for raw count data. 
+We evaluated differences in beta diversity between PCR replicates across sequncing runs to assess how robust the different bioinformatic pipelines and normalization methods are to low quality sequence data and variability in sample total feature abundance.
+Higher pairwise distances for NIST run 1 indicates diversity metrics were negatively impacted by larger variation in total abundance across PCR replicates (Fig. \@ref(fig:seqCharPlot)A).
+Whereas, higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are negatively impacted by sequencing errors (Fig. \@ref(fig:seqCharPlot)B & C). A linear model was used to test for significant differences in PCR replicates beta diversity by pipeline and sequencing run for raw count data.
 
-Mean pairwise distances were consistent across the JHU runs for Mothur and DADA2, suggesting they are better able to account for sequencing errors than other pipelines evaluated in this study. 
-Conversely, the Deblur pipeline had the highest number of failed samples for JHU1, suggesting it is less robust to sequencing errors compared to the other pipelines (Table \@ref(tab:pipeCharTbl)).   
+Mean pairwise distances were consistent across the JHU runs for Mothur and DADA2, suggesting they are better able to account for sequencing errors than other pipelines evaluated in this study.
+Conversely, the Deblur pipeline had the highest number of failed samples for JHU1, suggesting it is less robust to sequencing errors compared to the other pipelines (Table \@ref(tab:pipeCharTbl)).
 
-* QIIME pipelines less robust to lower seq quality  
-* Across pipelines NIST 1 and NIST 2 greater PCR replicate difference   
-* Expected lower diff for NIST 2 compared to JHU2 but consistent results with NIST 1, not sure why.  
-    * Potentially due to higher R2 seq quality…   
-    * Unaccounted for lab effect????   
-
-* Greater variability for unweighted taxa 
-* higher pcr rep beta diversity for unweighted  
-* similar pattern for runs and pipelines between unweighted metrics 
-
+* QIIME pipelines less robust to lower seq quality
+* Across pipelines NIST 1 and NIST 2 greater PCR replicate difference
+* Expected lower diff for NIST 2 compared to JHU2 but consistent results with NIST 1, not sure why.
+    * Potentially due to higher R2 seq quality…
+    * Unaccounted for lab effect????
+* Greater variability for unweighted taxa
+* higher pcr rep beta diversity for unweighted
+* similar pattern for runs and pipelines between unweighted metrics
 
 
-__Impact of normalization methods on PCR replicate beta diversity.__ 
-
-- Compared results across normalization methods for NIST run 1, low error rate, high total abundance COV (Fig. \@ref(fig:seqCharPlot)).   
-- Methods had minimal impact, TMM and RLE tended to lower pairwise dist, rare15 increased (Fig. \@ref(fig:techNormImpactWeighted))  
+- We compared beta diversity repeatability for PCR replicates across normalization methods for NIST run 1 which had low error rate but high total abundance COV (Fig. \@ref(fig:seqCharPlot)).
+- Most normalization methods had minimal impact on beta diversity repeatability.
+- However, beta diversity between PCR replicates was significantly lower when TMM and RLE were used to normalize the count data for a number of beta diversity metrics and pipelines (Fig. \@ref(fig:techNormImpactWeighted))
 * CSS no significant difference for Bray, Weighted UniFrac significant decrease for deblur and open ref but higher for DADA2.
-* No difference for UQ  
-* TSS lower for Bray excluding deblur and dada, lower for Open ref and bray for Wunifrac  
-* Rarefaction  
-- Rareq15 no differences or lowered repeat for all but Jaccard mothur and Denovo Unifrac  
-- Norm 2000  
-    - improved repeat for all but closed ref (unweighted), not significant for deblur  
-    - weighted imporved for mothur bray and deblur, open ref wunif, not significantly difference for rest  
-- Norm 5000 similar results to 2000 but fewer significant.  
-
-interpretation  
-* Norm TMM and RLE best for weighted metrics, followed by TSS  
-* Mixed results for rarefaction  
-* rare2000 best for unweighted  
+* TSS lower for Bray excluding deblur and dada, lower for Open ref and bray for Wunifrac
+- Performance varied for count data normalized using rarefaction.
+- Rareq15 no differences or lowered repeat for all but Jaccard mothur and Denovo Unifrac
+- Rarefying counts to 2000, improved repeat for all but closed ref (unweighted), not significant for deblur
+    - For weighted metrics weighted improved for mothur bray and deblur, open ref wunif, not significantly difference for rest
+- Norm 5000 similar results to 2000 but fewer significant.
+- Overall, count data normalized using TMM and RLE had the lowest beta diversity between PCR replicates for weighted metrics, followed by TSS.
+- For unweighted metrics, rarefying count data to 2000 total abundance resulted in the lowest beta diversity between PCR replicates. 
