@@ -3,7 +3,7 @@ title: "Sequence Data and Pipeline Characterization"
 author: "Nate Olson"
 date: '`r Sys.Date()`'
 output:
-  bookdown::pdf_document2: 
+  bookdown::pdf_document2:
     toc: FALSE
 ---
 
@@ -11,8 +11,8 @@ output:
 library(ProjectTemplate)
 load.project()
 source("src/plot_color_definitions.R")
-ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>% 
-    set_names(str_replace(basename(.), "_ps.rds", "")) %>% 
+ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>%
+    set_names(str_replace(basename(.), "_ps.rds", "")) %>%
     map(readRDS)
 
 library(ggpubr)
@@ -26,7 +26,7 @@ error_plot <- ggplot(phix_error_df) +
     theme_bw() +
     labs(x = "Amplicon Base Position", y = "PhiX Error Rate", color = "Dataset") +
     scale_color_manual(values = run_colors) +
-    theme(legend.direction = "horizontal", 
+    theme(legend.direction = "horizontal",
           legend.position = "bottom", legend.box = "vertical")
 ```
 
@@ -35,85 +35,85 @@ r1_seq_char_df <- seq_char_df %>%
     filter(read_dir == "R1") %>%
     left_join(mgtstMetadata) %>%
     mutate(seq_run = as.character(seq_run))
-r1_ntc <- r1_seq_char_df %>% filter(biosample_id == "NTC") 
+r1_ntc <- r1_seq_char_df %>% filter(biosample_id == "NTC")
 
 n_read_plot <- r1_seq_char_df %>% filter(biosample_id != "NTC") %>%
-    ggplot() + 
-        geom_boxplot(aes(x = seq_lab, y = read, color = seq_run)) + 
-        geom_point(data = r1_ntc, aes(x = seq_lab, y = read, color = seq_run), 
+    ggplot() +
+        geom_boxplot(aes(x = seq_lab, y = read, color = seq_run)) +
+        geom_point(data = r1_ntc, aes(x = seq_lab, y = read, color = seq_run),
                    shape = 21,
-                   position = position_jitterdodge(jitter.width = 0.25)) + 
-        scale_y_log10() + 
-        theme_bw() + labs(x = "Sequencing Lab", 
-                          y = "Library Size", 
+                   position = position_jitterdodge(jitter.width = 0.25)) +
+        scale_y_log10() +
+        theme_bw() + labs(x = "Sequencing Lab",
+                          y = "Library Size",
                           color = "Sequencing Run") +
-        theme(legend.position = "bottom") + 
+        theme(legend.position = "bottom") +
         scale_color_manual(values = run_colors)
 ```
 
- 
+
 ```{r covFit}
 ## TODO move to munge
-qual_df <- seq_qual_comparisons %>% 
-    mutate(read_dir = paste0(read_dir, "_qual")) %>% 
-    select(-sd_quality, -cov_quality) %>% 
-    spread(read_dir, mean_quality) %>% 
-    separate(replicate, c("biosample_id","t_fctr","seq_run_id"), 
+qual_df <- seq_qual_comparisons %>%
+    mutate(read_dir = paste0(read_dir, "_qual")) %>%
+    select(-sd_quality, -cov_quality) %>%
+    spread(read_dir, mean_quality) %>%
+    separate(replicate, c("biosample_id","t_fctr","seq_run_id"),
              remove = FALSE,extra = "merge")
 
-tech_art_df <- seq_char_comparisons %>% 
-    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>% 
+tech_art_df <- seq_char_comparisons %>%
+    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>%
     left_join(qual_df)
-fit2 <- lme4::lmer(cov_total_abu ~ seq_run_id + (1 | pipe / biosample_id / t_fctr), 
+fit2 <- lme4::lmer(cov_total_abu ~ seq_run_id + (1 | pipe / biosample_id / t_fctr),
                    data = tech_art_df)
 
 confint_dat <- confint(fit2)
 mod_betas <- fit2@beta
 cov_est <- data_frame(run_id = c("jhu_run1","jhu_run2","nist_run1","nist_run2"),
-                      est = c(mod_betas[1], 
+                      est = c(mod_betas[1],
                               mod_betas[1] + mod_betas[2],
                               mod_betas[1] + mod_betas[3],
                               mod_betas[1] + mod_betas[4]))
-                    
-fit_est_df <- as.data.frame(confint_dat) %>% 
-    rownames_to_column(var = "run_id") %>% 
-    filter(!grepl("sig", run_id)) %>% 
-    gather("conf_int","est", -run_id) %>% 
+
+fit_est_df <- as.data.frame(confint_dat) %>%
+    rownames_to_column(var = "run_id") %>%
+    filter(!grepl("sig", run_id)) %>%
+    gather("conf_int","est", -run_id) %>%
     spread(run_id, est) %>%
     rename(jhu_run1 = `(Intercept)`) %>%
-    gather("run_id","est", -conf_int, -jhu_run1) %>% 
-    mutate(est = jhu_run1 + est) %>% 
+    gather("run_id","est", -conf_int, -jhu_run1) %>%
+    mutate(est = jhu_run1 + est) %>%
     mutate(run_id = str_replace(run_id, "seq_run_id","")) %>%
-    spread(run_id, est) %>% 
-    gather("run_id","est", -conf_int) %>% 
-    mutate(conf_int = if_else(conf_int == "2.5 %", "lci","uci")) %>% 
-    spread(conf_int, est) %>% 
-    left_join(cov_est) %>% 
+    spread(run_id, est) %>%
+    gather("run_id","est", -conf_int) %>%
+    mutate(conf_int = if_else(conf_int == "2.5 %", "lci","uci")) %>%
+    spread(conf_int, est) %>%
+    left_join(cov_est) %>%
     mutate(seq_run_id = str_replace(run_id, "_run",""))
 
-cov_plot <- ggplot(fit_est_df) + 
-    geom_pointrange(aes(x = seq_run_id, y = est, ymin = lci, 
-                        ymax = uci, color = seq_run_id)) + 
+cov_plot <- ggplot(fit_est_df) +
+    geom_pointrange(aes(x = seq_run_id, y = est, ymin = lci,
+                        ymax = uci, color = seq_run_id)) +
     labs(x = "Sequencing Run", y = "Total Abundance COV") +
-    theme_bw() + 
-    scale_color_manual(values = run_colors) + 
+    theme_bw() +
+    scale_color_manual(values = run_colors) +
     theme(legend.position = "none")
 ```
 
 ```{r qualFit}
-seq_qual_dat <- seq_char_df %>% 
-    left_join(mgtstMetadata) %>% 
-    filter(biosample_id != "NTC") %>% 
-    mutate(seq_run_id = paste0(seq_lab, seq_run)) 
+seq_qual_dat <- seq_char_df %>%
+    left_join(mgtstMetadata) %>%
+    filter(biosample_id != "NTC") %>%
+    mutate(seq_run_id = paste0(seq_lab, seq_run))
 
-## See 2018-02-15 for linear model results - all statistically significantly different 
+## See 2018-02-15 for linear model results - all statistically significantly different
 
-seq_qual_plot <- seq_qual_dat %>% 
-    ggplot() + 
-    geom_boxplot(aes(x = seq_run_id, y = quality, color = read_dir))  + 
-    theme_bw() + 
-    labs(x = "Sequencing Run", y = "Mode Read Base Quality Score", color = "Read Direction") + 
-    theme(legend.position = "bottom") + 
+seq_qual_plot <- seq_qual_dat %>%
+    ggplot() +
+    geom_boxplot(aes(x = seq_run_id, y = quality, color = read_dir))  +
+    theme_bw() +
+    labs(x = "Sequencing Run", y = "Mode Read Base Quality Score", color = "Read Direction") +
+    theme(legend.position = "bottom") +
     scale_color_manual(values = c("black", "darkgray"))
 ```
 
@@ -130,39 +130,39 @@ ggsave("img/seqCharPlot.png", seqCharPlot, width = 7.5, height = 3.5)
 
 ```{r pipeCharTbl, echo = FALSE, message = FALSE, warning = FALSE}
 pipe_char_summary <- pipe_char_df %>%
-    unnest() %>% 
-    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
-                          if_else(pipe == "qiimeOpenRef", "q_open", 
+    unnest() %>%
+    mutate(pipe = if_else(pipe == "deblur", "q_deblur",
+                          if_else(pipe == "qiimeOpenRef", "q_open",
                                   if_else(pipe == "qiimeClosedRef", "q_closed",
                                           if_else(pipe == "qiimeDeNovo", "q_denovo",
                                           pipe)))),
            pipe = factor(pipe)) %>%
-    left_join(mgtstMetadata) %>% 
-    filter(biosample_id != "NTC") %>% 
-    group_by(pipe, n_taxa, n_samples, num_singletons, sparsity) %>% 
+    left_join(mgtstMetadata) %>%
+    filter(biosample_id != "NTC") %>%
+    group_by(pipe, n_taxa, n_samples, num_singletons, sparsity) %>%
     summarise(total_abu_med = round(median(total_abu),0),
               total_abu_max = round(max(total_abu),0),
-              total_abu_min = round(min(total_abu),0), 
+              total_abu_min = round(min(total_abu),0),
               pass_rate_med = round(median(pass_rate),2),
               pass_rate_max = round(max(pass_rate),2),
-              pass_rate_min = round(min(pass_rate),2)) %>% 
-    mutate(total_abu_summary = paste0(total_abu_med, " (", 
-                                      total_abu_max, "-", total_abu_min,")")) %>% 
+              pass_rate_min = round(min(pass_rate),2)) %>%
+    mutate(total_abu_summary = paste0(total_abu_med, " (",
+                                      total_abu_max, "-", total_abu_min,")")) %>%
     mutate(pass_rate_summary = paste0(pass_rate_med, " (",
-                                      pass_rate_max, "-", pass_rate_min,")")) %>% 
-    mutate(sparsity = round(sparsity, 3)) %>% 
+                                      pass_rate_max, "-", pass_rate_min,")")) %>%
+    mutate(sparsity = round(sparsity, 3)) %>%
     select(-total_abu_med, -total_abu_max, -total_abu_min,
-           -pass_rate_med, -pass_rate_max, -pass_rate_min) 
+           -pass_rate_med, -pass_rate_max, -pass_rate_min)
 
-pipe_char_summary %>% 
-    select(pipe, n_taxa, num_singletons, n_samples,  sparsity, 
-           total_abu_summary, pass_rate_summary) %>% 
-      dplyr::rename(Pipelines = pipe, Features = n_taxa, 
+pipe_char_summary %>%
+    select(pipe, n_taxa, num_singletons, n_samples,  sparsity,
+           total_abu_summary, pass_rate_summary) %>%
+      dplyr::rename(Pipelines = pipe, Features = n_taxa,
                     Singletons = num_singletons,
-                    Samples = n_samples, 
-                    Sparsity = sparsity, 
-                    `Total Abundance` = total_abu_summary, 
-                    `Pass Rate` = pass_rate_summary) %>% 
+                    Samples = n_samples,
+                    Sparsity = sparsity,
+                    `Total Abundance` = total_abu_summary,
+                    `Pass Rate` = pass_rate_summary) %>%
       knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. No template controls were excluded from summary statistic calculations. Sparsity is defined as the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2), rows in the count table. Singletons is the total number of features only observed once in a single sample. Total Abundance is the median and range (minimum - maximum) per sample total feature abundance. Pass Rate is the median and range for the proportion of reads removed while processing a sample's sequence data through a bioinformatic pipeline.", booktabs = TRUE)
 ```
 
@@ -174,66 +174,62 @@ ps_iNEXT <- function(ps){
                     "jhu_run1_2-A10","jhu_run2_2-A10")
     count_tbl <- prune_samples(sample_set, ps)  %>%
         {prune_taxa(taxa_sums(.) > 0, .)} %>%
-        otu_table() 
-    
+        otu_table()
+
     if (!taxa_are_rows(ps)) {
         count_tbl <- t(count_tbl)
-    } 
+    }
 
     count_df <- as.data.frame(count_tbl)
-    
+
     iNEXT::iNEXT(count_df)
 }
 
 
-rare_plot_df <- tibble(ps_obj = ps_list) %>% 
-    add_column(pipe = names(ps_list)) %>% 
-    mutate(pipe = if_else(pipe == "deblur", "q_deblur", 
-                          if_else(pipe == "qiimeOpenRef", "q_open", 
+rare_plot_df <- tibble(ps_obj = ps_list) %>%
+    add_column(pipe = names(ps_list)) %>%
+    mutate(pipe = if_else(pipe == "deblur", "q_deblur",
+                          if_else(pipe == "qiimeOpenRef", "q_open",
                                   if_else(pipe == "qiimeClosedRef", "q_closed",
                                           if_else(pipe == "qiimeDeNovo", "q_denovo",
                                           pipe)))),
            pipe = factor(pipe)) %>%
     mutate(inext_dat = map(ps_obj, ps_iNEXT),
-           rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) + 
-                   labs(x = "Sampling Depth", y = "Feature Diversity") + 
-                   theme_bw() + 
+           rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) +
+                   labs(x = "Sampling Depth", y = "Feature Diversity") +
+                   theme_bw() +
                    ggtitle(.y) +
                    scale_color_manual(values=run_colors2)})) %>%
     select(-ps_obj, -inext_dat)
 
 ```
 
-```{r rarePlot, fig.cap = "Rarefaction curves for an example sample across pipelines (A-F) and sequencing runs (line color).", fig.height=6, fig.width=8} 
+```{r rarePlot, fig.cap = "Rarefaction curves for an example sample across pipelines (A-F) and sequencing runs (line color).", fig.height=6, fig.width=8}
 ggarrange(plotlist = rare_plot_df$rare_plot,
-          labels = "AUTO", legend = "right", 
+          labels = "AUTO", legend = "right",
           common.legend = TRUE, nrow = 3, ncol = 2)
 ```
 
 
-Sequencing data for the two-sample titration dataset was obtained from four replicate sequencing runs with different sequence quality and library size variability (Fig. \@ref(fig:seqCharPlot), _Supplemental DADA2 qual plot_). 
-For both sequencing laboratories (JHU and NIST) the first runs had higher variability in feature total abundance between samples than the second runs (Fig. \@ref(fig:seqCharPlot)A). 
-Sequencing error rate and base quality scores also varied by sequencing run. 
-The first JHU run had higher PhiX error rates compared to the other sequencing runs especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)B). 
+Sequencing data for the two-sample titration dataset was obtained from four replicate sequencing runs with different sequence quality and library size variability (Fig. \@ref(fig:seqCharPlot), _Supplemental DADA2 qual plot_).
+For both sequencing laboratories (JHU and NIST) the first runs had higher variability in feature total abundance between samples than the second runs (Fig. \@ref(fig:seqCharPlot)A).
+Sequencing error rate and base quality scores also varied by sequencing run.
+The first JHU run had higher PhiX error rates compared to the other sequencing runs especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)B).
 Read base quality was lower for the reverse read than the forward reads for all four sequencing runs (Fig. \@ref(fig:seqCharPlot)C).
-Sequence data from the two NIST runs had higher quality scores compared to the JHU runs, excluding JHU2 forward reads (Fig. \@ref(fig:seqCharPlot)C). 
-Overall JHU run 1 had low read quality and high total abundance COV, NIST run 1 had higher quality and total abundance COV, whereas the NIST and JHU second runs had lower COV and higher quality. 
-By comparing the results for the first JHU run to the other runs we can evaluate how well the bioinformatic pipelines handle low quality reads. 
-Similarly we can use data from the NIST run 1 to evaluate how well normalization methods are able to account for differences in total abundance between samples. 
+Sequence data from the two NIST runs had higher quality scores compared to the JHU runs, excluding JHU2 forward reads (Fig. \@ref(fig:seqCharPlot)C).
+Overall JHU run 1 had low read quality and high total abundance COV, NIST run 1 had higher quality and total abundance COV, whereas the NIST and JHU second runs had lower COV and higher quality.
+By comparing the results for the first JHU run to the other runs we can evaluate how well the bioinformatic pipelines handle low quality reads.
+Similarly we can use data from the NIST run 1 to evaluate how well normalization methods are able to account for differences in total abundance between samples.
 
 
-The six bioinformatic pipelines evaluated employ different pre-processing, clustering, and quality filtering methods, as a result the features and count tables generated by the pipelines exhibit different characteristics in terms of the number of features, total abundance, and proportion of sequences passing quality control (Table \@ref(tab:pipeCharTbl)).  
+The six bioinformatic pipelines evaluated employ different pre-processing, clustering, and quality filtering methods, as a result the features and count tables generated by the pipelines exhibit different characteristics in terms of the number of features, total abundance, number of singletons, proportion of sequences passing quality control (Table \@ref(tab:pipeCharTbl)).
 
-- differences in number of features  
-- sparsity  
-- number of samples  
-- Large number of singletons for qiime de novo  
 
-Rarefaction curves are in ecology to determine how well a community has been sampled [@Gotelli2001;@Chao2014]. 
-Measurement methods prone to errors, such as marker-gene sequencing, will never reach the asympotote if errors are not appropriately accounted for in sample processing [@Chiu2016]. 
-Sequence inference methods have lower species diversity estimates and reach asympotote, whereas _de novo_, open-reference, and closed-reference methods do not (Fig. \@ref(fig:rarePlot)). 
-Based on the rarefaction curve slopes the QIIME _de novo_ pipeline had the highest rate of artifacts, due to not filtering singletons. 
-The sequence inference methods, DADA2 and Deblur plateau around the same level. 
-However, DADA2 asymptotes were inconsistent across sequencing runs, indicating artificial plateaus for the lower throughput and lower quality runs. 
-Mothur and Deblur rarefaction curves were consistent across sequencing runs. 
-The QIIME open reference, closed reference, and de novo rarefaction curves were influenced by both sequence quality and library size.  
+Rarefaction curves are in ecology to determine how well a community has been sampled [@Gotelli2001;@Chao2014].
+Measurement methods prone to errors, such as marker-gene sequencing, will never reach the asympotote if errors are not appropriately accounted for in sample processing [@Chiu2016].
+Sequence inference methods have lower species diversity estimates and reach asympotote, whereas _de novo_, open-reference, and closed-reference methods do not (Fig. \@ref(fig:rarePlot)).
+Based on the rarefaction curve slopes the QIIME _de novo_ pipeline had the highest rate of artifacts, due to not filtering singletons.
+The sequence inference methods, DADA2 and Deblur plateau around the same level.
+However, DADA2 asymptotes were inconsistent across sequencing runs, indicating artificial plateaus for the lower throughput and lower quality runs.
+Mothur and Deblur rarefaction curves were consistent across sequencing runs.
+The QIIME open reference, closed reference, and de novo rarefaction curves were influenced by both sequence quality and library size.
