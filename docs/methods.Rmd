@@ -8,7 +8,6 @@ output:
 bibliography: ../bibliography.bib
 ---
 
-## Methods
 Our assessment framework utilizes a dataset of DNA mixtures from five vaccine trial participants (Olson et al. _in prep_).
 DNA extracts from stool collected from individuals (biological replicates) before and after exposure to pathogenic _Escherichia coli_.
 The pre- and post-exposure DNA was mixed following a $log_2$ two-sample titration mixture design, resulting in a set of samples with varying levels of similarity.
@@ -17,7 +16,7 @@ In order to assess the measurement process technical variability technical repli
 Sequencing libraries were prepared at independent laboratories using the same protocol (ILLUMINA) with the sample 16S PCR as input, the resulting libraries were sequenced twice at each laboratory.
 Resulting in four sequence datasets with varying sequence quality and library size variability.
 For the first laboratory (JHU) the base quality scores were lower than expected and the instrument was re-calibrated before the second run resulting in improved quality scores.
-For the second laboratory (NIST) the total run throughput was lower than expected, the pool library was re-optimized for resulting in increased throughput and lower sample to sample read count variability.  
+For the second laboratory (NIST) the total run throughput was lower than expected, the pool library was re-optimized for resulting in increased throughput and lower sample to sample read count variability. 
 Sequence data characterization was performed using the savR [@savR] and ShortRead Bioconductor R packages [@ShortRead].
 
 ## Bioinformatic Pipelines  
@@ -58,7 +57,7 @@ Weighted and Unweighted UniFrac phylogenetic Beta-diversity metrics were calcula
 For our feature-level Beta-diversity assessment the Bray-Curtis weighted and Jaccard unweighted metrics were used [@Bray1957;@Jaccard1912].
 
 ## Beta-Diversity Assessment
-- Three assessment components, (1) beta-diversity repeatability, 
+Our assessment consisted of three components, (1) beta-diversity repeatability, 
 (2) differences in beta diversity between individuals and treatments, 
 and (3) ability to distinguish between groups of samples with varying levels of similarity. 
 Standard linear models were used to test for significance using the R `lm` function. 
@@ -66,13 +65,13 @@ Mixed effects models were used to take into account repeated measures were fit u
 Model fit was evaluated based on model statistics, AIC, BIC, and logLik, as well as diagnostic plots.
 Tukey Honest Significant Differences test was used for multiple comparison testing using the `TukeyHSD` function.  
 
-### Beta-Diversity Repeatability
+### Beta-Diversity Repeatability 
+
 - To assess beta-diversity repeatability we compared beta-diversity values between PCR replicates within the four sequencing runs. 
 - Sequencing runs different characteristics, variance in sample total abundance and sequence quality 
 - Compared mean beta diversity between PCR replicates for across pipelines for the four beta diversity metrics. 
 - Linear model used to quantify differences between pipelines and across sequencing runs for each of the diversity metrics calculated for the raw count data. 
     - R model equation  `mean_dist~pipe*seq_run_id`, `mean_dist` is the mean beta-diversity between the four PCR replicates, `pipe` is bioinformatic pipeline, and `seq_run_id` is sequencing run number (note does not account for lab effect). 
-
 - Evaluated the impact of normalization methods for NIST run 1.  
 - Linear model used to quantify normalization method impact on PCR repeatability. 
     - Independent models fit for each diversity metric-pipeline combination. 
@@ -92,7 +91,8 @@ Tukey Honest Significant Differences test was used for multiple comparison testi
 
 
 
-### Beta Diversity Between Individuals and Treatments
+### Beta Diversity Between Individuals and Treatments 
+
 - To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.  
 - Linear model used to quantify differences in beta diversity between biological and technical sources of variability.
     - R model equation `log(value) ~ variation + variation_label`, `value` is the beta diversity between replicates, `variation_label` is the variation source, and `variation` is the type of variation. 
@@ -103,7 +103,6 @@ Tukey Honest Significant Differences test was used for multiple comparison testi
         - w/in_lab_pcr: with subject, treatment and lab, between sequencing runs?? (check)
         - w/in_lab_runs: within subject, treatment, lab, and sequencing runs (4 pcr replicates)
         - btw_labs: within subject, treatment, across sequencing labs
-
 - Used variation partitioning [@borcard1992partialling] to quantify how technical and biological factors contribute to the total observed variation. 
 - Variation partition was calculated using the Vegan R package [@vegan]. 
 - Tested whether sources of variation significantly contributed to the overall variation using `drda` and `anova` [@vegan]. 
