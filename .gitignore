@@ -7,3 +7,4 @@ data/diversity_data/*
 data/.DS_Store
 cache/pipe_char*
 cache/seq_char*
+*html
