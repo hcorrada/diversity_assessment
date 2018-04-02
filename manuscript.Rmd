@@ -2,8 +2,8 @@
 title: "Assessing the impact of sequencing characteristics on 16S rRNA marker-gene surveys beta diversity analysis."
 
 output:
-  bookdown::pdf_document2:
-  # bookdown::word_document2: 
+  # bookdown::pdf_document2:
+  bookdown::word_document2:
     toc: FALSE
     # template: template.tex
     # keep_tex: TRUE
