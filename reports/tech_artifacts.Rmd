@@ -1,5 +1,5 @@
 ---
-title: "Technical Artifacts"
+title: "PCR Replicate Beta Diversity Repeatability"
 author: "Nate Olson"
 date: '`r Sys.Date()`'
 output:
@@ -160,34 +160,22 @@ ggarrange(weighted, unweighted,
 ```
 
 
-We evaluated differences in beta diversity between PCR replicates across sequncing runs to assess bioinformatic pipeline and normalization methods robustness to low quality sequence data and variability in sample total feature abundance.
-Higher pairwise distances for NIST run 1 indicates diversity metrics were negatively impacted by larger variation in total abundance across PCR replicates (Fig. \@ref(fig:seqCharPlot)A).
-Whereas, higher pairwise distances for JHU run 1 indicates bioinformatic pipelines are negatively impacted by sequencing errors (Fig. \@ref(fig:seqCharPlot)B & C).
-The NIST and JHU second runs had low sequencing error rates sample total abundance variation and therefore we would expect the beta diversity between PCR replicates for these runs to be lower than the first runs.
-
-
-We assessed the sequence quality impact on sequence quality on PCR replicate beta diversity using the un-normalized count data.
-Mothur and DADA2 mean PCR replicate beta diversity was consistent across the JHU runs, suggesting the pipelines are more robust to sequencing errors than the other pipelines evaluated in this study (Fig. \@ref(fig:techMeanDist)).
-Conversely, the Deblur pipeline had the highest number of failed samples for the first JHU run, and therefore less robust to sequencing errors compared to the other pipelines (Table \@ref(tab:pipeCharTbl)).
-Based on the sequencing run error rates and total abundance variation we expected the second NIST run to have comparable, if not lower, beta diversity between PCR replicates.
-However, the beta diversity was consistently higher for both the NIST runs than the second JHU run and the second NIST run values were more similar to the first NIST run than the second JHU run.
-PCR replicate beta diversity varied by diversity metric (Fig. \@ref(fig:techMeanDist)).
+Next, we evaluated differences in beta diversity between un-normalized PCR replicates across sequencing runs and pipelines.
+PCR replicate beta diversity varied by diversity metric (Fig. \@ref(fig:seqCharPlot)).
 Beta diversity was consistently higher for unweighted compared to weighted metrics and phylogenetic diversity metrics were lower than taxonomic metrics.
+We expected to see higher pairwise distances for the lower quality JHU1 run compared to the higher quality JHU2 run.
+This was true for the QIIME clustering pipelines, however the Mothur and DADA2 mean PCR replicate beta diversity was consistent across the JHU runs, suggesting that these pipelines are more robust to sequencing errors (Fig. \@ref(fig:seqCharPlot)).
+Conversely, with the highest number of failed samples for the first JHU run, the Deblur pipeline was the least robust to sequencing errors (Table \@ref(tab:pipeCharTbl)).
+We also expected that the second NIST run, which had higher read quality and lower total abundance variability, to have comparable, if not lower, beta diversity between PCR replicates. This was not the case.  Beta diversity was consistently higher for both the NIST runs compared to the high quality, low variability second JHU run. Furthermore, the second NIST run values were more similar to the first high quality and high total abundance variability NIST run, than the second JHU run.
 
 
 Normalization methods varied in their ability to improve beta diversity repeatability.
-To evaluate the effect of normalizion methods on beta diversity repeatability we compared normalized to un-normalized PCR replicate beta diversity (Fig. \@ref(fig:seqCharPlot)).
-Most normalization methods had minimal impact on beta diversity repeatability.
-However, for a number of pipelines TMM and RLE normalization methods  significantly lowered weighted PCR replicate beta diversity (Fig. \@ref(fig:techNormImpactWeighted)A).
-In general the normalized count beta diversity was not significantly different from the unnormalized, aside from a few pipeline metric combinations.
-The lack of consistent effect on weighted beta diversity metrics for the other normalization methods indicates that normalization methods do not effect PCR replicate beta diversity or that normalization method effect is metric and pipeline specific.
+When comparing normalized to un-normalized PCR replicate beta diversity, we observed that most normalization methods had minimal impact on weighted metrics (Fig. \@ref(fig:techNormImpactWeighted)A).
+For a number of pipelines, TMM and RLE normalization methods significantly lowered weighted PCR replicate beta diversity (Fig. \@ref(fig:techNormImpactWeighted)A).
+For unweighted metrics (Fig. \@ref(fig:techNormImpactWeighted)B), rarefying count data to 2000 total abundance resulted in the lowest beta diversity between PCR replicates.
+While rarefying counts to the total abundance of the 85th most abundant sample (rareq15) resulted in no differences or lowered unweighted beta diversity repeatability for most pipeline-diversity metric combinations, it resulted in higher weighed beta diversity for QIIME clustering techniques.
+Rarefaction to this level is also most susceptible to sample loss and should be interpreted with caution (Supplemental Table X).
 
-PCR replicate beta diversity varied for count data normalized using rarefaction \@ref(fig:seqCharPlot)).
-Rarefying counts to the total abundance of the 85th most abundance sample (rareq15) resulted in no differences or lowered beta diversity repeatability for PCR replicates for all pipeline-diversity metric combinations except for mothur-jaccard and _de novo_-UniFrac .
-Rarefying counts to 2000, improved results for all but closed reference, though the effect was not significant for Deblur.
-Rarefying to 5000 total abundance produced similar results to 2000, though the effect was statistically significant for fewer pipeline-metric combinations.
-Overall, count data normalized using TMM and RLE had the lowest beta diversity between PCR replicates for weighted metrics, followed by TSS.
-For unweighted metrics, rarefying count data to 2000 total abundance resulted in the lowest beta diversity between PCR replicates.
 
 <!-- For discussion
 However, the beta diversity was consistently higher for both the NIST runs than the second JHU run and the second NIST run values were closer to the first NIST run than the second JHU run.

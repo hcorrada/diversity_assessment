@@ -164,18 +164,18 @@ ggarrange(weighted, unweighted,
           legend = "bottom")
 ```
 
-We next looked at how different pipelines and normalization methods captured diversity differences between biological and technical replicates.
-Beta-diversity distances between biological and technical replicates varies by pipeline and beta-diversity metric for raw count data (Fig. \@ref(fig:bioVtechRaw)).
-Overall, as expected, the mean diversity observed between biological replicates was greater than that between technical replicates.
-The magnitude of the difference varied by diversity metric and pipeline.
-The difference in beta diversity between biological replicates and technical replicates was greater for DADA2, mothur, and Deblur, compared to QIIME open-reference, close-reference, and _de novo_ pipelines.
-The difference was greater for weighted than unweighted beta diversity metrics for all pipelines.
 
-We also used variation partitioning to evalute the impact of different normalization methods on the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run.
-Accross all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechVarpart)).
-In our unnormalized pipelines, sequencing run accounts for a greater proprotion of the explained variance, highlighting the overall importance of normalizing our datasets.
-Effective normalization methods decrease the technical variability in the data without decreasing the biological variability.
-For both weighted and unweighted metrics rarefaction normalization methods generally show increased amounts of variation explained by biological factors rather than technical artifacts.
-The non-rarefaction normalization methods do not reduce the impacts of technical arifacts as effectively, especially for the QIIME pipelines.
-RLE and TMM consistently increase the technical variability and often decrease the amount of variability in the data attributed to biological factors (Fig. \@ref(fig:bioVtechRaw)A).
-For the QIIME closed reference, open reference, and _de novo_ pipelines and taxonomic beta diversity metrics subject variation greater than sequencing run after normalization (excluding TMM, RLE, UQ and CSS) but not without.
+Finally, we characterized how different pipelines and normalization methods capture diversity differences between biological and technical replicates.
+As expected, the mean diversity observed between biological replicates was greater than that between technical replicates ((Fig. \@ref(fig:bioVtechRaw)).
+The magnitude of this difference, however, was greater for weighted than unweighted beta diversity metrics and varied by pipeline.
+Greater differences were observed with the DADA2, Mothur, and Deblur pipelines, compared to the QIIME clustering approaches.
+
+
+Variation partitioning was used to identify the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run.
+Across all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechVarpart)).
+This is consistent with our observation of greater biological than technical variability. Sequencing run accounts for a greater proportion of the explained variance in the un-normalized runs, highlighting the overall importance of normalizing our datasets.
+
+
+Effective normalization methods decrease the technical noise in the data without decreasing the biological signal.
+For both weighted (Fig. \@ref(fig:bioVtechVarpart)A) and unweighted (Fig. \@ref(fig:bioVtechVarpart)B) metrics, rarefaction normalization methods generally show increased amounts of variation explained by biological factors and decreased amounts of variation explained by technical artifacts.
+The numeric normalization methods were not as effective, especially for the QIIME pipelines. RLE and TMM normalization consistently increased technical variability and often decreased biological variability (Fig. \@ref(fig:bioVtechVarpart)A).

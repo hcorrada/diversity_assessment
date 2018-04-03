@@ -194,20 +194,17 @@ ggarrange(sig_noise_ne_weighted, sig_noise_ne_unweighted,
           legend = "bottom", common.legend = TRUE)
 ```
 
-Signal-to-noise ratio for unweighted metrics was around 1 for all pipelines and sequencing runs (Fig. \@ref(fig:sigalToNoiseRawPlot)).
-Signal-to-noise ratios around 1 indicate that the signal magnitude (biological differences) was comparable to the noise (differences between PCR replicates).
-We define the signal-to-noise ratio as the beta diversity between unmixed pre-exposure samples and the other samples in the titration series (signal) divided by PCR replicate beta diversity for the samples being compared.
-Only DADA2 and mothur signal to noise ratios were greater than the pipelines pre-processed using QIIME.
-DADA2 and Mothur higher signal to noise ratio differences for JHU runs compared to NIST runs, especially for weighted phylogenetic.
+We further sought to identify which pipelines and normalization methods are best able to pull out biological signals from background, technical noise.
+We calculated a signal-to-noise ratio by dividing the beta diversity between unmixed pre-exposure samples and samples in the titration series (signal) by PCR replicate beta diversity for the samples being compared.
+The signal-to-noise ratio for unweighted metrics on un-normalized samples was around 1 for all pipelines and sequencing runs (Fig. \@ref(fig:sigalToNoiseRawPlot)),
+indicating that the signal magnitude (biological differences) was equal to the noise (differences between PCR replicates).
+Using weighted metrics, only DADA2 and Mothur ratios were consistently greater than 1, and these pipelines had higher ratio differences for the JHU runs compared to NIST runs.
 The relationship between NIST and JHU runs for the signal to noise relationship is consistent with the PCR replicate beta diversity results.
 
-Similar to PCR beta diversity repeatability we evaluated the how well normalization methods account for differences in the sample total abundance by comparing un-normalized to normalized NIST run 1 signal-to-noise ratio (Fig. \@ref(fig:signalToNoiseNormEffectPlot)).
-Normalizing count data should increase the signal-to-noise ratio.
-Most normalization methods did not have a significant effect on the signal-to-noise ratio for weighted metrics (Fig. \@ref(fig:signalToNoiseNormEffectPlot)A).
-TSS significantly increased the Bray-Curtis signal to noise ratio for Mothur and DADA2, but not for the other pipelines or weighted UniFrac.
-Some normalization methods significantly decreased the signal to noise ratio for weighted beta diversity metrics.
-Rarefying counts to 15th quantile resulted in significantly lower weighted UniFrac and Bray-Curtis beta-diversity for QIIME closed-reference and _de novo_.
-While RLE and TMM improved PCR replicate beta diversity, these normalization methods also significantly lowered the weighted UniFrac beta diversity for DADA2, Mothur, and QIIME _de novo_.
-While, rareifying count data often increased unweighted metric signal-to-noise ratio though the increase was only significant for DADA2 and Mothur.
-Rarefying count data to 2000 and 5000 significantly improved the DADA2 signal-to-noise ratio for both unweighted metrics.
-Mothur signal-to-noise ratio was only significantly higher for Jaccard and when count data was rareifed to 2000.
+
+Normalizing count data should increase the signal-to-noise ratio;
+however, most normalization methods did not have a significant effect when using weighted metrics (Fig. \@ref(fig:signalToNoiseNormEffectPlot)A).
+One exception was TSS, which significantly increased the Bray-Curtis signal to noise ratio for the Mothur and DADA2 datasets.
+Rarefying counts to the 15th quantile resulted in significantly lower weighted UniFrac and Bray-Curtis beta-diversity for QIIME closed-reference and _de novo_ pipelines.
+While RLE and TMM improved PCR replicate beta diversity, these normalization methods also significantly lowered the weighted UniFrac beta diversity for DADA2, Mothur, and QIIME _de novo_ pipelines.
+Rarefaction often increased unweighted metric signal-to-noise ratio (Fig. \@ref(fig:signalToNoiseNormEffectPlot)B), though the increase was only significant at lower subsampling depths for DADA2 and Mothur pipelines.
