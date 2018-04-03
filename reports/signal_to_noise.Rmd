@@ -186,10 +186,10 @@ sig_noise_ne_unweighted <- sig_to_noise_ne_df %>%
     filter(normalization != "RAW", metric %in% c("jaccard","unifrac")) %>%
     ggplot(aes(x = normalization)) + 
     geom_blank() + 
-    geom_ribbon(data = raw_sig_noise_weighted, 
+    geom_ribbon(data = raw_sig_noise_unweighted, 
                 aes(x = x, ymin = lci, ymax = uci),
                     fill = "grey90") +
-    geom_hline(data = raw_sig_noise_weighted, 
+    geom_hline(data = raw_sig_noise_unweighted, 
                aes(yintercept = est), color = "white") + 
     geom_point(aes(x = normalization, y = est, shape = t_stat, color = normalization)) +
     geom_linerange(aes(x = normalization, ymin = lci, ymax = uci, color = normalization)) +
