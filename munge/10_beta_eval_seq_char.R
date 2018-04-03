@@ -41,7 +41,7 @@ compute_diversity_comparisons_with_seq_char <- function(metric, sample_compariso
         # Calculate average distance for pcr replicates
         beta_div_summary <- beta_div_df %>% 
             group_by(replicate) %>%
-            summarise(mean_dist = mean(value), N = n())
+            summarise(mean_dist = median(value), N = n())
         
         # Calculate sequencing info for replicates
         rep_seq_info <- mgtstMetadata %>% 
