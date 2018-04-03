@@ -12,7 +12,7 @@ library(ProjectTemplate)
 load.project()
 source("src/plot_color_definitions.R")
 ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>%
-    set_names(str_replace(basename(.), "_ps.rds", "")) %>%
+    set_names(str_remove(basename(.), "_ps.rds")) %>%
     map(readRDS)
 
 library(ggpubr)
@@ -188,17 +188,18 @@ ps_iNEXT <- function(ps){
 
 rare_plot_df <- tibble(ps_obj = ps_list) %>%
     add_column(pipe = names(ps_list)) %>%
-    mutate(pipe = if_else(pipe == "deblur", "q_deblur",
-                          if_else(pipe == "qiimeOpenRef", "q_open",
-                                  if_else(pipe == "qiimeClosedRef", "q_closed",
-                                          if_else(pipe == "qiimeDeNovo", "q_denovo",
-                                          pipe)))),
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
+                        pipe == "qiimeOpenRef" ~ "q_open",
+                        pipe == "qiimeClosedRef" ~ "q_closed",
+                        pipe == "qiimeDeNovo"~ "q_denovo",
+                        TRUE ~ pipe),
            pipe = factor(pipe)) %>%
     mutate(inext_dat = map(ps_obj, ps_iNEXT),
            rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) +
                    labs(x = "Sampling Depth", y = "Feature Diversity") +
                    theme_bw() +
-                   ggtitle(.y) +
+                   ggtitle(.y) + 
+                   scale_shape_manual(values = run_shapes) + 
                    scale_color_manual(values=run_colors2)})) %>%
     select(-ps_obj, -inext_dat)
 

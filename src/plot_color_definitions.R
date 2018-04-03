@@ -13,6 +13,12 @@ run_colors2 <- c(
     'nist_run2_2-A10' = "#A35390"
 )
 
+run_shapes <- c(
+    'jhu_run1_2-A10' = 19,
+    'jhu_run2_2-A10' = 17,
+    'nist_run1_2-A10' = 15,
+    'nist_run2_2-A10' = 3
+)
 
 pipe_colors <- c(
     dada = "#5D995D",
@@ -35,3 +41,4 @@ norm_colors <- c(
     UQ = "#f2d51a",
     TSS = "#66ad85"
 )
+
