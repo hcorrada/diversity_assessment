@@ -34,9 +34,9 @@ Mothur version 1.39.3 (https://www.mothur.org) and SILVA release version 119 ref
 
 
 The DADA2 big data protocol for DADA2 versions 1.4 or later was followed (https://benjjneb.github.io/dada2/bigdata.html), except for read length trimming parameters and primer trimming.
-The forward and reverse reads were trimmed to 260 and 200 bp respectively.  Using the values from the online protocol resulted in total abundance values around 5000.
+The forward and reverse reads were trimmed to 260 and 200 bp respectively.
 Forward and reverse primers were trimmed using cutadapt version 1.14 (https://cutadapt.readthedocs.io/en/stable/) [@Martin2011].
-DADA2 version 1.6.0 [@callahan2016DADA2] and reference database info.
+The pipeline was run using DADA2 version 1.6.0 [@callahan2016DADA2] and formatted SILVA database version 128 trainset provided by the DADA2 developers [@benjamin_callahan_2017_824551].
 Taxonomic classification was performed using the DADA2 implementation of the RDP bayesian classifier [@Wang2007].
 The phylogenetic tree was generated following methods in [@callahan2016]  using the DECIPHER R package version for multiple sequence alignment [@DECIPHER] and the phangorn R package for tree construction [@phangorn].
 
