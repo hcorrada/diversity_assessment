@@ -44,6 +44,9 @@ get_within_dist_summary_df <- function(dist_obj, mgtstMetadata){
 
 ############### Between titration pairwise distance summary 
 get_between_dist_summary_df <- function(dist_obj, mgtstMetadata){
+    ## another approach is to subset rows by one set of sample ids and col by
+    ## another 
+    
     ## sample names and number of samples from distance object
     dist_labels <- labels(dist_obj)
     sams <- length(dist_labels)
