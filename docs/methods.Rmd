@@ -64,45 +64,52 @@ Standard linear models were used to test for significance using the R `lm` funct
 Mixed effects models were used to take into account repeated measures were fit using the R `lmer` in the lme4 package [@lme4].
 Model fit was evaluated based on model statistics, AIC, BIC, and logLik, as well as diagnostic plots.
 Tukey Honest Significant Differences test was used for multiple comparison testing using the `TukeyHSD` function.
+The source code for all statistical analysis is available at https://github.com/nate-d-olson/diversity_assessment.
 
 ### Beta-Diversity Repeatability
 
-- To assess beta-diversity repeatability we compared beta-diversity values between PCR replicates within the four sequencing runs.
-- Sequencing runs different characteristics, variance in sample total abundance and sequence quality
-- Compared mean beta diversity between PCR replicates for across pipelines for the four beta diversity metrics.
-- Linear model used to quantify differences between pipelines and across sequencing runs for each of the diversity metrics calculated for the raw count data.
-    - R model equation  `mean_dist~pipe*seq_run_id`, `mean_dist` is the mean beta-diversity between the four PCR replicates, `pipe` is bioinformatic pipeline, and `seq_run_id` is sequencing run number (note does not account for lab effect).
-- Evaluated the impact of normalization methods for NIST run 1.
+Beta-diversity repeatability was evaluated for the different pipelines across sequencing runs.
+Here we define repeatability as the median beta diversity between PCR replicates.
+The unnormalized count data was used to characterize the baseline beta-diversity repeatability for the different pipeline and sequencng runs.
+A linear model was used to quantify differences between pipelines and across sequencing runs for each of the diversity metrics.
+Data from sequencing run NIST1 was used to evaluate the impact of normalization methods on beta-diversity repeatability.
+To quantify normalization method impact independent linear models were fit for each pipeline and diversity metric.
+
+
+<!-- - R model equation  `mean_dist~pipe*seq_run_id`, `mean_dist` is the mean beta-diversity between the four PCR replicates, `pipe` is bioinformatic pipeline, and `seq_run_id` is sequencing run number (note does not account for lab effect).
 - Linear model used to quantify normalization method impact on PCR repeatability.
     - Independent models fit for each diversity metric-pipeline combination.
     - R model equation `mean_dist~normalization`.
-
+-->
 
 ### Beta Diversity Signal to Noise Ratio
 
-- Relationship between beta diversity between titrations (signal) and PCR replicates.
-- This assessment evaluated the ability to differentiate titrations and post-exposure samples from pre-exposure samples.
-- Signal was measured as the median beta diversity between pre-exposure PCR replicates and PCR replicates for each titration and post-exposure samples.
-- Noise was measured as the mean of the median beta diversity between pre-exposure PCR replicates and median beta diversity between PCR replicates for the samples being compared to the pre-exposure samples.
-- A weighted average of the signal to noise was calculated as the area under the curve (using the `trapz` function) of the signal/noise ratio and the proportion of pre-exposure sample in the in titration being compared [@pracma].
-- A linear model was used to quantify the differences in the signal to noise ratio between sequencing runs for each bioinformatic pipeline and diversity metric `log10(auc) ~ pipe + seq_run_num + biosample_id`.
-- A mixed effects model was used to quantify the impact of different normalization methods on the signal to noise ratio for NIST run 1, `log10(auc) ~ method + (1 | biosample_id)`.
-- Independent linear models were fit for each bioinformatic pipeline and diversity metric.
+Next, we evaluated the signal-to-noise ratio for the different pipelines across sequencing runs by comparing pre-exposure samples to the titration and post-exposure samples from the same subject.
+Signal was measured as the median beta-diversity between PCRs from the samples being compared (Fig. \@ref(fig:experimentalDesign)).
+Noise was measured as the median between PCR replicate beta-diversity.
+A weighted average of the signal-to-noise ratio was calculated as the area under the curve (using the `trapz` function) of the signal-to-noise ratio and the proportion of pre-exposure sample in the sample being compared [@pracma].
+Tndependent linear models were fit for each diversity metric to quantify differences in the signal-to-noise ratio between sequencing runs and pipelines.
+A mixed effects linear model was then used to quantify normalization methods impact on the signal-to-noise ratio using data from NIST1 with subject as a random effect.
+Independent mixed effects linear models were fit for each pipeline and diversity metric.
 
+<!-- linear model was then used  and diversity metric `log10(auc) ~ pipe + seq_run_num + biosample_id`.
+norm effect `log10(auc) ~ method + (1 | biosample_id)`
+-->
 
 
 ### Beta Diversity Between Individuals and Treatments
 
-- To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity dissimilarity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.
-- Linear model used to quantify differences in beta diversity between biological and technical sources of variability.
-    - R model equation `log(value) ~ variation + variation_label`, `value` is the beta diversity between replicates, `variation_label` is the variation source, and `variation` is the type of variation.
-    - Variation labels
-        - btw_subject_w/in_time: between subjects within treatment (pre- and post-exposure), within sequencing run
-        - w/in_subj_btw_time: within subject between treatments, within sequencing run
-        - btw_time: across subjects between treatments, within sequencing run
-        - w/in_lab_pcr: with subject, treatment and lab, between sequencing runs?? (check)
-        - w/in_lab_runs: within subject, treatment, lab, and sequencing runs (4 pcr replicates)
-        - btw_labs: within subject, treatment, across sequencing labs
-- Used variation partitioning [@borcard1992partialling] to quantify how technical and biological factors contribute to the total observed variation.
-- Variation partition was calculated using the Vegan R package [@vegan].
-- Tested whether sources of variation significantly contributed to the overall variation using `drda` and `anova` [@vegan].
+To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.
+A linear model was then used to quantify differences in beta diversity between biological and technical sources of variability.
+We then used variation partitioning [@borcard1992partialling] to quantify technical and biological factor's contribution to the total observed variation.
+Variation partition was calculated using the Vegan R package [@vegan].
+Distance-based redundancy analysis (dbRDA) was used to test for significant sources of variation [@vegan].
+
+<!-- - R model equation `log(value) ~ variation + variation_label`, `value` is the beta diversity between replicates, `variation_label` is the variation source, and `variation` is the type of variation.
+- Variation labels
+    - btw_subject_w/in_time: between subjects within treatment (pre- and post-exposure), within sequencing run
+    - w/in_subj_btw_time: within subject between treatments, within sequencing run
+    - btw_time: across subjects between treatments, within sequencing run
+    - w/in_lab_pcr: with subject, treatment and lab, between sequencing runs?? (check)
+    - w/in_lab_runs: within subject, treatment, lab, and sequencing runs (4 pcr replicates)
+    - btw_labs: within subject, treatment, across sequencing labs -->
