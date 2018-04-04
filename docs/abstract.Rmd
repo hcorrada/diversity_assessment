@@ -1,9 +1,11 @@
-Originally developed for macro-ecology, beta diversity metrics are commonly used to asses overall community similarity between microbiome samples. 
-The effects of sequencing depth and error rates on beta diversity calculations are currently unknown, however these artifacts are often accounted for by applying normalization techniques prior to assessment. 
-In the following study, we determine the impact of sequence characteristics on beta-diversity analysis, and how well they are handled by different bioinformatic pipelines and normalization methods. 
-We present a novel dataset of stool samples from five vaccine trial participants, collected before and after exposure to the pathogen and mixed following a two-sample titration. 
-The sequencing data were processed using six bioinformatics pipelines, including sequence inference, _de novo_, and reference based approaches, and nine normalization methods, including standard rarefaction approaches and numeric normalization techniques. 
+Originally developed for macro-ecology, beta diversity metrics are commonly used to assess overall community similarity between microbiome samples.
+The effects of sequencing depth and error rates on beta diversity calculations are currently unknown.
+In the following study, we determine the impact of sequence characteristics on beta-diversity analysis, and how well they are handled by different bioinformatic pipelines and normalization methods.
+We present a novel dataset of stool samples from five vaccine trial participants, collected before and after exposure to a pathogen and mixed following a two-sample titration.
+The sequencing data were processed using six bioinformatics pipelines, including sequence inference, _de novo_, and reference based clustering approaches, along with nine normalization methods, including standard rarefaction approaches and numeric normalization techniques.
 We assess (1) beta-diversity repeatability for PCR replicates across multiple sequencing libraries and runs, (2) the ability to differentiate groups of samples with varying levels of similarity and (3) differences in beta diversity between biological and technical factors.
-Results varied by pipeline and normalization method. The Mothur and DADA2 pipelines were less susceptible to sequencing errors, and rarefaction generally improved diversity detection.
-Furthermore, we found that normalization concepts developed for microarray and RNA sequencing data, including trimmed mean of M values (TMM) and relative log expression (RLE), are not appropriate for marker-gene survey beta-diversity analysis. 
+Results varied by pipeline and normalization method. The Mothur and DADA2 pipelines were less susceptible to sequencing errors.
+Rarefaction generally improved results for unweighted metrics and total sum scaling for weighted metrics.
+Though rarefaction results varied by rarefaction level.
+Furthermore, we found that normalization methods developed for microarray and RNA sequencing data, including trimmed mean of M values (TMM) and relative log expression (RLE), are not appropriate for marker-gene survey beta-diversity analysis. 
 While low error rates and consistent library sizes are ideal, some bioinformatic pipelines and normalization methods are more robust to lower quality sequencing data than others.

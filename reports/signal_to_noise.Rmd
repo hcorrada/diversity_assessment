@@ -87,8 +87,8 @@ auc_summary %>%
     mutate(x_offset = if_else(seq_lab == "jhu", -0.3  + 0.1 * seq_run, 0.1 * seq_run),
            x_pos = as.numeric(pipe) + x_offset) %>%
     ggplot() +
-    geom_blank(aes(x = pipe)) + 
-    geom_hline(aes(yintercept = 1), color = "grey40") + 
+    geom_blank(aes(x = pipe)) +
+    geom_hline(aes(yintercept = 1), color = "grey40") +
     geom_line(aes(x = x_pos, y = auc,group = paste(pipe,seq_lab_run)), color = "grey60") +
     geom_point(aes(x = x_pos, y = auc, color = seq_lab_run, shape = biosample_id)) +
     facet_grid(weight~f_type) +
@@ -143,7 +143,7 @@ sig_to_noise_ne_df <- norm_effect_auc_fit %>%
 ```
 
 
-```{r signalToNoiseNormEffectPlot, echo = FALSE, message = FALSE, warning = FALSE, fig.cap = "Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data for (A) weighted and  (B) unweighted beta diversity metrics. Estimates calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods.", fig.height = 8, fig.width = 6}
+```{r signalToNoiseNormEffectPlot, echo = FALSE, message = FALSE, warning = FALSE, fig.cap = "Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data for (A) weighted and  (B) unweighted beta-diversity metrics. Estimates were calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods.", fig.height = 8, fig.width = 6}
 sig_to_noise_ne_df <- sig_to_noise_ne_df %>%
     mutate(metric = str_remove(dist_method, "_dist")) %>%
     mutate(t_stat = if_else(abs(statistic) > 2, ">2","<2")) %>%
@@ -155,25 +155,25 @@ sig_to_noise_ne_df <- sig_to_noise_ne_df %>%
        pipe = factor(pipe))
 
 raw_sig_noise_weighted <- sig_to_noise_ne_df %>%
-    filter(normalization == "RAW", metric %in% c("bray","wunifrac")) %>% 
-    add_column(xmin = -Inf, xmax = Inf) %>% 
+    filter(normalization == "RAW", metric %in% c("bray","wunifrac")) %>%
+    add_column(xmin = -Inf, xmax = Inf) %>%
     gather(key = key, value = x, xmax, xmin)
 
 raw_sig_noise_unweighted <- sig_to_noise_ne_df %>%
-    filter(normalization == "RAW", metric %in% c("jaccard","unifrac")) %>% 
-    add_column(xmin = -Inf, xmax = Inf) %>% 
+    filter(normalization == "RAW", metric %in% c("jaccard","unifrac")) %>%
+    add_column(xmin = -Inf, xmax = Inf) %>%
     gather(key = key, value = x, xmax, xmin)
 
 
 sig_noise_ne_weighted <- sig_to_noise_ne_df %>%
     filter(normalization != "RAW", metric %in% c("bray","wunifrac")) %>%
     ggplot(aes(x = normalization)) +
-    geom_blank() + 
-    geom_ribbon(data = raw_sig_noise_weighted, 
+    geom_blank() +
+    geom_ribbon(data = raw_sig_noise_weighted,
                 aes(x = x, ymin = lci, ymax = uci),
                     fill = "grey90") +
-    geom_hline(data = raw_sig_noise_weighted, 
-               aes(yintercept = est), color = "white") + 
+    geom_hline(data = raw_sig_noise_weighted,
+               aes(yintercept = est), color = "white") +
     geom_point(aes(y = est, color = normalization, shape = t_stat)) +
     geom_linerange(aes(ymin = lci, ymax = uci, color = normalization)) +
     theme_bw() +
@@ -184,13 +184,13 @@ sig_noise_ne_weighted <- sig_to_noise_ne_df %>%
 
 sig_noise_ne_unweighted <- sig_to_noise_ne_df %>%
     filter(normalization != "RAW", metric %in% c("jaccard","unifrac")) %>%
-    ggplot(aes(x = normalization)) + 
-    geom_blank() + 
-    geom_ribbon(data = raw_sig_noise_unweighted, 
+    ggplot(aes(x = normalization)) +
+    geom_blank() +
+    geom_ribbon(data = raw_sig_noise_unweighted,
                 aes(x = x, ymin = lci, ymax = uci),
                     fill = "grey90") +
-    geom_hline(data = raw_sig_noise_unweighted, 
-               aes(yintercept = est), color = "white") + 
+    geom_hline(data = raw_sig_noise_unweighted,
+               aes(yintercept = est), color = "white") +
     geom_point(aes(x = normalization, y = est, shape = t_stat, color = normalization)) +
     geom_linerange(aes(x = normalization, ymin = lci, ymax = uci, color = normalization)) +
     theme_bw() +
@@ -206,16 +206,16 @@ ggarrange(sig_noise_ne_weighted, sig_noise_ne_unweighted,
 ```
 
 We further sought to identify which pipelines and normalization methods are best able to pull out biological signals from background, technical noise.
-We calculated a signal-to-noise ratio by dividing the beta diversity between unmixed pre-exposure samples and samples in the titration series (signal) by PCR replicate beta diversity for the samples being compared.
+We calculated a signal-to-noise ratio by dividing the beta-diversity between unmixed pre-exposure samples and other samples in the titration series (signal) by PCR replicate beta-diversity for the samples being compared.
 The signal-to-noise ratio for unweighted metrics on un-normalized samples was around 1 for all pipelines and sequencing runs (Fig. \@ref(fig:sigalToNoiseRawPlot)),
 indicating that the signal magnitude (biological differences) was equal to the noise (differences between PCR replicates).
 Using weighted metrics, only DADA2 and Mothur ratios were consistently greater than 1, and these pipelines had higher ratio differences for the JHU runs compared to NIST runs.
-The relationship between NIST and JHU runs for the signal to noise relationship is consistent with the PCR replicate beta diversity results.
+The relationship between NIST and JHU runs for the signal to noise relationship is consistent with the PCR replicate beta-diversity results.
 
 
 Normalizing count data should increase the signal-to-noise ratio;
-however, most normalization methods did not have a significant effect when using weighted metrics (Fig. \@ref(fig:signalToNoiseNormEffectPlot)A).
+however, most normalization methods did not have a significant for weighted metrics (Fig. \@ref(fig:signalToNoiseNormEffectPlot)A).
 One exception was TSS, which significantly increased the Bray-Curtis signal to noise ratio for the Mothur and DADA2 datasets.
-Rarefying counts to the 15th quantile resulted in significantly lower weighted UniFrac and Bray-Curtis beta-diversity for QIIME closed-reference and _de novo_ pipelines.
-While RLE and TMM improved PCR replicate beta diversity, these normalization methods also significantly lowered the weighted UniFrac beta diversity for DADA2, Mothur, and QIIME _de novo_ pipelines.
+Rarefying counts to the 15th quantile resulted in significantly lower the weighted UniFrac and Bray-Curtis signal-to-noise ratio for QIIME closed-reference and _de novo_ pipelines.
+While RLE and TMM improved PCR replicate beta-diversity, these normalization methods also significantly lowered the weighted UniFrac beta-diversity for DADA2, Mothur, and QIIME _de novo_ pipelines.
 Rarefaction often increased unweighted metric signal-to-noise ratio (Fig. \@ref(fig:signalToNoiseNormEffectPlot)B), though the increase was only significant at lower subsampling depths for DADA2 and Mothur pipelines.

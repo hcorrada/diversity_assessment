@@ -9,14 +9,16 @@ bibliography: ../bibliography.bib
 ---
 
 Our assessment framework utilizes a dataset of DNA mixtures from five vaccine trial participants (Olson et al. _in prep_).
-DNA was extracted from stool collected from five individuals (biological replicates) before and after exposure to pathogenic _Escherichia coli_.
+DNA was extracted from stool collected from five individuals (subjects) before and after exposure to pathogenic _Escherichia coli_ (timepoints).
 The pre- and post-exposure DNA was mixed following a $log_2$ two-sample titration mixture design, resulting in a set of samples with varying levels of similarity.
 The microbial community in the unmixed pre- and post-exposure samples and titrations were measured using 16S rRNA marker-gene sequencing.
 Four technical replicates of each were generated during the 16S rRNA PCR amplification process.
-Two technical replicates of each PCR were sent to two independent laboratories (JHU and NIST) for sequencing.
-Sequencing libraries were prepared at the independent laboratories using the same protocol (ILLUMINA) with the sample 16S PCR as input.
+Technical replicates of each PCR were sent to two independent laboratories (JHU and NIST) for sequencing.
+
+
+Sequencing libraries were prepared at the independent laboratories using the same protocol (ILLUMINA).
 Resulting libraries were sequenced twice at each laboratory, resulting in four sequence datasets with varying sequence quality and library sizes.
-The base quality scores of the data from the first run at JHU were lower than expected and the instrument was re-calibrated, resulting in improved quality scores for the second run.
+The first JHU run PhiX error rate was higher than expected and the instrument was re-calibrated by the manufacturer, resulting in improved quality scores for the second run.
 The first run at NIST generated lower total throughput than expected, so the pool library for the second run was re-optimized and generated a dataset with increased throughput and lower sample to sample read count variability.
 No template controls were also sequenced for quality control and did not reveal any significant reagent contamination.
 Sequence data characterization was performed using the savR [@savR] and ShortRead Bioconductor R packages [@ShortRead].
@@ -28,51 +30,52 @@ Code used to run the bioinformatic pipelines is available at https://github.com/
 Pre-processing and feature detection methods vary by pipeline.
 The Mothur pipeline uses the OptiClust algorithm for _de novo_ clustering [@Westcott2017].
 Pre-processing includes merging and quality filtering paired-end reads followed by aligning sequences to the SILVA reference alignment [@Schloss2009].
-Taxonomic classification was performed using the Mothur implementation of the RDP bayesian classifier [@Wang2007].
+Taxonomic classification was performed using the RDP bayesian classifier [@Wang2007] implented in Mothur.
 The phylogenetic tree was constructed in Mothur using the clearcut algorithm [@Sheneman2006].
 Mothur version 1.39.3 (https://www.mothur.org) and SILVA release version 119 reference alignment and RDP the mothur formatted version of the RDP 16S rRNA database release version 10 [@Cole2014].
 
 
 The DADA2 big data protocol for DADA2 versions 1.4 or later was followed (https://benjjneb.github.io/dada2/bigdata.html), except for read length trimming parameters and primer trimming.
-The forward and reverse reads were trimmed to 260 and 200 bp respectively.
 Forward and reverse primers were trimmed using cutadapt version 1.14 (https://cutadapt.readthedocs.io/en/stable/) [@Martin2011].
+The forward and reverse reads were trimmed to 260 and 200 bp respectively.
+Read trimming positions were defined based on read quality score distributions, maximizing the overlap region between the forward and reverse read while minimizing the inclusion of low quality sequence data.
 The pipeline was run using DADA2 version 1.6.0 [@callahan2016DADA2] and formatted SILVA database version 128 trainset provided by the DADA2 developers [@benjamin_callahan_2017_824551].
 Taxonomic classification was performed using the DADA2 implementation of the RDP bayesian classifier [@Wang2007].
-The phylogenetic tree was generated following methods in [@callahan2016]  using the DECIPHER R package version for multiple sequence alignment [@DECIPHER] and the phangorn R package for tree construction [@phangorn].
+The phylogenetic tree was generated following methods in [@callahan2016] using the DECIPHER R package for multiple sequence alignment [@DECIPHER] and the phangorn R package for tree construction [@phangorn].
 
 
-The QIIME pipelines all used the same input merged paired-end, quality filtered set of sequences [@Caporaso2010].
-Both open and closed reference pipelines used the Greengenes 97\% similarity database for reference clustering.
+The QIIME pipelines all used the same merged paired-end, quality filtered set of sequences [@Caporaso2010].
 UCLUST alogrithm (version v1.2.22q) was used for clustering and taxonomic assignment against the Greengenes database version 13.8 97\% similarity OTUs [@Edgar2010;@McDonald2012].
-Phylogenetic trees were constructed using FastTree and a multiple sequence alignment generated using pyNAST and the Greengenes reference alignment (Greengenes info) [@Caporaso2010;@Price2010].
-Additionally, sequence variants were inferred from the QIIME merged and quality filtered sequences using the Deblur sequence inference clustering method (version 1.0.3) [@Amir2017].
-The same taxonomic classification and phylogenetic tree construction methods used for the other QIIME pipelines were also used for the Deblur clustered sequence data.
+Phylogenetic trees were constructed using FastTree and a multiple sequence alignment generated using pyNAST and the Greengenes reference alignment [@Caporaso2010;@Price2010].
+Both open and closed reference pipelines used the Greengenes 97\% similarity database for reference clustering.
+Additionally, sequence variants were inferred from the QIIME merged and quality filtered sequences using Deblur (version 1.0.3) [@Amir2017].
+Phylogenetic tree construction methods used for the other QIIME pipelines were also used for the Deblur pipeline.
 
 ## Normalization Methods and Beta-Diversity Metrics
-Normalization methods are used to account for differences in the number of sequences generated per sample.
-Rarefaction, subsampling counts without replacement to an even abundance, is a commonly used method in macro-ecology and 16S rRNA marker-gene surveys [@Gotelli2001;@Hughes2005].
+Normalization methods are used to account for between sample differences in feature total abundance.
+Rarefaction, subsampling counts without replacement to an even abundance, is a commonly used normalization method in macro-ecology and 16S rRNA marker-gene surveys [@Gotelli2001;@Hughes2005].
 We rarefied samples to four levels; 2000, 5000, and 10000 total reads per sample, and to the total abundance of the 15th percentile.
-Rarefaction levels were selected based on values commonly used in published studies [@Thompson2017] and other comparison studies [@Weiss2017;@McMurdie2014].
-Rarified count data was analyzed using both weighted and unweighted Beta-diversity metrics. Additional numeric normalization methods were only analyzed for weighted metrics, as they do not impact unweighted metric results.
+Rarefaction levels were selected based on values used in published studies [@Thompson2017] and other comparison studies [@Weiss2017;@McMurdie2014].
+Rarified count data was analyzed using both weighted and unweighted beta-diversity metrics.
 Numeric normalization methods include those previously developed for normalizing microarray and RNAseq data, such as upper quartile (UQ), trimmed mean of M values (TMM), and relative log expression [@Robinson2010;@McCarthy2012], and those that are commonly used to normalize 16S rRNA marker-gene survey, such as cumulative sum scaling (CSS) [@Paulson2013] and total sum scaling (proportions, TSS).
+Numeric normalization methods were used for weighted metrics, as they do not impact unweighted metric results.
 
-
-Weighted and unweighted phylogenetic and taxonomic beta diversity metrics were compared. Beta diversity metrics were calculated using phyloseq version 1.22.3 [@McMurdie2013]. Weighted and unweighted UniFrac phylogenetic beta-diversity metrics were calculated using the phyloseq implementation of FastUniFrac [@McMurdie2013;@Hamady2010]. For feature-level beta-diversity assessment, the Bray-Curtis weighted and Jaccard unweighted metrics were used [@Bray1957;@Jaccard1912].
+Weighted and unweighted phylogenetic and taxonomic beta-diversity metrics were compared. Beta-diversity metrics were calculated using phyloseq version 1.22.3 [@McMurdie2013]. Weighted and unweighted UniFrac phylogenetic beta-diversity metrics were calculated using the phyloseq implementation of FastUniFrac [@McMurdie2013;@Hamady2010]. For feature-level beta-diversity assessment, the Bray-Curtis weighted and Jaccard unweighted metrics were used [@Bray1957;@Jaccard1912].
 
 ## Beta-Diversity Assessment
 Standard linear models were used to test for significance using the R `lm` function.
-Mixed effects models were used to take into account repeated measures were fit using the R `lmer` in the lme4 package [@lme4].
+Mixed effects models, used to take into account repeated measures, were fit using the R `lmer` function in the lme4 package [@lme4].
 Model fit was evaluated based on model statistics, AIC, BIC, and logLik, as well as diagnostic plots.
 Tukey Honest Significant Differences test was used for multiple comparison testing using the `TukeyHSD` function.
-The source code for all statistical analysis is available at https://github.com/nate-d-olson/diversity_assessment.
+The source code for all analysis is available at https://github.com/nate-d-olson/diversity_assessment.
 
 ### Beta-Diversity Repeatability
 
 Beta-diversity repeatability was evaluated for the different pipelines across sequencing runs.
 Here we define repeatability as the median beta diversity between PCR replicates.
-The unnormalized count data was used to characterize the baseline beta-diversity repeatability for the different pipeline and sequencng runs.
-A linear model was used to quantify differences between pipelines and across sequencing runs for each of the diversity metrics.
-Data from sequencing run NIST1 was used to evaluate the impact of normalization methods on beta-diversity repeatability.
+The unnormalized count data was used to characterize the baseline beta-diversity repeatability for the different pipeline and sequencing runs.
+Linear models were used to quantify differences between pipelines and across the four sequencing runs for the diversity metrics.
+Data from sequencing run NIST1 were used to evaluate normalization method impact on PCR replicate beta-diversity.
 To quantify normalization method impact independent linear models were fit for each pipeline and diversity metric.
 
 
@@ -84,12 +87,12 @@ To quantify normalization method impact independent linear models were fit for e
 
 ### Beta Diversity Signal to Noise Ratio
 
-Next, we evaluated the signal-to-noise ratio for the different pipelines across sequencing runs by comparing pre-exposure samples to the titration and post-exposure samples from the same subject.
-Signal was measured as the median beta-diversity between PCRs from the samples being compared (Fig. \@ref(fig:experimentalDesign)).
-Noise was measured as the median between PCR replicate beta-diversity.
-A weighted average of the signal-to-noise ratio was calculated as the area under the curve (using the `trapz` function) of the signal-to-noise ratio and the proportion of pre-exposure sample in the sample being compared [@pracma].
-Tndependent linear models were fit for each diversity metric to quantify differences in the signal-to-noise ratio between sequencing runs and pipelines.
-A mixed effects linear model was then used to quantify normalization methods impact on the signal-to-noise ratio using data from NIST1 with subject as a random effect.
+Next, we evaluated the signal-to-noise ratio for the different pipelines across sequencing runs by comparing pre-exposure samples to other samples in the titration series.
+Signal was measured as the median beta-diversity between samples being compared (Fig. \@ref(fig:experimentalDesign)).
+Noise was measured as the median PCR replicate beta-diversity within the compared samples.
+A weighted average of the signal-to-noise ratio was calculated as the area under the curve (using the `trapz` function) of the signal-to-noise ratio and the proportion of pre-exposure DNA in the sample being compared [@pracma].
+Independent linear models were fit for each diversity metric to quantify differences in the signal-to-noise ratio between sequencing runs and pipelines.
+A mixed effects linear model was then used to quantify normalization method impact on the signal-to-noise ratio using data from NIST1 with subject as a random effect.
 Independent mixed effects linear models were fit for each pipeline and diversity metric.
 
 <!-- linear model was then used  and diversity metric `log10(auc) ~ pipe + seq_run_num + biosample_id`.
@@ -100,10 +103,10 @@ norm effect `log10(auc) ~ method + (1 | biosample_id)`
 ### Beta Diversity Between Individuals and Treatments
 
 To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.
-A linear model was then used to quantify differences in beta diversity between biological and technical sources of variability.
+A linear model was used to quantify differences in beta diversity between biological and technical sources of variability.
 We then used variation partitioning [@borcard1992partialling] to quantify technical and biological factor's contribution to the total observed variation.
 Variation partition was calculated using the Vegan R package [@vegan].
-Distance-based redundancy analysis (dbRDA) was used to test for significant sources of variation [@vegan].
+Distance-based redundancy analysis (dbRDA) was used to identify significant sources of variation [@vegan].
 
 <!-- - R model equation `log(value) ~ variation + variation_label`, `value` is the beta diversity between replicates, `variation_label` is the variation source, and `variation` is the type of variation.
 - Variation labels
