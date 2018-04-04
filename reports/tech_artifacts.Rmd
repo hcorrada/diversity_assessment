@@ -61,7 +61,7 @@ norm_impact <- tech_art_df %>%
 
 ```
 
-```{r techMeanDist, fig.cap = "Distribution of mean pairwise PCR replicate beta diversity for by sequencing run and pipeline for un-normalized count data.", fig.height=4, fig.width=6}
+```{r techMeanDist, fig.cap = "Distribution of mean pairwise PCR replicate beta-diversity for by sequencing run and pipeline for un-normalized count data.", fig.height=4, fig.width=6}
 tech_art_df %>% filter(normalization == "RAW") %>%
     ggplot() +
     geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
@@ -70,12 +70,12 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
           legend.position = "bottom") +
     labs(x = "Bioinformatic Pipeline",
-         y = "PCR Replicate Beta Diversity",
+         y = "PCR Replicate Beta-Diversity",
          fill = "Sequncing Run") +
     scale_fill_manual(values = run_colors)
 ```
 
-```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted (A) and unweighted (B) pcr replicates beta diversity, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates", fig.height=8, fig.width=7}
+```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted (A) and unweighted (B) pcr replicates beta-diversity, for sequencing run with higher quality and total abundance variability, NIST run 1. Data are presented as minimal-ink boxplots, where points indicate median value, gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between pcr replicates.", fig.height=8, fig.width=7}
 norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15",
                     "CSS", "RLE", "TMM", "TSS", "UQ")
 
@@ -118,9 +118,10 @@ weighted <- tech_art_df_for_plot %>%
                       position = position_dodge(), size = 1) +
     facet_grid(f_type~pipe,scales = "free", space = "free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "none") +
     labs(x = "Normalization",
-         y = "PCR Replicate Beta Diversity",
+         y = "PCR Replicate Beta-Diversity",
          color = "Bioinformatic Pipeline") +
     scale_color_manual(values = norm_colors)
 
@@ -148,9 +149,10 @@ unweighted <- tech_art_df_for_plot %>%
                       position = position_dodge(), size = 1) +
     facet_grid(f_type~pipe,scales = "free", space = "free") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "none") +
     labs(x = "Normalization",
-         y = "PCR Replicate Beta Diversity",
+         y = "PCR Replicate Beta-Diversity",
          color = "Bioinformatic Pipeline") +
     scale_color_manual(values = norm_colors)
 
@@ -160,20 +162,20 @@ ggarrange(weighted, unweighted,
 ```
 
 
-Next, we evaluated differences in beta diversity between un-normalized PCR replicates across sequencing runs and pipelines.
-PCR replicate beta diversity varied by diversity metric (Fig. \@ref(fig:seqCharPlot)).
-Beta diversity was consistently higher for unweighted compared to weighted metrics and phylogenetic diversity metrics were lower than taxonomic metrics.
+Next, we evaluated differences in beta-diversity between un-normalized PCR replicates across sequencing runs and pipelines.
+PCR replicate beta-diversity varied by diversity metric (Fig. \@ref(fig:seqCharPlot)).
+Beta-diversity was consistently higher for unweighted compared to weighted metrics and phylogenetic diversity metrics were lower than taxonomic metrics.
 We expected to see higher pairwise distances for the lower quality JHU1 run compared to the higher quality JHU2 run.
 This was true for the QIIME clustering pipelines, however the Mothur and DADA2 mean PCR replicate beta diversity was consistent across the JHU runs, suggesting that these pipelines are more robust to sequencing errors (Fig. \@ref(fig:seqCharPlot)).
 Conversely, with the highest number of failed samples for the first JHU run, the Deblur pipeline was the least robust to sequencing errors (Table \@ref(tab:pipeCharTbl)).
-We also expected that the second NIST run, which had higher read quality and lower total abundance variability, to have comparable, if not lower, beta diversity between PCR replicates. This was not the case.  Beta diversity was consistently higher for both the NIST runs compared to the high quality, low variability second JHU run. Furthermore, the second NIST run values were more similar to the first high quality and high total abundance variability NIST run, than the second JHU run.
+We also expected that the second NIST run, which had higher read quality and lower total abundance variability, to have comparable, if not lower, PCR replicates beta-diversity. This was not the case.  Beta-diversity was consistently higher for both NIST runs compared to the high quality, low variability second JHU run. Furthermore, the second NIST run values were more similar to the first high quality and high total abundance variability NIST run, than the second JHU run.
 
 
-Normalization methods varied in their ability to improve beta diversity repeatability.
-When comparing normalized to un-normalized PCR replicate beta diversity, we observed that most normalization methods had minimal impact on weighted metrics (Fig. \@ref(fig:techNormImpactWeighted)A).
-For a number of pipelines, TMM and RLE normalization methods significantly lowered weighted PCR replicate beta diversity (Fig. \@ref(fig:techNormImpactWeighted)A).
-For unweighted metrics (Fig. \@ref(fig:techNormImpactWeighted)B), rarefying count data to 2000 total abundance resulted in the lowest beta diversity between PCR replicates.
-While rarefying counts to the total abundance of the 85th most abundant sample (rareq15) resulted in no differences or lowered unweighted beta diversity repeatability for most pipeline-diversity metric combinations, it resulted in higher weighed beta diversity for QIIME clustering techniques.
+Normalization methods varied in their ability to improve beta-diversity repeatability.
+When comparing normalized to un-normalized PCR replicate beta-diversity, we observed that most normalization methods had minimal impact on weighted metrics (Fig. \@ref(fig:techNormImpactWeighted)A).
+For a number of pipelines, TMM and RLE normalization methods significantly lowered weighted PCR replicate beta-diversity (Fig. \@ref(fig:techNormImpactWeighted)A).
+For unweighted metrics (Fig. \@ref(fig:techNormImpactWeighted)B), rarefying count data to 2000 total abundance resulted in the lowest beta-diversity between PCR replicates.
+While rarefying counts to the total abundance of the 85th most abundant sample (rareq15) resulted in no differences or lowered unweighted beta-diversity repeatability for most pipeline-diversity metric combinations, it resulted in higher weighed beta-diversity for QIIME clustering techniques.
 Rarefaction to this level is also most susceptible to sample loss and should be interpreted with caution (Supplemental Table X).
 
 
