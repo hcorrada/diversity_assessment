@@ -174,9 +174,9 @@ We also expected that the second NIST run, which had higher read quality and low
 Normalization methods varied in their ability to improve beta-diversity repeatability.
 When comparing normalized to un-normalized PCR replicate beta-diversity, we observed that most normalization methods had minimal impact on weighted metrics (Fig. \@ref(fig:techNormImpactWeighted)A).
 For a number of pipelines, TMM and RLE normalization methods significantly lowered weighted PCR replicate beta-diversity (Fig. \@ref(fig:techNormImpactWeighted)A).
-For unweighted metrics (Fig. \@ref(fig:techNormImpactWeighted)B), rarefying count data to 2000 total abundance resulted in the lowest beta-diversity between PCR replicates.
-While rarefying counts to the total abundance of the 85th most abundant sample (rareq15) resulted in no differences or lowered unweighted beta-diversity repeatability for most pipeline-diversity metric combinations, it resulted in higher weighed beta-diversity for QIIME clustering techniques.
-Rarefaction to this level is also most susceptible to sample loss and should be interpreted with caution (Supplemental Table X).
+For unweighted metrics (Fig. \@ref(fig:techNormImpactWeighted)B), rarefying count data to 2000 total feature abundance resulted in the lowest beta-diversity between PCR replicates.
+While rarefying counts to the total abundance of the 15th most abundant sample (rareq15) resulted in no differences or lower PCR replicate beta-diversity for most pipeline-diversity metric combinations, resulting in higher weighed beta-diversity for QIIME clustering techniques.
+Rarefaction to this level is also most susceptible to sample loss and should not be used as it results in unnecessary loss of statistical power (Supplemental Table X).
 
 
 <!-- For discussion
