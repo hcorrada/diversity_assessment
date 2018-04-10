@@ -56,13 +56,13 @@ n_read_plot <- r1_seq_char_df %>% filter(biosample_id != "NTC") %>%
 ## TODO move to munge
 qual_df <- seq_qual_comparisons %>%
     mutate(read_dir = paste0(read_dir, "_qual")) %>%
-    select(-sd_quality, -cov_quality) %>%
+    dplyr::select(-sd_quality, -cov_quality) %>%
     spread(read_dir, mean_quality) %>%
     separate(replicate, c("biosample_id","t_fctr","seq_run_id"),
              remove = FALSE,extra = "merge")
 
 tech_art_df <- seq_char_comparisons %>%
-    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>%
+    dplyr::select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>%
     left_join(qual_df)
 fit2 <- lme4::lmer(cov_total_abu ~ seq_run_id + (1 | pipe / biosample_id / t_fctr),
                    data = tech_art_df)
@@ -80,7 +80,7 @@ fit_est_df <- as.data.frame(confint_dat) %>%
     filter(!grepl("sig", run_id)) %>%
     gather("conf_int","est", -run_id) %>%
     spread(run_id, est) %>%
-    rename(jhu_run1 = `(Intercept)`) %>%
+    dplyr::rename(jhu_run1 = `(Intercept)`) %>%
     gather("run_id","est", -conf_int, -jhu_run1) %>%
     mutate(est = jhu_run1 + est) %>%
     mutate(run_id = str_replace(run_id, "seq_run_id","")) %>%
@@ -151,11 +151,11 @@ pipe_char_summary <- pipe_char_df %>%
     mutate(pass_rate_summary = paste0(pass_rate_med, " (",
                                       pass_rate_max, "-", pass_rate_min,")")) %>%
     mutate(sparsity = round(sparsity, 3)) %>%
-    select(-total_abu_med, -total_abu_max, -total_abu_min,
+    dplyr::select(-total_abu_med, -total_abu_max, -total_abu_min,
            -pass_rate_med, -pass_rate_max, -pass_rate_min)
 
 pipe_char_summary %>%
-    select(pipe, n_taxa, num_singletons, n_samples,  sparsity,
+    dplyr::select(pipe, n_taxa, num_singletons, n_samples,  sparsity,
            total_abu_summary, pass_rate_summary) %>%
       dplyr::rename(Pipelines = pipe, Features = n_taxa,
                     Singletons = num_singletons,
@@ -201,7 +201,7 @@ rare_plot_df <- tibble(ps_obj = ps_list) %>%
                    ggtitle(.y) +
                    scale_shape_manual(values = run_shapes) +
                    scale_color_manual(values=run_colors2)})) %>%
-    select(-ps_obj, -inext_dat)
+    dplyr::select(-ps_obj, -inext_dat)
 
 ```
 

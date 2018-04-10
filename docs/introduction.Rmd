@@ -17,9 +17,9 @@ Bioinformatic pipelines and normalization methods are often used to reduce these
 Bioinformatic pipelines reduce bias by removing sequencing artifacts, such as single and multi-base pair variants, and chimeric sequences, from microbiome datasets.
 If not accounted for, these artifacts may incorrectly be attributed as novel diversity in a sample.
 Bioinformatic pipelines also use clustering or sequence inference techniques to group reads into biologically informative units.
-Standard clustering methods include _de novo_ clustering based on pairwise sequence similarities [@Schloss2005] and closed reference clustering of reads against a reference database [@Edgar2011].
+Standard clustering methods include _de novo_ clustering based on pairwise sequence similarities [@Schloss2005] and closed reference clustering of reads against a reference database [@edgar2010search].
 Open reference clustering is a combination of the two, first applying a closed reference approach, followed by _de novo_ clustering of reads that did not map to a reference [@Rideout2014].
-Sequence inference methods use statistical models and algorithms to group sequences independent of sequence similarity but based on the probability that a lower abundant sequence is an artifact originating from more highly abundant sequence, independent of sequence similarity [@callahan2016DADA2; @Amir2017].
+Sequence inference methods use statistical models and algorithms to group sequences independent of sequence similarity but based on the probability that a lower abundant sequence is an artifact originating from more highly abundant sequence, independent of sequence similarity [@callahan2016dada2; @Amir2017].
 The resulting features, OTUs (operational taxonomic units) for clustering methods and SVs (sequence variants) for sequence inference methods, have different characteristics because the different methods vary in their ability to detect and remove errors, while retaining true biological sequences.
 
 
@@ -27,7 +27,7 @@ Rarefaction and numeric normalization methods account for differences in sample 
 Rarifying abundance data traces its origins to macro ecology, where counts for a unit (sample) are randomly subsampled to a user defined constant level [@Gotelli2001].
 Although there are concerns about its statistical validity [@McMurdie2014],
 rarefaction is currently the only normalization method for unweighted, presence-absence based, beta-diversity metrics [@Weiss2017].
-For weighted, abundance based beta-diversity analyses, we can apply numeric normalization methods, such as total and cumulative sum scaling (TSS and CSS), where counts are divided by sample total abundance (TSS) or by the cumulative abundance (CSS) for a defined percentile [@Paulson2013].
+For weighted, abundance based beta-diversity analyses, we can apply numeric normalization methods, such as total and cumulative sum scaling (TSS and CSS), where counts are divided by sample total abundance (TSS) or by the cumulative abundance (CSS) for a defined percentile [@paulson2013differential].
 CSS is one of the few normalization methods developed specifically for 16S rRNA marker-gene survey data.
 Other normalization methods, including upper quartile (UQ), trimmed mean of M values (TMM) and relative log expression [@Robinson2010; @McCarthy2012], were initially developed for normalizing RNAseq and microarray data.
 Many studies have found these methods useful in normalizing marker-gene survey data for differential abundance analysis, though it is unclear whether these techniques are also suitable for beta-diversity analysis.
@@ -42,7 +42,7 @@ Beause these four groups of beta-diversity metrics measure different community c
 they are not interchangeable should be evaluated in a complementary manner to gain maximal insight into community differences [@Anderson2011].
 
 
-Previous studies have evaluated different bioinformatics pipelines [@Sinha2017] and normalization methods [@McMurdie2014; @Weiss2017] on beta-diversity analysis.
+Previous studies have evaluated different bioinformatics pipelines [@Sinha2017-ew] and normalization methods [@McMurdie2014; @Weiss2017] on beta-diversity analysis.
 Yet, the ability of these pipelines to account for sequence quality and coverage, and how this affects diversity conclusions, remains unknown.
 Here, we use novel dataset of stool samples from vaccine trial participants, collectec before and after exposure to the pathogen, and mixed following a two-sample titration mixture design.
 We sequenced multiple technical PCR replicates, allowing us to evaluate (1) beta-diversity repeatability,
