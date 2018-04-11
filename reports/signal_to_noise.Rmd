@@ -70,7 +70,7 @@ norm_effect_auc_fit <- norm_effect_auc_df %>%
 ```
 
 
-```{r sigalToNoiseRawPlot, warning = FALSE, echo = FALSE, message = FALSE, fig.cap = "The weighted average signal to noise varied by pipeline, run, and diversity metric. Points indicate the signal to noise for each individual with grey lines representing the range of values for a pipeline and sequencing run. Dark grey horizontal line indicates a signal-to-noise ratio of 1."}
+```{r sigalToNoiseRawPlot, warning = FALSE, echo = FALSE, message = FALSE, fig.cap = "The weighted average signal to noise varied by pipeline, run, and diversity metric. Points indicate the signal to noise for each individual with grey lines representing the range of values for a pipeline and sequencing run. Dark grey horizontal lines indicate a signal-to-noise ratio of 1."}
 auc_summary %>%
     ungroup() %>%
     mutate(seq_lab_run = paste0(seq_lab,"_run", seq_run)) %>%
@@ -143,7 +143,7 @@ sig_to_noise_ne_df <- norm_effect_auc_fit %>%
 ```
 
 
-```{r signalToNoiseNormEffectPlot, echo = FALSE, message = FALSE, warning = FALSE, fig.cap = "Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data for (A) weighted and  (B) unweighted beta-diversity metrics. Estimates were calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods.", fig.height = 8, fig.width = 6}
+```{r signalToNoiseNormEffectPlot, echo = FALSE, message = FALSE, warning = FALSE, fig.cap = "Weighted average signal to noise ratio estimate and 95 CI for raw and normalized count data for (A) weighted and  (B) unweighted beta-diversity metrics. Estimates were calculated using a mixed effects linear model using subject as random effect. The horizontal solid line is the unnormalized count signal to noise estimate,S and horizontal dashed lines indicate 95 CI. The points and line ranges indicate the model estimate and 95 CI for the different normalization methods.", fig.height = 8, fig.width = 6}
 sig_to_noise_ne_df <- sig_to_noise_ne_df %>%
     mutate(metric = str_remove(dist_method, "_dist")) %>%
     mutate(t_stat = if_else(abs(statistic) > 2, ">2","<2")) %>%
@@ -218,4 +218,4 @@ however, most normalization methods did not have a significant for weighted metr
 One exception was TSS, which significantly increased the Bray-Curtis signal to noise ratio for the Mothur and DADA2 datasets.
 Rarefying counts to the 15th quantile resulted in significantly lower the weighted UniFrac and Bray-Curtis signal-to-noise ratio for QIIME closed-reference and _de novo_ pipelines.
 While RLE and TMM improved PCR replicate beta-diversity, these normalization methods also significantly lowered the weighted UniFrac beta-diversity for DADA2, Mothur, and QIIME _de novo_ pipelines.
-Rarefaction often increased unweighted metric signal-to-noise ratio (Fig. \@ref(fig:signalToNoiseNormEffectPlot)B), though the increase was only significant at lower subsampling depths for DADA2 and Mothur pipelines.
+Rarefaction often increased the unweighted metric signal-to-noise ratio (Fig. \@ref(fig:signalToNoiseNormEffectPlot)B), though the increase was only significant at lower subsampling depths for DADA2 and Mothur pipelines.

@@ -50,7 +50,7 @@ biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highl
 ```
 
 
-```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological (subject and titration level) and technical variation (sequencing lab and run) (pairwise distance between replicates.) Grey line indicates the mean differences for diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method.", fig.height=4, fig.width=6, eval = FALSE}
+```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, the y-axis is the differences between the mean biological (subject and titration level) and technical variation (sequencing lab and run) (pairwise distance between replicates.) Grey line indicates the mean differences in diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method.", fig.height=4, fig.width=6, eval = FALSE}
 
 raw_bio_v_tech <- biol_v_tech_variation_summary_higherlevel %>%
     filter(normalization == "RAW") %>%
@@ -74,7 +74,7 @@ biol_v_tech_variation_summary_higherlevel %>%
 ```
 
 
-```{r bioVtechRaw, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = ".Biological vs. Technical Variation,distribution in (A) weighted and (B) unweighted beta-diversity between between technical replicates and biological treatments (subject  and timepoint)."}
+```{r bioVtechRaw, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, distribution in (A) weighted and (B) unweighted beta-diversity between technical replicates and biological treatments (subject  and timepoint)."}
 
 weighted <- bio_v_tech_dat %>%
     filter(weight == "Weighted", normalization == "RAW") %>%
@@ -108,7 +108,7 @@ ggarrange(weighted + rremove("xlab") + rremove("x.text"),
           legend = "bottom", heights = c(0.35,0.65))
 ```
 
-```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for unnormalized data.", fig.width = 6, fig.height = 8}
+```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted $R^2$ value, indicating the proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for unnormalized data.", fig.width = 6, fig.height = 8}
 varpart_stats <- varpart_stats %>%
         mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
                         pipe == "qiimeOpenRef" ~ "q_open",
@@ -172,9 +172,9 @@ Greater differences were observed with the DADA2, Mothur, and Deblur pipelines, 
 
 Variation partitioning was used to identify the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run.
 Across all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechVarpart)).
-This is consistent with our observation of greater biological than technical variability. Sequencing run accounts for a greater proportion of the explained variance in the unnormalized runs, highlighting the overall importance of normalizing our datasets.
+The variation partitioning results are consistent with our observation of greater biological than technical variability. Sequencing run accounts for a greater proportion of the explained variance in the unnormalized runs, highlighting the overall importance of normalizing our datasets.
 
 
 Effective normalization methods decrease technical noise in the data without decreasing biological signal.
-For both weighted (Fig. \@ref(fig:bioVtechVarpart)A) and unweighted (Fig. \@ref(fig:bioVtechVarpart)B) metrics, rarefaction normalization methods generally show increased proportion of variation explained by biological factors and decreased proportion of variation explained by technical artifacts.
+For both weighted (Fig. \@ref(fig:bioVtechVarpart)A) and unweighted (Fig. \@ref(fig:bioVtechVarpart)B) metrics, rarefaction normalization methods show increased proportion of variation explained by biological factors and decreased the proportion of variation explained by technical artifacts.
 Numeric normalization methods were not as effective, especially for the QIIME pipelines. RLE and TMM normalization consistently increased technical variability and often decreased biological variability (Fig. \@ref(fig:bioVtechVarpart)A).
