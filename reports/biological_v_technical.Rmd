@@ -87,8 +87,8 @@ weighted <- bio_v_tech_dat %>%
           legend.position = "bottom") +
     labs(x = "Variation Type", y = "Beta-Diversity",
          fill = "Variation Source", color = "Variation Source")+
-    scale_color_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))+
-    scale_fill_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))
 
 
 unweighted <- bio_v_tech_dat %>%
@@ -100,8 +100,8 @@ unweighted <- bio_v_tech_dat %>%
     theme_bw() +
     theme(axis.text.x = element_blank(),
           legend.position = "bottom") +
-    scale_color_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))+
-    scale_fill_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))+
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))+
     labs(x = "Variation Type", y = "Beta-Diversity",
          fill = "Variation Source", color = "Variation Source")
 
@@ -121,45 +121,42 @@ varpart_stats <- varpart_stats %>%
                         TRUE ~ pipe),
            pipe = factor(pipe))
 
+varpart_stats <- varpart_stats %>%
+    mutate(normalization= factor(normalization, 
+                                 levels=c("RAW", "rare2000",
+                                          "rare5000", "rare10000",
+                                          "rareq15", "CSS",
+                                          "RLE","TMM", "TSS", "UQ"),
+                                 ordered = T))
+
 varpart_weighted <- varpart_stats %>%
     filter(effect == "conditional",
            metric %in% c("bray", "wunifrac"))
 
-varpart_weighted_raw <- varpart_weighted %>% filter(normalization == "RAW")
-varpart_weighted_norm <- varpart_weighted %>% filter(normalization != "RAW")
-
-weighted <- ggplot(varpart_weighted_norm) +
-    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
-             stat = "identity", position = "dodge", width = 0.5) +
-    geom_point(data = varpart_weighted_raw,
-               aes(x = feature, y = Adj.R.square),
-               shape = "-", size = 8) +
+weighted <- ggplot(varpart_weighted) +
+    geom_bar(aes(x = normalization, y = Adj.R.square, fill = feature),
+             stat = "identity") +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
-    theme(legend.position = "bottom") +
-    scale_fill_manual(values = norm_colors)
-
+    theme(legend.position = "bottom") + 
+    scale_fill_manual(values=c("#7a0177", "#a6bddb", "#3690c0"))
+    
+    
 varpart_unweighted <- varpart_stats %>%
     filter(effect == "conditional",
            metric %in% c("jaccard", "unifrac"))
 
-varpart_unweighted_raw <- varpart_unweighted %>% filter(normalization == "RAW")
-varpart_unweighted_norm <- varpart_unweighted %>% filter(normalization != "RAW")
-
-unweighted <- ggplot(varpart_unweighted_norm) +
-    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
-             stat = "identity", position = "dodge", width = 0.5) +
-    geom_point(data = varpart_unweighted_raw,
-               aes(x = feature, y = Adj.R.square),
-               shape = "-", size = 8) +
+unweighted <- ggplot(varpart_unweighted) +
+    geom_bar(aes(x = normalization, y = Adj.R.square, fill = feature),
+             stat = "identity") +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
-    theme(legend.position = "bottom") +
-    scale_fill_manual(values = norm_colors)
+    theme(legend.position = "bottom") + 
+    scale_fill_manual(values=c("#7a0177", "#a6bddb", "#3690c0"))
 
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2,
