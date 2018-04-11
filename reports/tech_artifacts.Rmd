@@ -116,7 +116,7 @@ weighted <- tech_art_df_for_plot %>%
     geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization,
                           group = interaction(normalization,pipe)),
                       position = position_dodge(), size = 1) +
-    facet_grid(f_type~pipe,scales = "free", space = "free") +
+    facet_grid(metric~pipe,scales = "free", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
           legend.position = "none") +
@@ -144,10 +144,10 @@ unweighted <- tech_art_df_for_plot %>%
     # geom_line(aes(x = normalization, y = RAW_third_quartile,
     #               group = interaction(pipe, f_type)),
     #           linetype = "dashed", color = "grey60") +
-    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, shape = metric,
+    geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, #shape = metric,
                           group = interaction(normalization,pipe)),
                       position = position_dodge(), size = 1) +
-    facet_grid(f_type~pipe,scales = "free", space = "free") +
+    facet_grid(metric~pipe,scales = "free", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
           legend.position = "none") +
@@ -158,7 +158,7 @@ unweighted <- tech_art_df_for_plot %>%
 
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2, labels = "AUTO",
-          common.legend = TRUE)
+          legend = "none")
 ```
 
 

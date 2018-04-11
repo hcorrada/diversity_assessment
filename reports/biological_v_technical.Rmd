@@ -126,7 +126,7 @@ varpart_stats <- varpart_stats %>%
            pipe = factor(pipe))
 
 varpart_stats <- varpart_stats %>%
-    mutate(normalization= factor(normalization, 
+    mutate(normalization= factor(normalization,
                                  levels=c("RAW", "rare2000",
                                           "rare5000", "rare10000",
                                           "rareq15", "CSS",
@@ -143,11 +143,11 @@ weighted <- ggplot(varpart_weighted) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
-    xlab("") + ylab("Adjusted R^2") +
-    theme(legend.position = "bottom") + 
+    xlab("") + ylab(paste("Adjusted", expression(R^2))) +
+    theme(legend.position = "bottom") +
     scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
-    
-    
+
+
 varpart_unweighted <- varpart_stats %>%
     filter(effect == "conditional",
            metric %in% c("jaccard", "unifrac"))
@@ -158,8 +158,8 @@ unweighted <- ggplot(varpart_unweighted) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
-    xlab("") + ylab("Adjusted R^2") +
-    theme(legend.position = "bottom") + 
+    xlab("") + ylab(paste("Adjusted", expression(R^2))) +
+    theme(legend.position = "bottom") +
     scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
 
 ggarrange(weighted, unweighted,

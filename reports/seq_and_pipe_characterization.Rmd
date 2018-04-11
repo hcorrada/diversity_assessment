@@ -212,7 +212,7 @@ ggarrange(plotlist = rare_plot_df$rare_plot,
 ```
 
 
-The four replicate sequencing runs were of variable sequence quality and depth (Fig. \@ref(fig:seqCharPlot), _Supplemental DADA2 qual plot_).
+The four replicate sequencing runs were of variable sequence quality and depth (Fig. \@ref(fig:seqCharPlot)).
 Greater variability in sample feature total abundance was observed on the first run at each laboratory (Fig. \@ref(fig:seqCharPlot)A).
 Sequencing error rates and base quality scores also varied by sequencing run.
 JHU1 had higher PhiX error rates compared to all other runs, especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)B).

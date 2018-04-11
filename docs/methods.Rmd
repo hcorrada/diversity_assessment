@@ -8,7 +8,7 @@ output:
 bibliography: ../bibliography.bib
 ---
 
-Our assessment framework utilizes a dataset of DNA mixtures from five vaccine trial participants (Olson et al. _in prep_).
+Our assessment framework utilizes a dataset of DNA mixtures from five vaccine trial participants described in Section \@ref(two-sample-titration-design).
 DNA was extracted from stool collected from five individuals (subjects) before and after exposure to pathogenic _Escherichia coli_ (timepoints).
 The pre- and post-exposure DNA was mixed following a $log_2$ two-sample titration mixture design, resulting in a set of samples with varying levels of similarity.
 The microbial community in the unmixed pre- and post-exposure samples and titrations were measured using 16S rRNA marker-gene sequencing.

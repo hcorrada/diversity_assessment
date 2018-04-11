@@ -96,7 +96,7 @@ auc_summary %>%
     scale_color_manual(values = run_colors) +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0),
-          legend.position = "bottom") +
+          legend.position = "right") +
     labs(x = "Pipeline", y = "Signal/Noise", color = "Seq Run", shape = "Individual")
 ```
 
