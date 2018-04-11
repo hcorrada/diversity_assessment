@@ -163,7 +163,7 @@ pipe_char_summary %>%
                     Sparsity = sparsity,
                     `Total Abundance` = total_abu_summary,
                     `Pass Rate` = pass_rate_summary) %>%
-      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. No template controls were excluded from summary statistic calculations. Sparsity is defined as the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2), rows in the count table. Singletons is the total number of features only observed once in a single sample. Total Abundance is the median and range (minimum-maximum) per sample total feature abundance. Pass Rate is the median and range for the proportion of reads removed while processing a sample's sequence data through a bioinformatic pipeline.", booktabs = TRUE)
+      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. No template controls were excluded from summary statistic calculations. Sparsity is defined as the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2), rows in the count table. Singletons is the total number of features only observed once in a single sample. Total Abundance is the median and range (minimum-maximum) per sample total feature abundance. Pass Rate is the median and range for the proportion of reads not removed while processing a sample's sequence data through a bioinformatic pipeline.", booktabs = TRUE)
 ```
 
 
@@ -205,7 +205,7 @@ rare_plot_df <- tibble(ps_obj = ps_list) %>%
 
 ```
 
-```{r rarePlot, fig.cap = "Rarefaction curves for an example sample across pipelines (A-F) and sequencing runs (line color).", fig.height=6, fig.width=8}
+```{r rarePlot, fig.cap = "Rarefaction curves for an example sample across pipelines (A-F) and sequencing runs (line color). Rarefaction curves indicate how thoroughly a population has been sampled. Curves show the relationship between the number of unique features (y-axis) and sampling depth. Curves reaching an asymptote indicate the population has been completely sampled. Solid lines represent interpolated values obtained by randomly subsampling the observed abundance data. Dashed lines indicate extrapolated values predicted based on the observed count data and interpolated values.", fig.height=6, fig.width=8}
 ggarrange(plotlist = rare_plot_df$rare_plot,
           labels = "AUTO", legend = "right",
           common.legend = TRUE, nrow = 3, ncol = 2)
