@@ -102,7 +102,7 @@ norm effect `log10(auc) ~ method + (1 | biosample_id)`
 
 #### Beta Diversity Between Individuals and Treatments
 
-To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity metrics were compared between individuals, within individual between conditions (pre- and post-exposure), and different types of technical replicates.
+To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity metrics were compared between subjects, within subject and between conditions (pre- and post-exposure), and different types of technical replicates.
 A linear model was used to quantify differences in beta diversity between biological and technical sources of variability.
 We then used variation partitioning [@borcard1992partialling] to quantify technical and biological factor's contribution to the total observed variation.
 Variation partition was calculated using the Vegan R package [@vegan].

@@ -10,7 +10,7 @@ bibliography: ../bibliography.bib
 
 Sequence data characteristics, specifically sequence error rate and variation in library size can negatively impact beta diversity analysis (__REF__).
 Bioinformatic pipelines are used to convert the raw sequence data to a count matrix, ideally differentiating true biological sequences from sequencing artifacts alleviating biases due to sequencing errors (__REF__).
-Normalization methods, such as rarefying count data and cumulative sum scaling, are used to account for library size differences (__REF__).
+Normalization methods, such as rarefying count data and cumulative sum scaling, are used to account for library size differences [@paulson2013differentially].
 For our assessment, we compared the performance of six bioinformatic pipelines and nine normalization methods for four beta-diversity metrics.
 The results from our study employing a novel assessment framework indicates that bioinformatic pipelines vary in their ability to alleviate biases in beta diversity due to sequencing errors and some normalization methods accentuate the biases in the beta-diversity analysis due to library size differences.
 
@@ -37,7 +37,7 @@ Larger difference in beta diversity between biological and technical replicates 
 Some metrics, namely rarefying to the 15th quantile, RLE, and TMM, frequently reduced the differences in beta-diversity between the biological to technical factors.
 Variation partitioning results were consistent with this conclusion [__FIG__].
 RLE and TMM were developed for normalizing microarray and RNAseq data and not marker-gene sequence data.
-While these normalization methods improve differential abundance analysis [__REF__], they are not appropriate for beta-diversity analysis.
+While these normalization methods improve differential abundance analysis [@McMurdie2014], they are not appropriate for beta-diversity analysis.
 
 
 
@@ -52,7 +52,7 @@ Normalization can improve PCR replicate repeatability, but sometimes at the cost
 Our results indicate normalization methods developed for gene expression methods may not be appropriate for marker-gene survey beta diversity analysis.
 For weighted metrics, we recommend normalizing counts using TSS and CSS improved assessment results or had no effect compared to unnormalized counts.
 Rarefying count data improved unweighted metric results but higher rarefaction levels tended to perform worse than unnormalized data.
-Rarefying counts lowers statistical power and therefore not it is not advisable when other normalization methods are available [__REF__].
+Rarefying counts lowers statistical power and therefore not it is not advisable when other normalization methods are available [@McMurdie2014.
 As numeric normalization methods are not applicable to unweighted metrics, rarefying counts is the recommended normalization method.
 To reduce the risk of the random subsampling step biasing beta diversity results bootstrap replicates can be used to validate results [__REF__].
 
