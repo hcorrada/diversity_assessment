@@ -79,25 +79,29 @@ biol_v_tech_variation_summary_higherlevel %>%
 weighted <- bio_v_tech_dat %>%
     filter(weight == "Weighted", normalization == "RAW") %>%
     ggplot(aes(x = variation_label, y = value,
-               color = variation, fill = variation)) +
+               color = variation_label, fill = variation_label)) +
     geom_tufteboxplot() +
     facet_grid(f_type~pipe, scales = "free_y") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+    theme(axis.text.x = element_blank(),
           legend.position = "bottom") +
     labs(x = "Variation Type", y = "Beta-Diversity",
-         fill = "Variation Source", color = "Variation Source")
+         fill = "Variation Source", color = "Variation Source")+
+    scale_color_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))+
+    scale_fill_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))
 
 
 unweighted <- bio_v_tech_dat %>%
     filter(weight == "Unweighted", normalization == "RAW") %>%
     ggplot(aes(x = variation_label, y = value,
-               color = variation, fill = variation)) +
+               color = variation_label, fill = variation_label)) +
     geom_tufteboxplot() +
     facet_grid(f_type~pipe, scales = "free_y") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+    theme(axis.text.x = element_blank(),
           legend.position = "bottom") +
+    scale_color_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))+
+    scale_fill_manual(values=c("#74c476", "#238b45", "#005a32", "#807dba", "#6a51a3", "#4a1486"))+
     labs(x = "Variation Type", y = "Beta-Diversity",
          fill = "Variation Source", color = "Variation Source")
 
