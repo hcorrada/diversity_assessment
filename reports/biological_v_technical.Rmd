@@ -87,8 +87,10 @@ weighted <- bio_v_tech_dat %>%
           legend.position = "bottom") +
     labs(x = "Variation Type", y = "Beta-Diversity",
          fill = "Variation Source", color = "Variation Source")+
-    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))+
-    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                                "#fdae6b", "#f16913", "#8c2d04"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                               "#fdae6b", "#f16913", "#8c2d04"))
 
 
 unweighted <- bio_v_tech_dat %>%
@@ -100,8 +102,10 @@ unweighted <- bio_v_tech_dat %>%
     theme_bw() +
     theme(axis.text.x = element_blank(),
           legend.position = "bottom") +
-    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))+
-    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b", "#fa9fb5", "#ae017e", "#7a0177"))+
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                                "#fdae6b", "#f16913", "#8c2d04"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                               "#fdae6b", "#f16913", "#8c2d04"))+
     labs(x = "Variation Type", y = "Beta-Diversity",
          fill = "Variation Source", color = "Variation Source")
 
@@ -141,7 +145,7 @@ weighted <- ggplot(varpart_weighted) +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
     theme(legend.position = "bottom") + 
-    scale_fill_manual(values=c("#7a0177", "#a6bddb", "#3690c0"))
+    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
     
     
 varpart_unweighted <- varpart_stats %>%
@@ -156,7 +160,7 @@ unweighted <- ggplot(varpart_unweighted) +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab("Adjusted R^2") +
     theme(legend.position = "bottom") + 
-    scale_fill_manual(values=c("#7a0177", "#a6bddb", "#3690c0"))
+    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
 
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2,
