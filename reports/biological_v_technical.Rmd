@@ -47,6 +47,7 @@ biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highl
             weight = if_else(metric %in% c("unifrac","jaccard"),
                         "Unweighted", "Weighted"))
 
+
 ```
 
 
@@ -70,6 +71,8 @@ biol_v_tech_variation_summary_higherlevel %>%
               legend.position = "bottom") +
         labs(x = "Pipeline", y = "Biological - Technical", fill = "Normalization") +
     scale_fill_manual(values = norm_colors)
+
+
 
 ```
 
@@ -116,7 +119,7 @@ ggarrange(weighted + rremove("xlab") + rremove("x.text"),
           legend = "bottom", heights = c(0.35,0.65))
 ```
 
-```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted $R^2$ value, indicating the proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for unnormalized data.", fig.width = 6, fig.height = 8}
+```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted $R^2$ value, indicating the proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for unnormalized data.", fig.width = 16, fig.height = 8}
 varpart_stats <- varpart_stats %>%
         mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
                         pipe == "qiimeOpenRef" ~ "q_open",
@@ -135,32 +138,70 @@ varpart_stats <- varpart_stats %>%
 
 varpart_weighted <- varpart_stats %>%
     filter(effect == "conditional",
-           metric %in% c("bray", "wunifrac"))
+           metric %in% c("bray", "wunifrac"),
+           normalization !="RAW")
+
+varpart_weighted_raw <- varpart_stats %>%
+    filter(effect == "conditional",
+           metric %in% c("bray", "wunifrac"), 
+           normalization =="RAW")
+varpart_weighted_raw <- varpart_weighted_raw[,c("pipe", "feature", "metric", "Adj.R.square")]
+colnames(varpart_weighted_raw)<- c("pipe", "feature", "metric", "Raw.Adj.R.square")
+    
+varpart_weighted<-varpart_weighted %>% left_join(varpart_weighted_raw)
 
 weighted <- ggplot(varpart_weighted) +
-    geom_bar(aes(x = normalization, y = Adj.R.square, fill = feature),
-             stat = "identity") +
+    geom_point(aes(x=normalization, y=Adj.R.square, 
+                   group=feature, fill=feature, color=feature), 
+               size=2, position=position_dodge(width = 0.8), shape=16)+
+    geom_point(aes(x=normalization, y=Raw.Adj.R.square, 
+                   group=feature, fill=feature, color=feature), 
+               size=2, position=position_dodge(width = 0.8), shape=17)+
+    geom_linerange(aes(x=normalization, 
+                     ymin=Raw.Adj.R.square, ymax=Adj.R.square, 
+                     group=feature, color=feature), 
+                 position=position_dodge(width=0.8), size=0.5) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab(paste("Adjusted", expression(R^2))) +
     theme(legend.position = "bottom") +
-    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
+    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))+
+    scale_color_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
 
 
 varpart_unweighted <- varpart_stats %>%
     filter(effect == "conditional",
-           metric %in% c("jaccard", "unifrac"))
+           metric %in% c("jaccard", "unifrac"), 
+           normalization !="RAW")
+
+varpart_unweighted_raw <- varpart_stats %>%
+    filter(effect == "conditional",
+           metric %in% c("jaccard", "unifrac"), 
+           normalization =="RAW")
+varpart_unweighted_raw <- varpart_unweighted_raw[,c("pipe", "feature", "metric", "Adj.R.square")]
+colnames(varpart_unweighted_raw)<- c("pipe", "feature", "metric", "Raw.Adj.R.square")
+    
+varpart_unweighted<-varpart_unweighted %>% left_join(varpart_unweighted_raw)
 
 unweighted <- ggplot(varpart_unweighted) +
-    geom_bar(aes(x = normalization, y = Adj.R.square, fill = feature),
-             stat = "identity") +
+    geom_point(aes(x=normalization, y=Adj.R.square, 
+                   group=feature, fill=feature, color=feature), 
+               size=2, position=position_dodge(width = 0.8), shape=16)+
+    geom_point(aes(x=normalization, y=Raw.Adj.R.square, 
+                   group=feature, fill=feature, color=feature), 
+               size=2, position=position_dodge(width = 0.8), shape=17)+
+    geom_linerange(aes(x=normalization, 
+                     ymin=Raw.Adj.R.square, ymax=Adj.R.square, 
+                     group=feature, color=feature), 
+                 position=position_dodge(width=0.8), size=0.5) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab(paste("Adjusted", expression(R^2))) +
     theme(legend.position = "bottom") +
-    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
+    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))+
+    scale_color_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
 
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2,
