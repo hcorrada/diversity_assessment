@@ -164,7 +164,7 @@ weighted <- ggplot(varpart_weighted) +
     facet_grid(feature~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
-    xlab("") + ylab(paste("Adjusted", expression(R^2))) +
+    xlab("") + ylab(expression(Adjusted~R^2)) +
     theme(legend.position = "bottom") 
 
 
@@ -196,7 +196,7 @@ unweighted <- ggplot(varpart_unweighted) +
     facet_grid(feature~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
-    xlab("") + ylab(paste("Adjusted", expression(R^2))) +
+    xlab("") + ylab(expression(Adjusted~R^2)) +
     theme(legend.position = "bottom") 
 
 ggarrange(weighted, unweighted,
