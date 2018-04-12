@@ -152,22 +152,20 @@ varpart_weighted<-varpart_weighted %>% left_join(varpart_weighted_raw)
 
 weighted <- ggplot(varpart_weighted) +
     geom_point(aes(x=normalization, y=Adj.R.square, 
-                   group=feature, fill=feature, color=feature), 
+                   group=metric, fill=metric, color=metric), 
                size=2, position=position_dodge(width = 0.8), shape=16)+
     geom_point(aes(x=normalization, y=Raw.Adj.R.square, 
-                   group=feature, fill=feature, color=feature), 
+                   group=metric, fill=metric, color=metric), 
                size=2, position=position_dodge(width = 0.8), shape=17)+
     geom_linerange(aes(x=normalization, 
                      ymin=Raw.Adj.R.square, ymax=Adj.R.square, 
-                     group=feature, color=feature), 
+                     group=metric, color=metric), 
                  position=position_dodge(width=0.8), size=0.5) +
-    facet_grid(metric~pipe, scales = "free_x", space = "free") +
+    facet_grid(feature~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab(paste("Adjusted", expression(R^2))) +
-    theme(legend.position = "bottom") +
-    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))+
-    scale_color_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
+    theme(legend.position = "bottom") 
 
 
 varpart_unweighted <- varpart_stats %>%
@@ -186,26 +184,24 @@ varpart_unweighted<-varpart_unweighted %>% left_join(varpart_unweighted_raw)
 
 unweighted <- ggplot(varpart_unweighted) +
     geom_point(aes(x=normalization, y=Adj.R.square, 
-                   group=feature, fill=feature, color=feature), 
+                   group=metric, fill=metric, color=metric), 
                size=2, position=position_dodge(width = 0.8), shape=16)+
     geom_point(aes(x=normalization, y=Raw.Adj.R.square, 
-                   group=feature, fill=feature, color=feature), 
+                   group=metric, fill=metric, color=metric), 
                size=2, position=position_dodge(width = 0.8), shape=17)+
     geom_linerange(aes(x=normalization, 
                      ymin=Raw.Adj.R.square, ymax=Adj.R.square, 
-                     group=feature, color=feature), 
+                     group=metric, color=metric), 
                  position=position_dodge(width=0.8), size=0.5) +
-    facet_grid(metric~pipe, scales = "free_x", space = "free") +
+    facet_grid(feature~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
     xlab("") + ylab(paste("Adjusted", expression(R^2))) +
-    theme(legend.position = "bottom") +
-    scale_fill_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))+
-    scale_color_manual(values=c("#fdae6b", "#a6bddb", "#3690c0"))
+    theme(legend.position = "bottom") 
 
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2,
-          labels = "AUTO",common.legend = TRUE,
+          labels = "AUTO", common.legend = FALSE,
           legend = "bottom")
 ```
 
