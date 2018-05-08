@@ -13,7 +13,7 @@ DNA was extracted from stool collected from five individuals (subjects) before a
 The pre- and post-exposure DNA was mixed following a $log_2$ two-sample titration mixture design, resulting in a set of samples with varying levels of similarity.
 The microbial community in the unmixed pre- and post-exposure samples and titrations were measured using 16S rRNA marker-gene sequencing.
 Four technical replicates of each were generated during the 16S rRNA PCR amplification process.
-Technical replicates of each PCR were sent to two independent laboratories (JHU and NIST) for sequencing.
+Technical replicates of each PCR were sent to two independent laboratories (JHU and NIST) for sequencing (Fig. \@ref(fig:experimentalDesign)).
 
 
 Sequencing libraries were prepared at the independent laboratories using the same protocol (ILLUMINA).

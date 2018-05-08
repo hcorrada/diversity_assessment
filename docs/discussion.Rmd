@@ -42,13 +42,13 @@ which showed the greatest similarity between PCR replicates,
 decreased our ability to tease out the true biological indicators.
 
 
-We finally evaluated the impact of difference sources of variability on pipeline and normalization methods by comparing diversity between biological samples and technical replicates.
+We finally evaluated the impact of different sources of variability on pipeline and normalization methods by comparing diversity between biological samples and technical replicates.
 For most pipelines and beta diversity metrics, normalizing the count data increased the difference in beta diversity between biological and technical replicates (Fig. \@ref(fig:techNormImpactWeighted)),
 indicating a greater ability to detect community levels differences between treatment conditions.
 Some metrics, namely rarefying to the 15th quantile, RLE, and TMM, frequently reduced the differences in beta-diversity between the biological to technical factors. Variation partitioning results were consistent with this conclusion (Fig. \@ref(fig:bioVtechVarpart)).
 
 This study highlights the importance of rigorous methods evaluation of computational tools and datasets.
-While we utilized six commonly cited bioinformatics pipelines, there are many different approaches and researchers should critically think about which is most appropriate for their own dataset.
+While we utilized six commonly cited bioinformatics pipelines, there are many different approaches and researchers should think critically about which is most appropriate for their own dataset.
 We used default program parameters in our analyses to make our findings generally applicable.
 However, we strongly advise researchers to have a good understanding of each step in their chosen pipeline, including what parameters are required and whether they should be changed to best fit data of interest.
 

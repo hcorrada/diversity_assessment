@@ -75,6 +75,67 @@ tech_art_df %>% filter(normalization == "RAW") %>%
     scale_fill_manual(values = run_colors)
 ```
 
+```{r pcrRepRawMethods, eval = FALSE, echo = FALSE}
+tech_art_df %>% filter(normalization == "RAW") %>%
+    filter(pipe %in% c("dada","mothur","q_open")) %>%
+    filter(metric %in% c("bray")) %>% 
+    mutate(pipe = fct_recode(pipe, "Mothur" = "mothur", 
+                             "DADA2" = "dada", 
+                             "QIIME" = "q_open")) %>% 
+    mutate(metric = fct_recode(metric, 
+                               "Bray Curtis" = "bray")) %>% 
+    ggplot() +
+    geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
+                 outlier.size = 0.5) +
+    facet_wrap(~metric, nrow = 1) + theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "right") +
+    labs(x = "Bioinformatic Pipeline",
+         y = "PCR Replicate Beta-Diversity",
+         fill = "Sequncing Run") +
+    scale_fill_manual(values = run_colors)
+
+tmp_img <- tempfile(fileext = ".png") 
+ggsave(filename = tmp_img, device = "png",width = 6, height = 4)
+img_filename <- "pcrRepRawMethods_plot.png"
+## Add if statement to upload image for first time then update if already present
+# googledrive::drive_upload(media = tmp_img, type = "png",
+#              path =  "defense_presentation",
+#              name = img_filename)
+googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
+
+```{r pcrRepRaw, eval = FALSE, echo = FALSE}
+tech_art_df %>% filter(normalization == "RAW") %>%
+    filter(pipe %in% c("dada","mothur","q_open")) %>%
+    filter(metric %in% c("jaccard", "bray")) %>% 
+    mutate(pipe = fct_recode(pipe, "Mothur" = "mothur", 
+                             "DADA2" = "dada", 
+                             "QIIME" = "q_open")) %>% 
+    mutate(metric = fct_recode(metric, 
+                               "Jaccard Dissimilarity" = "jaccard",
+                               "Bray Curtis" = "bray")) %>% 
+    ggplot() +
+    geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
+                 outlier.size = 0.5) +
+    facet_wrap(~metric, nrow = 1) + theme_bw() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "bottom") +
+    labs(x = "Bioinformatic Pipeline",
+         y = "PCR Replicate Beta-Diversity",
+         fill = "Sequncing Run") +
+    scale_fill_manual(values = run_colors)
+
+tmp_img <- tempfile(fileext = ".png") 
+ggsave(filename = tmp_img, device = "png",width = 8, height = 4)
+img_filename <- "pcrRepRaw_plot.png"
+## Add if statement to upload image for first time then update if already present
+# googledrive::drive_upload(media = tmp_img, type = "png",
+#              path =  "defense_presentation",
+#              name = img_filename)
+googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
+
 ```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted (A) and unweighted (B) PCR replicates beta-diversity, for the sequencing run with higher quality and total abundance variability, NIST1. Data are presented as minimal-ink boxplots, where points indicate median value, the gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between PCR replicates.", fig.height=8, fig.width=7}
 norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15",
                     "CSS", "RLE", "TMM", "TSS", "UQ")
@@ -107,12 +168,6 @@ weighted <- tech_art_df_for_plot %>%
         geom_line(aes(x = normalization, y = RAW_median,
                   group = interaction(pipe, f_type)),
                   color = "white") +
-    # geom_line(aes(x = normalization, y = RAW_first_quartile,
-    #               group = interaction(pipe, f_type)),
-    #           linetype = "dashed", color = "grey60") +
-    # geom_line(aes(x = normalization, y = RAW_third_quartile,
-    #               group = interaction(pipe, f_type)),
-    #           linetype = "dashed", color = "grey60") +
     geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization,
                           group = interaction(normalization,pipe)),
                       position = position_dodge(), size = 1) +
@@ -138,12 +193,6 @@ unweighted <- tech_art_df_for_plot %>%
                     fill = "grey90") +
         geom_line(aes(x = normalization, y = RAW_median,
                   group = interaction(pipe, f_type)), color = "white") +
-    # geom_line(aes(x = normalization, y = RAW_first_quartile,
-    #               group = interaction(pipe, f_type)),
-    #           linetype = "dashed", color = "grey60") +
-    # geom_line(aes(x = normalization, y = RAW_third_quartile,
-    #               group = interaction(pipe, f_type)),
-    #           linetype = "dashed", color = "grey60") +
     geom_tufteboxplot(aes(x = normalization, y = mean_dist, color = normalization, #shape = metric,
                           group = interaction(normalization,pipe)),
                       position = position_dodge(), size = 1) +
@@ -161,6 +210,120 @@ ggarrange(weighted, unweighted,
           legend = "none")
 ```
 
+
+```{r pcrRepNormMethods, eval = FALSE, echo = FALSE}
+tech_art_for_pres <- tech_art_df_for_plot %>%
+    filter(metric == "bray", normalization %in% c("rare5000","TMM","TSS")) %>% 
+    filter(pipe %in% c("dada","mothur","q_open")) %>%
+    mutate(pipe = factor(pipe)) %>% 
+    mutate(pipe = fct_recode(pipe, "Mothur" = "mothur", 
+                             "DADA2" = "dada", 
+                             "QIIME" = "q_open")) %>%
+    mutate(pipe = fct_recode(pipe, "DADA2" = "dada")) %>% 
+    mutate(metric = fct_recode(metric, 
+                               "Bray Curtis" = "bray")) %>% 
+    filter(seq_run_id %in% c("nist_run1")) 
+    
+    
+ribbon_dat <- tech_art_for_pres %>% 
+    select(pipe, metric, weight, 
+           RAW_first_quartile, RAW_third_quartile, RAW_median) %>% 
+    distinct() %>% 
+    mutate(xmin = as.numeric(pipe) - 0.5, xmax = as.numeric(pipe) + 0.5) %>% 
+    gather(key = key, value = x, xmax, xmin)
+
+tech_art_for_pres %>% 
+     ggplot(aes(x = pipe)) +
+        geom_blank() +
+        geom_ribbon(data = ribbon_dat,
+                    aes(x = x,
+                        ymin = RAW_first_quartile,
+                        ymax = RAW_third_quartile),
+                    fill = "grey80") +
+        geom_line(data = ribbon_dat,
+                  aes(x = x, y = RAW_median),
+                  color = "white")  +
+    geom_vline(aes(xintercept = 1.5)) + 
+    geom_vline(aes(xintercept = 2.5)) + 
+    geom_boxplot(aes(x = pipe, y = mean_dist, fill = normalization)) +
+    facet_wrap(~metric,scales = "free") +
+    theme_bw() +
+    theme(axis.text.x =  element_text(angle = -45, hjust = 0),
+          legend.position = "right",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+    labs(x = "Normalization",
+         y = "PCR Replicate Beta-Diversity") +
+    scale_fill_manual(values = norm_colors)
+
+tmp_img <- tempfile(fileext = ".png")
+ggsave(filename = tmp_img, device = "png",width = 8, height = 4)
+img_filename <- "pcrRepNormMethods_plot.png"
+## Add if statement to upload image for first time then update if already present
+# googledrive::drive_upload(media = tmp_img, type = "png",
+#              path =  "defense_presentation",
+#              name = img_filename)
+googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
+
+
+
+```{r pcrRepNorm, eval = FALSE, echo = FALSE}
+tech_art_for_pres <- tech_art_df_for_plot %>%
+    filter((metric == "jaccard" & normalization %in% c("rare2000","rare5000","rare10000")) |
+           (metric == "bray" & normalization %in% c("rare5000","TMM","TSS"))) %>% 
+    filter(pipe %in% c("dada","mothur","q_open")) %>%
+    mutate(pipe = factor(pipe)) %>% 
+    mutate(pipe = fct_recode(pipe, "Mothur" = "mothur", 
+                             "DADA2" = "dada", 
+                             "QIIME" = "q_open")) %>% 
+    mutate(metric = fct_recode(metric, 
+                               "Jaccard Dissimilarity" = "jaccard",
+                               "Bray Curtis" = "bray")) %>% 
+    filter(seq_run_id %in% c("nist_run1")) 
+    
+    
+ribbon_dat <- tech_art_for_pres %>% 
+    select(pipe, metric, weight, 
+           RAW_first_quartile, RAW_third_quartile, RAW_median) %>% 
+    distinct() %>% 
+    mutate(xmin = as.numeric(pipe) - 0.5, xmax = as.numeric(pipe) + 0.5) %>% 
+    gather(key = key, value = x, xmax, xmin)
+
+tech_art_for_pres %>% 
+     ggplot(aes(x = pipe)) +
+        geom_blank() +
+        geom_ribbon(data = ribbon_dat,
+                    aes(x = x,
+                        ymin = RAW_first_quartile,
+                        ymax = RAW_third_quartile),
+                    
+                    fill = "grey80") +
+        geom_line(data = ribbon_dat,
+                  aes(x = x, y = RAW_median),
+                  color = "white")  +
+    geom_vline(aes(xintercept = 1.5)) + 
+    geom_vline(aes(xintercept = 2.5)) + 
+    geom_boxplot(aes(x = pipe, y = mean_dist, fill = normalization)) +
+    facet_wrap(~metric,scales = "free") +
+    theme_bw() +
+    theme(axis.text.x =  element_text(angle = -45, hjust = 0),
+          legend.position = "right",
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) +
+    labs(x = "Normalization",
+         y = "PCR Replicate Beta-Diversity") +
+    scale_fill_manual(values = norm_colors)
+
+tmp_img <- tempfile(fileext = ".png")
+ggsave(filename = tmp_img, device = "png",width = 8, height = 4)
+img_filename <- "pcrRepNorm_plot.png"
+## Add if statement to upload image for first time then update if already present
+googledrive::drive_upload(media = tmp_img, type = "png",
+             path =  "defense_presentation",
+             name = img_filename)
+# googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
 
 Next, we evaluated differences in beta-diversity between un-normalized PCR replicates across sequencing runs and pipelines.
 PCR replicate beta-diversity varied by diversity metric (Fig. \@ref(fig:seqCharPlot)).
