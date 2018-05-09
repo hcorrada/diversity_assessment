@@ -1,0 +1,124 @@
+---
+title: "Ordination Plots"
+author: "Nate Olson"
+date: "5/7/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggpubr)
+library(phyloseq)
+source("../src/plot_color_definitions.R")
+```
+
+## Objective
+Develop figure with ordination plots to evaluate whether TMM and RLE negatively impact beta diversity analysis. 
+
+## Approach 
+Generate ordination plots for data and use color to differentiate subjects and sequencing run (different plots). 
+Compare normalization methods: RAW, RLE, TSS, and TMM for DADA2 and Mothur pipelines. 
+
+```{r}
+dada_tss_full <- readRDS("../data/norm_data/dada_TSS.rds")
+dada_tmm_full <- readRDS("../data/norm_data/dada_TMM.rds")
+mothur_tss_full <- readRDS("../data/norm_data/mothur_TSS.rds")
+mothur_tmm_full <- readRDS("../data/norm_data/mothur_TMM.rds")
+```
+
+Subset samples only unmixed
+create new variable names for subject titration 
+seq run
+
+```{r}
+dada_tss_full <- readRDS("../data/norm_data/dada_TSS.rds")
+dada_tmm_full <- readRDS("../data/norm_data/dada_TMM.rds")
+mothur_tss_full <- readRDS("../data/norm_data/mothur_TSS.rds")
+mothur_tmm_full <- readRDS("../data/norm_data/mothur_TMM.rds")
+
+subset_ps <- function(ps){
+    ps <- subset_samples(ps, t_fctr %in% c(0)) 
+    filter_taxa(ps, function(x) sum(x) > 0, TRUE)
+}
+
+factor_var <- function(ps){
+    sample_data(ps)$t_fctr <- factor(sample_data(ps)$t_fctr)
+    sample_data(ps)$seq_run <- paste0(sample_data(ps)$seq_lab, 
+                                      sample_data(ps)$seq_run)
+    
+    ps
+}
+
+prep_ps <- compose(subset_ps, factor_var)
+```
+
+
+```{r}
+dada_ps_df <- tibble(pipe = "DADA2", 
+                      normalization = c("TSS", "TMM")) %>% 
+    add_column(ps = list(dada_tss_full, dada_tmm_full))
+
+mothur_ps_df <- tibble(pipe = "Mothur", 
+                      normalization = c("TSS", "TMM")) %>% 
+    add_column(ps = list(mothur_tss_full, mothur_tmm_full))
+
+make_ord_plot <- function(ps, ord, run_colors){
+    plot_ordination(ps, ord, color = "seq_run", shape = "biosample_id") + 
+        theme_bw()
+}
+
+ord_df <- bind_rows(dada_ps_df, mothur_ps_df) %>% 
+    mutate(ps = map(ps, prep_ps)) %>% 
+    mutate(Bray = map(ps, ordinate, method = "MDS"),
+           `Weighted UniFrac` = map(ps, ordinate, method = "MDS", 
+                                    distance = "wunifrac")) %>% 
+    gather("dist_method", "ord", Bray, `Weighted UniFrac`)
+    
+ord_plot_df <- ord_df %>%     
+    mutate(ord_plot = map2(ps, ord, make_ord_plot)) %>% 
+    arrange(pipe, normalization, dist_method)
+```
+
+
+
+
+```{r fig.height = 6, fig.cap = "Principal coordinate analysis for TMM and TSS normalized (A) DADA2 and (B) Mothur unmixed PRE samples. "}
+ord_plot_dat_df <- ord_plot_df %>% 
+    select(-ps, -ord) %>% 
+    mutate(plot_dat = map(ord_plot, ~.$data),
+           y_label = map_chr(ord_plot, ~.$labels$y),
+           x_label = map_chr(ord_plot, ~.$labels$x)) %>% 
+    mutate(x_label = str_extract(x_label, "(?<=\\[).*(?=\\])")) %>% 
+    mutate(y_label = str_extract(y_label, "(?<=\\[).*(?=\\])")) %>% 
+    mutate(pcoa_percent = paste0("Axis.1: ", x_label, "\nAxis.2: ", y_label)) %>% 
+    select(-ord_plot) %>% 
+    unnest()
+
+dada_plot <- ord_plot_dat_df %>% 
+    filter(pipe == "DADA2") %>%
+    ggplot() + geom_point(aes(x = Axis.1, y = Axis.2, color = seq_run, 
+                              shape = biosample_id)) + 
+    geom_text(aes(x = 0.3, y = -0.25, label = pcoa_percent)) + 
+    facet_grid(normalization ~ dist_method) + 
+    theme_bw() + 
+    theme(legend.box = "vertical") + 
+    labs(color = "Sequencing Run", shape = "Subject") + 
+    scale_color_manual(values = run_colors)
+
+mothur_plot <- ord_plot_dat_df %>% 
+    filter(pipe == "Mothur") %>% 
+    ggplot() + 
+    geom_point(aes(x = Axis.1, y = Axis.2, color = seq_run, shape = biosample_id)) +
+    geom_text(aes(x = -0.3, y = 0.2, label = pcoa_percent)) + 
+    facet_grid(normalization ~ dist_method) + 
+    theme_bw() + 
+    labs(color = "Sequencing Run", shape = "Subject") + 
+    scale_color_manual(values = run_colors)
+
+ggarrange(dada_plot + rremove("xlab"), mothur_plot, 
+          ncol = 1,nrow = 2, labels = "AUTO",
+          common.legend = TRUE, legend = "bottom") 
+```
+
