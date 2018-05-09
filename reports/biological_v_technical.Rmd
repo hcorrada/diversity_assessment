@@ -133,7 +133,8 @@ weighted <- bio_v_tech_dat %>%
     scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
                                 "#fdae6b", "#f16913", "#8c2d04"))+
     scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
-                               "#fdae6b", "#f16913", "#8c2d04"))
+                               "#fdae6b", "#f16913", "#8c2d04")) + 
+    scale_y_continuous(breaks = c(0.00, 0.25, 0.50, 0.75, 1.00))
 
 
 unweighted <- bio_v_tech_dat %>%
@@ -150,10 +151,12 @@ unweighted <- bio_v_tech_dat %>%
     scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
                                "#fdae6b", "#f16913", "#8c2d04"))+
     labs(x = "Variation Type", y = "Beta-Diversity",
-         fill = "Variation Source", color = "Variation Source")
+         fill = "Variation Source", color = "Variation Source") + 
+    scale_y_continuous(breaks = c(0.00, 0.25, 0.50, 0.75, 1.00))
 
 ggarrange(weighted + rremove("xlab") + rremove("x.text"),
-          unweighted,
+          unweighted, 
+          heights = c(0.6, 0.4), 
           ncol = 1, nrow = 2,
           labels = "AUTO", common.legend = TRUE,
           legend = "bottom")
@@ -224,7 +227,7 @@ bio_v_tech_dat %>%
     theme(axis.text.x = element_blank(),
           legend.position = "right") +
     labs(x = "Variation Type", y = "Beta-Diversity",
-         fill = "Variation Source", color = "Variation Source")+
+         fill = "Variation Source", color = "Variation Source") +
     scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
                                 "#fdae6b", "#f16913", "#8c2d04"))+
     scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
@@ -241,7 +244,7 @@ googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img
 ```
 
 
-```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Impact of different normalization methods on biological and technical sources of variatoin for different pipelines and beta-diversity metrics. y-axis is the adjusted $R^2$, indicating the proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Normalized adjusted $R^2$ values greater than and less than unnormalized values indicated with upright triangle and upsidedown triangles, respectively. Vertical lines indicate difference between unnormalized and normalized adjusted $R^2$ values.", fig.width = 8, fig.height = 6}
+```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Impact of different normalization methods on biological and technical sources of variatoin for different pipelines and beta-diversity metrics. y-axis is the adjusted $R^2$, indicating the proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Normalized adjusted $R^2$ values greater than and less than unnormalized values indicated with upright triangle and upsidedown triangles, respectively. Vertical lines indicate difference between unnormalized and normalized adjusted $R^2$ values.", fig.width = 8, fig.height = 7}
 varpart_stats <- varpart_stats %>%
         mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
                         pipe == "qiimeOpenRef" ~ "q_open",
@@ -335,7 +338,7 @@ unweighted <- varpart_unweighted %>%
     scale_shape_manual(values = c(24,25))
 
 ggarrange(weighted, unweighted,
-          ncol = 1, nrow = 2,
+          ncol = 1, nrow = 2, 
           labels = "AUTO", 
           common.legend = TRUE,
           legend = "bottom")

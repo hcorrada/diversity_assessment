@@ -69,7 +69,7 @@ Model fit was evaluated based on model statistics, AIC, BIC, and logLik, as well
 Tukey Honest Significant Differences test was used for multiple comparison testing using the `TukeyHSD` function.
 The source code for all analysis is available at https://github.com/nate-d-olson/diversity_assessment.
 
-#### Beta-Diversity Repeatability
+#### PCR Repeatability
 
 Beta-diversity repeatability was evaluated for the different pipelines across sequencing runs.
 Here we define repeatability as the median beta diversity between PCR replicates.
@@ -85,7 +85,7 @@ To quantify normalization method impact, independent linear models were fit for 
     - R model equation `mean_dist~normalization`.
 -->
 
-#### Beta Diversity Signal to Noise Ratio
+#### Signal to Noise Ratio
 
 Next, we evaluated the signal-to-noise ratio for the different pipelines across sequencing runs by comparing pre-exposure samples to other samples in the titration series.
 Signal was measured as the median beta-diversity between samples were compared (Fig. \@ref(fig:experimentalDesign)).
@@ -100,7 +100,7 @@ norm effect `log10(auc) ~ method + (1 | biosample_id)`
 -->
 
 
-#### Beta Diversity Between Individuals and Treatments
+#### Biological v. Technical Variation
 
 To quantify the contribution of biological and technical variability to total variability the distribution of beta diversity metrics were compared between subjects, within subject and between conditions (pre- and post-exposure), and different types of technical replicates.
 A linear model was used to quantify differences in beta diversity between biological and technical sources of variability.

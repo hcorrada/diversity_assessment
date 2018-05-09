@@ -1,9 +1,9 @@
 Originally developed for macro-ecology, beta diversity metrics are commonly used to assess overall community similarity between microbiome samples.
 The effects of sequencing depth and error rates on beta diversity calculations have not been thoroughly studied.
-In the following study, we determine the impact of sequence characteristics on beta-diversity analysis, and how well they are handled by different bioinformatic pipelines and normalization methods.
+In the following study, we determine the impact of sequence characteristics on beta-diversity analyses, and how well they are handled by different bioinformatic pipelines and normalization methods.
 We use a mixture dataset of stool samples from five vaccine trial participants, collected before and after exposure to a pathogen and mixed following a two-sample titration.
 The sequencing data were processed using six bioinformatics pipelines, including sequence inference, _de novo_, and reference based clustering approaches, along with nine normalization methods, including standard rarefaction approaches and numeric normalization techniques.
-We assess (1) beta-diversity repeatability for PCR replicates across multiple sequencing libraries and runs, (2) the ability to differentiate groups of samples with varying levels of similarity and (3) differences in beta diversity between biological and technical factors.
+We assess (1) beta-diversity repeatability for PCR replicates across multiple sequencing libraries and runs, (2) the ability to differentiate groups of samples with varying levels of similarity and (3) differences in beta-diversity between biological and technical factors.
 The Mothur and DADA2 pipelines were more robust to sequencing errors compared to the other pipelines evaluated in the study.
 Out of the normalization methods compared in the study we suggest using rarefaction for unweighted metrics and total sum scaling for weighted metrics, 
 though rarefaction results varied by total abundance value used for subsampling the count data.
