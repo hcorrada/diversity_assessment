@@ -340,5 +340,5 @@ mgtstMetadata_no_jhu1 <- mgtstMetadata %>%
     filter(!(seq_lab == "jhu" & seq_run == "1")) 
 
 ProjectTemplate::cache('varpart_stats_no_jhu1', 
-                       {get_varpart_stats(mgtstMetadata)},
+                       {get_varpart_stats(mgtstMetadata_no_jhu1)},
                        depends = c("mgtstMetadata"))
