@@ -1,0 +1,19 @@
+Pipelines	Assessment	Value
+DADA2	PCR Repeatability	+
+Mothur	PCR Repeatability	+
+QIIME _de novo_	PCR Repeatability	
+QIIME _Open_	PCR Repeatability	
+QIIME _Closed_	PCR Repeatability	+
+QIIME _Deblur_	PCR Repeatability	+
+DADA2	Signal-to-Noise	+
+Mothur	Signal-to-Noise	+
+QIIME _de novo_	Signal-to-Noise	-
+QIIME _Open_	Signal-to-Noise	-
+QIIME _Closed_	Signal-to-Noise	-
+QIIME _Deblur_	Signal-to-Noise	-
+DADA2	Biological v. Technical	+
+Mothur	Biological v. Technical	+
+QIIME _de novo_	Biological v. Technical	-
+QIIME _Open_	Biological v. Technical	-
+QIIME _Closed_	Biological v. Technical	-
+QIIME _Deblur_	Biological v. Technical	+
