@@ -7,4 +7,9 @@ data/diversity_data/*
 data/.DS_Store
 cache/pipe_char*
 cache/seq_char*
+cache/*RData 
+cache/*hash
 *html
+.httr-oauth
+
+scratch/*pdf
