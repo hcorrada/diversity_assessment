@@ -152,3 +152,5 @@ walk(ps_no_ntc_list, apply_rare_methods_ps)
 
 ## Numeric normalization
 walk(ps_no_ntc_list, apply_norm_methods_ps)
+
+rm(ps_list, ps_no_ntc_list)
