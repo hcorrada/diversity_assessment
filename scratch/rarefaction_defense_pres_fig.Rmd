@@ -1,0 +1,75 @@
+---
+title: "Figures for Defense"
+author: "Nate Olson"
+date: "4/16/2018"
+output: html_document
+---
+
+```{r setup}
+library("googledrive")
+library(ProjectTemplate)
+load.project()
+source("src/plot_color_definitions.R")
+library(ggpubr)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+
+## Rarefaction Curve Plot
+```{r rarePlotSetUp, warning=FALSE, message=FALSE, echo = FALSE}
+ps_list <- list.files("data/phyloseq_objects", full.names = TRUE) %>%
+    set_names(str_remove(basename(.), "_ps.rds")) %>%
+    map(readRDS)
+
+ps_iNEXT <- function(ps){
+    sample_set <- c("nist_run1_2-A10","nist_run2_2-A10",
+                    "jhu_run1_2-A10","jhu_run2_2-A10")
+    count_tbl <- prune_samples(sample_set, ps)  %>%
+        {prune_taxa(taxa_sums(.) > 0, .)} %>%
+        otu_table()
+
+    if (!taxa_are_rows(ps)) {
+        count_tbl <- t(count_tbl)
+    }
+
+    count_df <- as.data.frame(count_tbl)
+
+    iNEXT::iNEXT(count_df)
+}
+
+
+rare_plot_df <- tibble(ps_obj = ps_list) %>%
+    add_column(pipe = names(ps_list)) %>%
+    mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
+                        pipe == "qiimeOpenRef" ~ "q_open",
+                        pipe == "qiimeClosedRef" ~ "q_closed",
+                        pipe == "qiimeDeNovo"~ "q_denovo",
+                        TRUE ~ pipe),
+           pipe = factor(pipe)) %>%
+    filter(pipe %in% c("dada","mothur", "q_open")) %>%
+    mutate(inext_dat = map(ps_obj, ps_iNEXT),
+           rare_plot = map2(inext_dat, pipe, ~{iNEXT::ggiNEXT(.x) +
+                   labs(x = "Sampling Depth", y = "Feature Diversity") +
+                   theme_bw() +
+                   ggtitle(.y) +
+                   scale_shape_manual(values = run_shapes) +
+                   scale_color_manual(values=run_colors2)})) %>%
+    dplyr::select(-ps_obj, -inext_dat)
+```
+
+```{r rarePlot, fig.cap = "Rarefaction curves for an example sample across pipelines (A-F) and sequencing runs (line color). Rarefaction curves indicate how thoroughly a population has been sampled. Curves show the relationship between the number of unique features (y-axis) and sampling depth. Curves reaching an asymptote indicate the population has been completely sampled. Solid lines represent interpolated values obtained by randomly subsampling the observed abundance data. Dashed lines indicate extrapolated values predicted based on the observed count data and interpolated values.", fig.height=6, fig.width=8}
+ggarrange(plotlist = rare_plot_df$rare_plot, 
+          legend = "bottom",
+          common.legend = TRUE, 
+          nrow = 1, ncol = 3)
+```
+
+```{r}
+tmp_img <- tempfile(fileext = ".png") 
+ggsave(filename = tmp_img, device = "png",width = 8, height = 4)
+img_filename <- "rarefaction_plot.png"
+## Add if statement to upload image for first time then update if already present
+#drive_upload(media = tmp_img, type = "png", path =  "defense_presentation", name = img_filename)
+drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
+
