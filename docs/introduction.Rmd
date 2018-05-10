@@ -45,7 +45,7 @@ they are not interchangeable should be evaluated in a complementary manner to ga
 Previous studies have evaluated different bioinformatics pipelines [@Sinha2017-ew] and normalization methods [@McMurdie2014; @Weiss2017] on beta-diversity analysis.
 Yet, the ability of these pipelines to account for sequence quality and coverage, and how this affects diversity conclusions, remains unknown.
 Here, we use a novel dataset of stool samples from vaccine trial participants, collected before and after exposure to the pathogen, and mixed following a two-sample titration mixture design.
-We sequenced multiple technical PCR replicates, allowing us to evaluate (1) beta-diversity repeatability,
+We sequenced multiple technical PCR replicates, allowing us to evaluate (1) beta-diversity PCR repeatability,
 and the ability to (2) distinguish between groups of samples with varying levels of similarity,
 and (3) identify differences in beta-diversity between individuals and treatment.
 Furthermore, the data was reproduced from across four runs with different sequencing error rates and library sizes,

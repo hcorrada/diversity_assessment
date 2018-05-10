@@ -114,12 +114,14 @@ seq_qual_plot <- seq_qual_dat %>%
     geom_boxplot(aes(x = seq_run_id, y = quality, color = read_dir))  +
     theme_bw() +
     labs(x = "Sequencing Run", y = "Mode Read Base Quality Score", color = "Read Direction") +
-    theme(legend.position = "right") +
+    theme(legend.position = c(0.75,0.1), 
+          legend.direction = "horizontal",
+          legend.background = element_rect(fill = "transparent")) +
     scale_color_manual(values = c("black", "darkgray"))
 ```
 
 
-```{r seqCharPlot, fig.cap = "Sequencing quality and sample total abundance variation for the four sequencing runs used in this study. The same set of 192 PCRs were sequenced in all four runs. Independent sequencing libraries were generated at the two sequencing laboratories (JHU and NIST). (A) PhiX error rate relative to 16S rRNA amplicon base position for the four sequencing runs. (B) Distribution of mode read quality score by sequencing run. (C) Sequencing run total abundance coefficient of variation estimate and 95\\% confidence interval calculated using a mixed effects linear model.", fig.height=4, fig.width=10}
+```{r seqCharPlot, fig.cap = "Sequencing quality and sample total abundance variation for the four sequencing runs used in this study. The same set of 192 PCRs were sequenced in all four runs. Independent sequencing libraries were generated at the two sequencing laboratories (JHU and NIST). (A) PhiX error rate relative to 16S rRNA amplicon base position for the four sequencing runs. (B) Distribution of mode read quality score by sequencing run. (C) Sequencing run total abundance coefficient of variation estimate and 95\\% confidence interval calculated using a mixed effects linear model.", fig.height=6, fig.width=10}
 ggarrange(error_plot,
           ggarrange(seq_qual_plot, cov_plot, ncol = 2, labels = c("B", "C")), 
           nrow = 2, labels = "A") 
@@ -235,12 +237,12 @@ ggarrange(plotlist = rare_plot_df$rare_plot,
 ```
 
 
-The four replicate sequencing runs were of variable sequence quality and depth (Fig. \@ref(fig:seqCharPlot)).
-Greater variability in sample feature total abundance was observed on the first run at each laboratory (Fig. \@ref(fig:seqCharPlot)A).
+The four replicate sequencing runs were of variable sequence quality and depth (Fig. \@ref(fig:seqCharPlot)). 
 Sequencing error rates and base quality scores also varied by sequencing run.
-JHU1 had higher PhiX error rates compared to all other runs, especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)B).
-Read base quality was lower for the reverse read than the forward reads for all four sequencing runs (Fig. \@ref(fig:seqCharPlot)C).
-Sequence data from the two NIST runs had higher quality scores than the data from JHU runs, except for JHU2 forward reads (Fig. \@ref(fig:seqCharPlot)C).
+JHU1 had higher PhiX error rates compared to all other runs, especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)A).
+Read base quality was lower for the reverse read than the forward reads for all four sequencing runs (Fig. \@ref(fig:seqCharPlot)B).
+Sequence data from the two NIST runs had higher quality scores than the data from JHU runs, except for JHU2 forward reads (Fig. \@ref(fig:seqCharPlot)B).
+Greater variability in sample feature total abundance was observed on the first run at each laboratory (Fig. \@ref(fig:seqCharPlot)C). 
 
 
 Overall, sequences from JHU1 had lower read quality and higher variability in total sample abundance.

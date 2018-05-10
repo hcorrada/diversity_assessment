@@ -14,10 +14,14 @@ run_colors2 <- c(
 )
 
 run_shapes <- c(
-    'jhu_run1_2-A10' = 19,
-    'jhu_run2_2-A10' = 17,
-    'nist_run1_2-A10' = 15,
-    'nist_run2_2-A10' = 3
+    'jhu1' = 19,
+    'jhu2' = 17,
+    'nist1' = 15,
+    'nist2' = 3,
+    'jhu1' = 19,
+    'jhu2' = 17,
+    'nist1' = 15,
+    'nist2' = 3
 )
 
 pipe_colors <- c(

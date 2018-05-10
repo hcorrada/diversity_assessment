@@ -2,13 +2,23 @@
 title: "Ordination Plots"
 author: "Nate Olson"
 date: "5/7/2018"
+<<<<<<< HEAD
 output: html_document
+=======
+output:
+  pdf_document: default
+  html_document: default
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
 ---
 
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(ggpubr)
 library(phyloseq)
+<<<<<<< HEAD
+=======
+source("../src/plot_color_definitions.R")
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
 ```
 
 ## Objective
@@ -19,10 +29,17 @@ Generate ordination plots for data and use color to differentiate subjects and s
 Compare normalization methods: RAW, RLE, TSS, and TMM for DADA2 and Mothur pipelines. 
 
 ```{r}
+<<<<<<< HEAD
 dada_tss_full <- readRDS("data/norm_data/dada_TSS.rds")
 dada_tmm_full <- readRDS("data/norm_data/dada_TMM.rds")
 mothur_tss_full <- readRDS("data/norm_data/mothur_TSS.rds")
 mothur_tmm_full <- readRDS("data/norm_data/mothur_TMM.rds")
+=======
+dada_tss_full <- readRDS("../data/norm_data/dada_TSS.rds")
+dada_tmm_full <- readRDS("../data/norm_data/dada_TMM.rds")
+mothur_tss_full <- readRDS("../data/norm_data/mothur_TSS.rds")
+mothur_tmm_full <- readRDS("../data/norm_data/mothur_TMM.rds")
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
 ```
 
 Subset samples only unmixed
@@ -30,8 +47,18 @@ create new variable names for subject titration
 seq run
 
 ```{r}
+<<<<<<< HEAD
 subset_ps <- function(ps){
     ps <- subset_samples(ps, t_fctr %in% c(20)) 
+=======
+dada_tss_full <- readRDS("../data/norm_data/dada_TSS.rds")
+dada_tmm_full <- readRDS("../data/norm_data/dada_TMM.rds")
+mothur_tss_full <- readRDS("../data/norm_data/mothur_TSS.rds")
+mothur_tmm_full <- readRDS("../data/norm_data/mothur_TMM.rds")
+
+subset_ps <- function(ps){
+    ps <- subset_samples(ps, t_fctr %in% c(0)) 
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
     filter_taxa(ps, function(x) sum(x) > 0, TRUE)
 }
 
@@ -73,7 +100,14 @@ ord_plot_df <- ord_df %>%
     arrange(pipe, normalization, dist_method)
 ```
 
+<<<<<<< HEAD
 ```{r fig.height = 8, fig.cap = "Principal coordinate analysis "}
+=======
+
+
+
+```{r fig.height = 6, fig.cap = "Principal coordinate analysis for TMM and TSS normalized (A) DADA2 and (B) Mothur unmixed PRE samples. "}
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
 ord_plot_dat_df <- ord_plot_df %>% 
     select(-ps, -ord) %>% 
     mutate(plot_dat = map(ord_plot, ~.$data),
@@ -81,26 +115,44 @@ ord_plot_dat_df <- ord_plot_df %>%
            x_label = map_chr(ord_plot, ~.$labels$x)) %>% 
     mutate(x_label = str_extract(x_label, "(?<=\\[).*(?=\\])")) %>% 
     mutate(y_label = str_extract(y_label, "(?<=\\[).*(?=\\])")) %>% 
+<<<<<<< HEAD
     mutate(dca_percent = paste0("DCA1: ", x_label, "\n","DCA2: ", y_label)) %>% 
+=======
+    mutate(pcoa_percent = paste0("Axis.1: ", x_label, "\nAxis.2: ", y_label)) %>% 
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
     select(-ord_plot) %>% 
     unnest()
 
 dada_plot <- ord_plot_dat_df %>% 
     filter(pipe == "DADA2") %>%
+<<<<<<< HEAD
     ggplot() + geom_point(aes(x = DCA1, y = DCA2, color = seq_run, 
                               shape = biosample_id)) + 
     geom_text(aes(x = 1.5, y = -0.8, label = dca_percent)) + 
     facet_grid(normalization ~ dist_method) + 
     theme_bw() + 
+=======
+    ggplot() + geom_point(aes(x = Axis.1, y = Axis.2, color = seq_run, 
+                              shape = biosample_id)) + 
+    geom_text(aes(x = 0.3, y = -0.25, label = pcoa_percent)) + 
+    facet_grid(normalization ~ dist_method) + 
+    theme_bw() + 
+    theme(legend.box = "vertical") + 
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
     labs(color = "Sequencing Run", shape = "Subject") + 
     scale_color_manual(values = run_colors)
 
 mothur_plot <- ord_plot_dat_df %>% 
     filter(pipe == "Mothur") %>% 
     ggplot() + 
+<<<<<<< HEAD
     geom_point(aes(x = DCA1, y = DCA2, color = seq_run, shape = biosample_id)) +
     geom_text(aes(x = 0.8, y = -0.5, label = paste0("DCA1: ", x_label))) + 
     geom_text(aes(x = 0.8, y = -0.7, label = paste0("DCA2: ", y_label))) +
+=======
+    geom_point(aes(x = Axis.1, y = Axis.2, color = seq_run, shape = biosample_id)) +
+    geom_text(aes(x = -0.3, y = 0.2, label = pcoa_percent)) + 
+>>>>>>> c894c6b7f113f1a49d9424277d43d4eab067bf61
     facet_grid(normalization ~ dist_method) + 
     theme_bw() + 
     labs(color = "Sequencing Run", shape = "Subject") + 
