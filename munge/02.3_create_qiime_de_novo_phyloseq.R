@@ -3,7 +3,7 @@ require(Biostrings)
 require(ape)
 
 #### QIIME Phyloseq Object
-make_qiime_de_novo_ref_ps <- function(ps_file){
+make_qiime_de_novo_ps <- function(ps_file){
 ## Issue loading biom file convert to json using biom convert
 ## ```
 ## biom convert -i otu_table.biom -o otu_table_json.biom --table-type "OTU table" --to-json

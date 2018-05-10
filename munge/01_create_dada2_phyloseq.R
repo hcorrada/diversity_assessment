@@ -1,7 +1,7 @@
 ### DADA2 Phyloseq Object
 # Generate phlyoseq object using DADA2 pipeline results
 
-make_dada_ps <- function(){
+make_dada_ps <- function(dada_ps_file){
     ###################### Load DADA2 Pipeline Results #########################
     require(Biostrings)
     
@@ -46,11 +46,11 @@ make_dada_ps <- function(){
 }
 
 #################### Only run if RDS file not already present ##################
-ps_file <- "data/phyloseq_objects/dada_ps.rds"
+dada_ps_file <- "data/phyloseq_objects/dada_ps.rds"
 
-if (file.exists(ps_file)) {
+if (file.exists(dada_ps_file)) {
     print("DADA phyloseq rds file exists")
 } else {
-    make_dada_ps()
+    make_dada_ps(dada_ps_file)
 }
     
