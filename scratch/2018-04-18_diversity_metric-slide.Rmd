@@ -1,0 +1,58 @@
+---
+title: "Beta-Div Presentation Calls"
+author: "Nate Olson"
+date: "4/18/2018"
+output: html_document
+---
+
+```{r}
+library(phyloseq)
+```
+
+
+```{r}
+count_mat <- matrix(data = c(0,8,3,3,3,3,1,0,0,1), nrow = 5, ncol = 2, byrow = TRUE)
+rownames(count_mat) <- c("blue","red","yellow","yellow_grey","blue_grey")
+colnames(count_mat) <- c("A","B")
+```
+
+```{r}
+count_mat
+```
+```{r}
+tmp_file <- tempfile(fileext = ".nwk")
+tree_text <- "(red:1.00,((yellow:0.48,yellow_grey:0.52):0.60,(blue:0.42,blue_grey:0.46):0.63):0.42);"
+# tree_text <- "(red:1.00,((yellow:0.1,yellow_grey:0.1):0.50,(blue:0.1,blue_grey:0.1):0.5):0.4);"
+write_lines(tree_text, tmp_file)
+tree <- read_tree(tmp_file)
+```
+
+```{r}
+library(ape)
+plot(tree,type = "cladogram", use.edge.length = TRUE)
+edgelabels(tree$edge.length, bg="grey", col="white", font=2)
+```
+
+
+```{r}
+phy <- phyloseq(otu_table(count_mat, taxa_are_rows = TRUE), 
+         phy_tree(tree))
+```
+
+Calculate Beta diversity
+```{r}
+1 - distance(phy, method = "j")
+```
+
+```{r}
+distance(phy, method = "bray")
+```
+
+```{r}
+distance(phy, method = "unifrac")
+```
+
+```{r}
+distance(phy, method = "wunifrac")
+```
+
