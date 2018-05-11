@@ -61,10 +61,10 @@ norm_impact <- tech_art_df %>%
 
 ```
 
-```{r techMeanDist, fig.cap = "Distribution of mean pairwise PCR replicate beta-diversity for by sequencing run and pipeline for un-normalized count data.", fig.height=4, fig.width=6}
+```{r techMeanDist, fig.cap = "Distribution of mean pairwise PCR replicate beta-diversity by sequencing run and pipeline for un-normalized count data.", fig.height=4, fig.width=6}
 tech_art_df %>%
     filter(normalization == "RAW") %>%
-    mutate(seq_run_id = str_remove(seq_run_id, "run_")) %>%
+    mutate(seq_run_id = str_remove(seq_run_id, "_run")) %>%
     ggplot() +
     geom_boxplot(aes(x = pipe, y = mean_dist, fill = seq_run_id),
                  outlier.size = 0.5) +
