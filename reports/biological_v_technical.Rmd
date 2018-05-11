@@ -156,7 +156,7 @@ unweighted <- bio_v_tech_dat %>%
 
 ggarrange(weighted + rremove("xlab") + rremove("x.text"),
           unweighted,
-          heights = c(0.4, 0.6),
+          # heights = c(0.4, 0.6),
           ncol = 1, nrow = 2,
           labels = "AUTO", common.legend = TRUE,
           legend = "bottom")
@@ -340,7 +340,6 @@ unweighted <- varpart_unweighted %>%
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2,
           labels = "AUTO",
-          heights = c(0.6, 0.4),
           common.legend = TRUE,
           legend = "bottom")
 ```
@@ -557,7 +556,8 @@ dada_plot <- ord_plot_dat_df %>%
     theme_bw() +
     theme(legend.box = "vertical") +
     labs(color = "Sequencing Run", shape = "Subject") +
-    scale_color_manual(values = run_colors)
+    scale_color_manual(values = run_colors) + 
+    guides(shape = guide_legend(nrow = 2))
 
 mothur_plot <- ord_plot_dat_df %>%
     filter(pipe == "Mothur") %>%
