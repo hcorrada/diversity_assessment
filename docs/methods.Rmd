@@ -16,7 +16,7 @@ Four technical replicates of each were generated during the 16S rRNA PCR amplifi
 Technical replicates of each PCR were sent to two independent laboratories (JHU and NIST) for sequencing (Fig. \@ref(fig:experimentalDesign)).
 
 
-Sequencing libraries were prepared at the independent laboratories using the same protocol (ILLUMINA).
+Sequencing libraries were prepared at the independent laboratories using the same protocol (16S Metagenomic Sequencing Library Preparation, posted date 11/27/2013, downloaded from \url{https://support.illumina.com}).
 Resulting libraries were sequenced twice at each laboratory, resulting in four sequence datasets with varying sequence quality and library sizes.
 The first JHU run PhiX error rate was higher than expected and the instrument was re-calibrated by the manufacturer, resulting in improved quality scores for the second run.
 The first run at NIST generated lower total throughput than expected, so the pool library for the second run was re-optimized and generated a dataset with increased throughput and lower sample to sample read count variability.
@@ -52,7 +52,7 @@ Additionally, sequence variants were inferred from the QIIME merged and quality-
 Phylogenetic tree construction methods used for the other QIIME pipelines were also used for the Deblur pipeline.
 
 ### Normalization Methods and Beta-Diversity Metrics
-Normalization methods are used to account for between sample differences in feature total abundance.
+Normalization methods are used to account for between-sample differences in feature total abundance.
 Rarefaction, subsampling counts without replacement to an even abundance, is a commonly used normalization method in macro-ecology and 16S rRNA marker-gene surveys [@Gotelli2001;@Hughes2005].
 We rarefied samples to four levels; 2000, 5000, and 10000 total reads per sample, and to the total abundance of the 15th percentile.
 Rarefaction levels were selected based on values used in published studies [@Thompson2017] and other comparison studies [@Weiss2017;@McMurdie2014].
@@ -75,7 +75,7 @@ Beta-diversity repeatability was evaluated for the different pipelines across se
 Here we define repeatability as the median beta diversity between PCR replicates.
 The unnormalized count data was used to characterize the baseline beta-diversity repeatability for the different pipeline and sequencing runs.
 Linear models were used to quantify differences between pipelines and across the four sequencing runs for the diversity metrics.
-Data from a sequencing run NIST1 were used to evaluate normalization method impact on PCR replicate beta-diversity.
+Data from the first NIST sequencing run (NIST1) were used to evaluate normalization method impact on PCR replicate beta-diversity.
 To quantify normalization method impact, independent linear models were fit for each pipeline and diversity metric.
 
 

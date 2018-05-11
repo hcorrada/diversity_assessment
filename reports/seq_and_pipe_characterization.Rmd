@@ -24,7 +24,7 @@ error_plot <- ggplot(phix_error_df) +
     geom_point(aes(x = base_position, y = errorrate, color = ds), alpha = 0.01) +
     geom_smooth(aes(x = base_position, y = errorrate, color = ds, linetype = read)) +
     theme_bw() +
-    labs(x = "Amplicon Base Position", y = "PhiX Error Rate", color = "Dataset") +
+    labs(x = "Amplicon Base Position", y = "PhiX Error Rate", color = "Sequencing Run", linetype = "Read Direction") +
     scale_color_manual(values = run_colors) +
     theme(legend.direction = "horizontal",
           # legend.position = "bottom", legend.box = "vertical")
@@ -114,17 +114,17 @@ seq_qual_plot <- seq_qual_dat %>%
     geom_boxplot(aes(x = seq_run_id, y = quality, color = read_dir))  +
     theme_bw() +
     labs(x = "Sequencing Run", y = "Mode Read Base Quality Score", color = "Read Direction") +
-    theme(legend.position = c(0.75,0.1), 
+    theme(legend.position = c(0.65,0.1),
           legend.direction = "horizontal",
           legend.background = element_rect(fill = "transparent")) +
     scale_color_manual(values = c("black", "darkgray"))
 ```
 
 
-```{r seqCharPlot, fig.cap = "Sequencing quality and sample total abundance variation for the four sequencing runs used in this study. The same set of 192 PCRs were sequenced in all four runs. Independent sequencing libraries were generated at the two sequencing laboratories (JHU and NIST). (A) PhiX error rate relative to 16S rRNA amplicon base position for the four sequencing runs. (B) Distribution of mode read quality score by sequencing run. (C) Sequencing run total abundance coefficient of variation estimate and 95\\% confidence interval calculated using a mixed effects linear model.", fig.height=6, fig.width=10}
+```{r seqCharPlot, fig.cap = "Sequencing quality and sample total abundance variation for the four sequencing runs used in this study. The same set of 192 PCRs were sequenced in all four runs. Independent sequencing libraries were generated at the two sequencing laboratories (JHU and NIST). (A) PhiX error rate relative to 16S rRNA amplicon base position for the four sequencing runs. (B) Distribution of mode read quality score by sequencing run. (C) Sequencing run total abundance coefficient of variation estimate and 95\\% confidence interval calculated using a mixed effects linear model.", fig.height=8, fig.width=8}
 ggarrange(error_plot,
-          ggarrange(seq_qual_plot, cov_plot, ncol = 2, labels = c("B", "C")), 
-          nrow = 2, labels = "A") 
+          ggarrange(seq_qual_plot, cov_plot, ncol = 2, labels = c("B", "C")),
+          nrow = 2, heights = c(0.6, 0.4), labels = "A")
 
 # seqCharPlot <- ggarrange(cov_plot, error_plot, seq_qual_plot, labels = "AUTO", ncol = 3)
 # seqCharPlot
@@ -133,7 +133,7 @@ ggarrange(error_plot,
 ```{r seqCharPre, eval = FALSE, echo = FALSE}
 ggarrange(seq_qual_plot, cov_plot)
 
-tmp_img <- tempfile(fileext = ".png") 
+tmp_img <- tempfile(fileext = ".png")
 ggsave(filename = tmp_img, device = "png",width = 8, height = 4)
 img_filename <- "seq_char_plot.png"
 ## Add if statement to upload image for first time then update if already present
@@ -189,28 +189,28 @@ pipe_char_summary %>%
 # ps_iNEXT <- function(ps){
 #     # sample_set <- c("nist_run1_2-A10","nist_run2_2-A10",
 #     #                 "jhu_run1_2-A10","jhu_run2_2-A10")
-#     seq_lab <- sample_data(ps)$seq_lab 
+#     seq_lab <- sample_data(ps)$seq_lab
 #     seq_run <- sample_data(ps)$seq_run
 #     sample_data(ps)$seq_lab_run <- paste0(seq_lab, seq_run)
 #     ps <- merge_samples(ps, group = "seq_lab_run")
-#     
-#     
-#     
-#     count_tbl <- ps %>% 
+#
+#
+#
+#     count_tbl <- ps %>%
 #         # prune_samples(sample_set, ps)  %>%
 #         {prune_taxa(taxa_sums(.) > 0, .)} %>%
 #         otu_table()
-# 
+#
 #     if (!taxa_are_rows(ps)) {
 #         count_tbl <- t(count_tbl)
 #     }
-# 
+#
 #     count_df <- as.data.frame(count_tbl)
-# 
+#
 #     iNEXT::iNEXT(count_df)
 # }
-# 
-# 
+#
+#
 # rare_plot_df <- tibble(ps_obj = ps_list) %>%
 #     add_column(pipe = names(ps_list)) %>%
 #     mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
@@ -230,19 +230,19 @@ pipe_char_summary %>%
 
 ```
 
-```{r rarePlot, fig.cap = "Rarefaction curves for an example sample across pipelines (A-F) and sequencing runs (line color). Rarefaction curves indicate how thoroughly a population has been sampled. Curves show the relationship between the number of unique features (y-axis) and sampling depth. Curves reaching an asymptote indicate the population has been completely sampled. Solid lines represent interpolated values obtained by randomly subsampling the observed abundance data. Dashed lines indicate extrapolated values predicted based on the observed count data and interpolated values.", fig.height=6, fig.width=8}
+```{r rarePlot, fig.cap = "Rarefaction curves for the four sequencing runs (line color) by pipeline (A-F). Rarefaction curves were calculated using the feature counts summed across all samples by sequencing run. Rarefaction curves indicate how thoroughly a population has been sampled. Curves show the relationship between the number of unique features (y-axis) and sampling depth. Curves reaching an asymptote indicate the population has been completely sampled. Solid lines represent interpolated values obtained by randomly subsampling the observed abundance data. Dashed lines indicate extrapolated values predicted based on the observed count data and interpolated values.", fig.height=6, fig.width=8}
 ggarrange(plotlist = rare_plot_df$rare_plot,
           labels = "AUTO", legend = "right",
           common.legend = TRUE, nrow = 3, ncol = 2)
 ```
 
 
-The four replicate sequencing runs were of variable sequence quality and depth (Fig. \@ref(fig:seqCharPlot)). 
+The four replicate sequencing runs were of variable sequence quality and depth (Fig. \@ref(fig:seqCharPlot)).
 Sequencing error rates and base quality scores also varied by sequencing run.
 JHU1 had higher PhiX error rates compared to all other runs, especially for the reverse reads (Fig. \@ref(fig:seqCharPlot)A).
 Read base quality was lower for the reverse read than the forward reads for all four sequencing runs (Fig. \@ref(fig:seqCharPlot)B).
 Sequence data from the two NIST runs had higher quality scores than the data from JHU runs, except for JHU2 forward reads (Fig. \@ref(fig:seqCharPlot)B).
-Greater variability in sample feature total abundance was observed on the first run at each laboratory (Fig. \@ref(fig:seqCharPlot)C). 
+Greater variability in sample feature total abundance was observed on the first run at each laboratory (Fig. \@ref(fig:seqCharPlot)C).
 
 
 Overall, sequences from JHU1 had lower read quality and higher variability in total sample abundance.
@@ -276,10 +276,10 @@ Furthermore, the Mothur rarefaction curves were consistent across sequencing run
 Measurement methods prone to errors, such as marker-gene sequencing, will never reach the asympotote if errors are not appropriately accounted for in sample processing [@Chiu2016]. -->
 
 ```{r rarePresFig, eval = FALSE, echo = FALSE}
-## Plots for defense 
+## Plots for defense
 rare_plot_df <- tibble(ps_obj = ps_list) %>%
     add_column(pipe = names(ps_list)) %>%
-    filter(pipe %in% c("dada", "mothur", "qiimeOpenRef")) %>% 
+    filter(pipe %in% c("dada", "mothur", "qiimeOpenRef")) %>%
     mutate(pipe = case_when(pipe == "dada" ~ "DADA2",
                         pipe == "qiimeOpenRef" ~ "QIIME",
                         pipe == "mothur" ~ "Mothur"),
@@ -290,13 +290,13 @@ rare_plot_df <- tibble(ps_obj = ps_list) %>%
                    theme_bw() +
                    ggtitle(.y) +
                    scale_shape_manual(values = run_shapes) +
-                   scale_color_manual(values=run_colors2)})) %>%
+                   scale_color_manual(values=run_colors)})) %>%
     dplyr::select(-ps_obj, -inext_dat)
 
 ggarrange(plotlist = rare_plot_df$rare_plot, legend = "bottom",
           common.legend = TRUE, nrow = 1, ncol = 3)
 
-tmp_img <- tempfile(fileext = ".png") 
+tmp_img <- tempfile(fileext = ".png")
 ggsave(filename = tmp_img, device = "png",width = 10, height = 4)
 img_filename <- "rare_plot.png"
 ## Add if statement to upload image for first time then update if already present
@@ -305,4 +305,3 @@ img_filename <- "rare_plot.png"
 #              name = img_filename)
 googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
 ```
-

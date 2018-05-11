@@ -11,7 +11,7 @@ bibliography: ../bibliography.bib
 
 Microbial communities are frequently characterized by targeting a marker-gene of interest (e.g., the 16S rRNA gene) for PCR amplification and high-throughput sequencing [@Goodrich2014].
 While these approaches have been successfully used to improve our understanding of microbiota taxonomy and diversity, they are subject to biases that can significantly affect downstream analysis.
-Bioinformatic pipelines and normalization methods are often used to reduce these biases, especially for beta-diversity calculations comparing community structure between samples [@Goodrich2014; @Kong2017].
+Bioinformatic pipelines and normalization methods reduce these biases, especially for beta-diversity calculations comparing sample community structure [@Goodrich2014; @Kong2017].
 
 
 Bioinformatic pipelines reduce bias by removing sequencing artifacts, such as single and multi-base pair variants, and chimeric sequences, from microbiome datasets.
@@ -20,10 +20,10 @@ Bioinformatic pipelines also use clustering or sequence inference techniques to 
 Standard clustering methods include _de novo_ clustering based on pairwise sequence similarities [@Schloss2005] and closed reference clustering of reads against a reference database [@edgar2010search].
 Open reference clustering is a combination of the two, first applying a closed reference approach, followed by _de novo_ clustering of reads that did not map to a reference [@Rideout2014].
 Sequence inference methods use statistical models and algorithms to group sequences independent of sequence similarity but based on the probability that a lower abundant sequence is an artifact originating from more highly abundant sequence, independent of sequence similarity [@callahan2016dada2; @Amir2017].
-The resulting features, OTUs (operational taxonomic units) for clustering methods and SVs (sequence variants) for sequence inference methods, have different characteristics because the different methods vary in their ability to detect and remove errors while retaining true biological sequences.
+The resulting features, operational taxonomic units (OTUs) for clustering methods and sequence variants (SVs) for sequence inference methods, have different characteristics because the different methods vary in their ability to detect and remove errors while retaining true biological sequences.
 
 
-Rarefaction and numeric normalization methods account for differences in sample total abundances caused by uneven pooling of samples prior to sequencing and differences in sequencing run throughput.
+Rarefaction and numeric normalization methods account for differences in sample total abundances caused by uneven pooling of samples prior to sequencing, and differences in sequencing run throughput.
 Rarifying abundance data traces its origins to macroecology, where counts for a unit (sample) are randomly subsampled to a user-defined constant level [@Gotelli2001].
 Although there are concerns about its statistical validity [@McMurdie2014],
 rarefaction is currently the only normalization method for unweighted, presence-absence based, beta-diversity metrics [@Weiss2017].
