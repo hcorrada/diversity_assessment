@@ -179,7 +179,8 @@ pipe_char_summary %>%
                     Sparsity = sparsity,
                     `Total Abundance` = total_abu_summary,
                     `Pass Rate` = pass_rate_summary) %>%
-      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. No template controls were excluded from summary statistic calculations. Sparsity is defined as the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2), rows in the count table. Singletons is the total number of features only observed once in a single sample. Total Abundance is the median and range (minimum-maximum) per sample total feature abundance. Pass Rate is the median and range for the proportion of reads not removed while processing a sample's sequence data through a bioinformatic pipeline.", booktabs = TRUE)
+      knitr::kable(caption = "Summary statistics for the different bioinformatic pipelines. No template controls were excluded from summary statistic calculations. Sparsity is defined as the proportion of 0's in the count table. Features is the total number of OTUs (QIIME and mothur) or SVs (DADA2), rows in the count table. Singletons is the total number of features only observed once in a single sample. Total Abundance is the median and range (minimum-maximum) per sample total feature abundance. Pass Rate is the median and range for the proportion of reads not removed while processing a sample's sequence data through a bioinformatic pipeline.", booktabs = TRUE)  %>%
+      kableExtra::kable_styling(latex_options = c("scale_down"))
 ```
 
 
