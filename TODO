@@ -1,10 +1,16 @@
-# Before sending to Hector
+# To Dos
+- check mixed-effect model fit 
+- send to Justin and Arlin for review 
+- fix pipeline names
+- fix seq run / lab names
 
-# After sending to Hector
-- acknowledgements
-- format for microbiome
-- Figures
-    Fig 5- leave for now, but maybe make into ink boxplots like in fig 4
+# Maybe To Dos
+- Single read analysis 
+- removing singletons  
+- log2 transformed counts
+- Deblur using qiime2
+- revise experimental design figure
+- trim figures
 - supplemental
     - Trellis
         - tech artifacts on other sequencing runs and unweighted metrics (fig 4)
@@ -12,9 +18,7 @@
         - Signal/noise - Nate
     - Technical artifacts norm method plot for other sequencing runs
     - Fig 4: weighted and unweighted metrics and figures for the other seq runs
-    - Example PCA to show bio v. tech
 
-- Look into QIIME default parameters
 
 ## Coding and Reproducibility
 - clean up make ps munge code formatting
@@ -22,9 +26,6 @@
 - consistent variable names
 - faster manuscript build
 - long term: using drake for munging https://ropensci.org/blog/2018/02/06/drake/
-
-## Notes
-- Look into adding PCR plate and lab effect to varpart
 
 ## Backing up
 using rsync to backup repo to remote repository
@@ -35,10 +36,6 @@ rsync -rv --progress --delete \
 ```
 
 ## Issues and notes
-- Manuscript formatting
-    - error when using hyperref and email references
-    - lmodern package needed for font warning
-
 - Error in DADA2 tree build - optim.ml matrix too large....
     - use NJ tree
     - email phangorn developer about issue
@@ -48,27 +45,3 @@ rsync -rv --progress --delete \
 - Potential relevant reference on normalization and beta-diversity
 https://www.biorxiv.org/content/biorxiv/early/2018/02/06/259325.full.pdf
 
-- Warning messages from re-running normalization
-```
-[1] "Processing: data/norm_data/qiimeOpenRef_UQ.rds"
-[1] "- Calculating wunifrac"
-Loading required package:
-Failed with error:  ‘invalid package name’
-In addition: Warning messages:
-1: In .f(...) :
-  Randomly assigning root as -- denovo158217 -- in the phylogenetic tree in the data you provided.
-2: In matrix(tree$edge[order(tree$edge[, 1]), ][, 2], byrow = TRUE,  :
-  data length [361389] is not a sub-multiple or multiple of the number of rows [180695]
-[1] "- Calculating bray"
- Running preprocessing script: 08_beta_eval_comparison_to_expectation.R
-Joining, by = c("seq_lab", "seq_run", "biosample_id")
-  Skipping cache update for beta_cluster_eval_bray_df: up to date
-  Skipping cache update for beta_cluster_eval_wunifrac_df: up to date
-  Skipping cache update for beta_cluster_eval_jaccard_df: up to date
-  Skipping cache update for beta_cluster_eval_unifrac_df: up to date
-Warning messages:
-1: In .f(...) :
-  Randomly assigning root as -- New.CleanUp.ReferenceOTU42652 -- in the phylogenetic tree in the data you provided.
-2: In matrix(tree$edge[order(tree$edge[, 1]), ][, 2], byrow = TRUE,  :
-  data length [91323] is not a sub-multiple or multiple of the number of rows [45662]
- ```
