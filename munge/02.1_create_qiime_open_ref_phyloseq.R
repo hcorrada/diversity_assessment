@@ -12,7 +12,8 @@ make_qiime_open_ref_ps <- function(){
 ##              --table-type "OTU table" --to-json
 ## ```
 qiime_dir <- "data/qiime_open_ref"
-biom_file <- file.path(qiime_dir, "otu_table_mc2_w_tax_no_pynast_failures_json.biom")
+biom_file <- file.path(qiime_dir, 
+                       "otu_table_mc2_w_tax_no_pynast_failures_json.biom")
 seq_file <- file.path(qiime_dir, "rep_set.fna")
 tree_file <- file.path(qiime_dir, "rep_set.tre")
 
@@ -26,7 +27,8 @@ sample_names(qiime_open_ref_ps) <- sample_names(qiime_open_ref_ps) %>%
 
 
 ## Adding sample metadata
-sample_data(qiime_open_ref_ps) <- column_to_rownames(mgtstMetadata, var = "sample_id")
+sample_data(qiime_open_ref_ps) <- column_to_rownames(mgtstMetadata, 
+                                                     var = "sample_id")
 
 ################ Adding seq data to phyloseq object ############################
 

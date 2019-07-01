@@ -65,10 +65,11 @@ qual_df <- seq_qual_comparisons %>%
 tech_art_df <- seq_char_comparisons %>%
     dplyr::select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>%
     left_join(qual_df)
-fit2 <- lme4::lmer(cov_total_abu ~ seq_run_id + (1 | pipe / biosample_id / t_fctr),
+fit <- lme4::lmer(cov_total_abu ~ seq_run_id + (1 | pipe / biosample_id / t_fctr),
                    data = tech_art_df)
 
-confint_dat <- confint(fit2)
+confint_dat <- confint(fit)
+## Reference for debugging https://stat.ethz.ch/pipermail/r-sig-mixed-models/2014q3/022394.html
 mod_betas <- fit2@beta
 cov_est <- data_frame(run_id = c("jhu_run1","jhu_run2","nist_run1","nist_run2"),
                       est = c(mod_betas[1],
@@ -100,6 +101,7 @@ cov_plot <- ggplot(fit_est_df) +
     scale_color_manual(values = run_colors) +
     theme(legend.position = "none")
 ```
+
 
 ```{r qualFit}
 seq_qual_dat <- seq_char_df %>%

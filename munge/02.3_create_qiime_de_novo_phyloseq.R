@@ -23,7 +23,8 @@ sample_names(qiime_de_novo_ps) <- sample_names(qiime_de_novo_ps) %>%
 
 
 ## Adding sample metadata
-sample_data(qiime_de_novo_ps) <- column_to_rownames(mgtstMetadata, var = "sample_id")
+sample_data(qiime_de_novo_ps) <- column_to_rownames(mgtstMetadata, 
+                                                    var = "sample_id")
 
 ################ Adding tree data to phyloseq object ###########################
 tree_dat <- read_tree(tree_file)

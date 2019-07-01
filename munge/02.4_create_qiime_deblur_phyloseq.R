@@ -24,7 +24,8 @@ sample_names(qiime_deblur_ps) <- sample_names(qiime_deblur_ps)  %>%
     str_replace("(?<=[:digit:])-(?=[:digit:])","_") %>%
     str_replace("_S.*", "")
 
-sample_data(qiime_deblur_ps) <- column_to_rownames(mgtstMetadata, var = "sample_id")
+sample_data(qiime_deblur_ps) <- column_to_rownames(mgtstMetadata, 
+                                                   var = "sample_id")
 
 ################ Adding seq data to phyloseq object ############################
 

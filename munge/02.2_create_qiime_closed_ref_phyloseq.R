@@ -21,7 +21,8 @@ sample_names(qiime_closed_ref_ps) <- sample_names(qiime_closed_ref_ps) %>%
 
 
 ## Adding sample metadata
-sample_data(qiime_closed_ref_ps) <- column_to_rownames(mgtstMetadata, var = "sample_id")
+sample_data(qiime_closed_ref_ps) <- column_to_rownames(mgtstMetadata, 
+                                                       var = "sample_id")
 
 ###################### Saving Phyloseq Object ##################################
 saveRDS(qiime_closed_ref_ps, ps_file)
