@@ -1,7 +1,7 @@
 
 ## Calculating Beta Diversity Metrics for Normalized count data
-# require(doParallel)
-# registerDoParallel(cores = 4)
+require(doParallel)
+registerDoParallel(cores = 12)
 
 ## Safely calculate distance metrics Instead of stopping when there is an error
 ## when calculating the distance metric provides NULL results with error message
@@ -29,13 +29,13 @@ calc_beta_div <- function(rds_file, div_metric){
     ## calc beta
     if (div_metric == "wunifrac") {
         if (n_taxa > 50000) {
-            div_results <- safe_unifrac(norm_ps, weighted = TRUE)
+            div_results <- safe_unifrac(norm_ps, weighted = TRUE, parallel = TRUE)
         } else {
             div_results <- safe_unifrac(norm_ps, weighted = TRUE, parallel = TRUE)
         }
     } else if (div_metric == "unifrac") {
         if (n_taxa > 50000) {
-            div_results <- safe_unifrac(norm_ps, weighted = FALSE)
+            div_results <- safe_unifrac(norm_ps, weighted = FALSE, parallel = TRUE)
         } else {
             div_results <- safe_unifrac(norm_ps, weighted = FALSE, parallel = TRUE)
         }

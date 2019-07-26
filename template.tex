@@ -1,12 +1,22 @@
 %% BioMed_Central_Tex_Template_v1.06
 \documentclass{bmcart}
-\RequirePackage{hyperref}
+ \RequirePackage{hyperref}
 \usepackage{lmodern}
 \usepackage{booktabs}
 \usepackage{graphicx}
-% \usepackage{biblatex}
-% \def\includegraphic{}
-% \def\includegraphics{}
+
+
+
+      
+% for bibtex v. biblatex issue issue
+% \usepackage[utf8]{inputenc}
+% \usepackage[english]{babel}
+% % \makeatletter
+% \let\c@author\relax
+% \makeatother
+% \usepackage[backend=biber, style=numeric]{biblatex}
+% \addbibresource{bibliography.bib} 
+
 
 \begin{document}
   \begin{frontmatter}
@@ -43,18 +53,15 @@
 
     \begin{abstractbox}
 
-      \begin{abstract} % abstract
-      \parttitle{First part title} %if any
-        Text for this section.
-
-      \parttitle{Second part title} %if any
-        Text for this section.
+      \begin{abstract} 
+        $abstract$
       \end{abstract}
 
       \begin{keyword}
-        \kwd{sample}
-        \kwd{article}
-        \kwd{author}
+        \kwd{16S rRNA sequencing}
+        \kwd{Beta-diversity}
+        \kwd{Feature Inference}
+        \kwd{Normalization}
       \end{keyword}
 
     \end{abstractbox}
@@ -75,7 +82,7 @@
     Text for this section \ldots
 
   \bibliographystyle{bmc-mathphys} % Style BST file (bmc-mathphys, vancouver, spbasic).
-  \bibliography{$bibliography$}      % Bibliography file (usually '*.bib' )
+  \bibliography{bibliography}     % Bibliography file (usually '*.bib' )
 
   \end{backmatter}
 \end{document}

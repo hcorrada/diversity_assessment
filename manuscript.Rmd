@@ -49,7 +49,7 @@ We sequenced the bacterial communities in stool samples collected from five vacc
 
 ## Dataset Characteristics
 
-```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd"}
+```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd", eval = FALSE}
 ```
 
 ```{r sampleChar, child="reports/sample_characterization.Rmd", eval = FALSE}
