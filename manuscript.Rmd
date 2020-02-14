@@ -41,7 +41,7 @@ Rmarkdown with BMC template https://stackoverflow.com/questions/44373540/no-auth
 ```
 
 # Results
-```{r experimentalDesign, echo = FALSE, fig.cap = "Stand-in figure."}
+```{r experimentalDesign, echo = FALSE, fig.cap = "Two-sample titration dataset experimental design. The dataset contained independent two-sample titration series from 5 vaccine trial participants (subjects), resulting in 45 samples. PCRs were run on two 96 well plates with each plate half containing one for each sample and three no template control reactions. The four replicate PCR assays per sample resulted in 180 PCRs. The PCR products were split into technical replicates and sequenced twice at two different laboratories."}
 knitr::include_graphics("img/experimental_design.png")
 ```
 
@@ -49,7 +49,7 @@ We sequenced the bacterial communities in stool samples collected from five vacc
 
 ## Dataset Characteristics
 
-```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd"}
+```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd", eval = FALSE}
 ```
 
 ```{r sampleChar, child="reports/sample_characterization.Rmd", eval = FALSE}

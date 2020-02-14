@@ -1,0 +1,19 @@
+Pipelines	Assessment	Value
+dada	PCR Repeatability	+
+mothur	PCR Repeatability	+
+q_denovo	PCR Repeatability	-
+q_open	PCR Repeatability	-
+q_closed	PCR Repeatability	+
+q_deblur	PCR Repeatability	+
+dada	Signal-to-Noise	+
+mothur	Signal-to-Noise	+
+q_denovo	Signal-to-Noise	-
+q_open	Signal-to-Noise	-
+q_closed	Signal-to-Noise	-
+q_deblur	Signal-to-Noise	-
+dada	Biological v. Technical	+
+mothur	Biological v. Technical	+
+q_denovo	Biological v. Technical	-
+q_open	Biological v. Technical	-
+q_closed	Biological v. Technical	-
+q_deblur	Biological v. Technical	+

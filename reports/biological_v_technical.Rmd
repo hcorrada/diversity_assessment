@@ -16,6 +16,46 @@ library(ggpubr)
 ```
 
 
+```{r variationCompKey, eval = FALSE, echo = FALSE}
+biol_v_tech_variation[[3]] %>%
+    select(variation, variation_label, same_individual, same_timepoint, same_pcr_product,
+           same_seq_lab, same_seq_run) %>%
+    distinct() %>%
+    gather("key", "value", -variation, -variation_label) %>%
+    distinct() %>%
+    group_by(variation, variation_label,key) %>%
+    mutate(count = n()) %>%
+    # filter(count == 2)
+    rowwise() %>%
+    mutate(value_fill = if_else(count == 2, "TRUE or FALSE", as.character(value))) %>%
+    ## Not actually the same run TRUE false filter allowed for same run id as 1 and 2 used for both sequnecing labs
+    mutate(value_fill = if_else(variation_label == "btw_labs" & key == "same_seq_run", "TRUE",value_fill)) %>%
+    # filter(value == TRUE) %>%
+    mutate(variation_label = factor(variation_label,
+                                    levels = c("btw_labs", "w/in_lab_runs",
+                                               "w/in_lab_pcr", "w/in_subj_btw_time",
+                                               "btw_subj_w/in_time", "btw_time"))) %>%
+    mutate(key = str_remove(key, "same_"),
+            key = factor(key,
+                                levels = c("timepoint","individual",
+                                           "pcr_product", "seq_run",
+                                           "seq_lab"))) %>%
+    ggplot() + geom_tile(aes(x = variation_label,
+                               y = key, fill = value_fill)) +
+    theme_few() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    labs(x = "Variation Level", y = "Variation Source", fill = "Same")
+
+tmp_img <- tempfile(fileext = ".png")
+ggsave(filename = tmp_img, device = "png",width = 4, height = 4)
+img_filename <- "bioVtechKey_diagram.png"
+## Add if statement to upload image for first time then update if already present
+# drive_upload(media = tmp_img, type = "png",
+#              path =  "defense_presentation",
+#              name = img_filename)
+drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
+
 
 ```{r bioVtechMunge, warning=FALSE, message=FALSE, echo = FALSE}
 ## Pre-processing data for figure(s)
@@ -47,10 +87,11 @@ biol_v_tech_variation_summary_higherlevel <- biol_v_tech_variation_summary_highl
             weight = if_else(metric %in% c("unifrac","jaccard"),
                         "Unweighted", "Weighted"))
 
+
 ```
 
 
-```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the differences between the mean biological (subject and titration level) and technical variation (sequencing lab and run) (pairwise distance between replicates.) Grey line indicates the mean differences for diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method.", fig.height=4, fig.width=6, eval = FALSE}
+```{r bioVtechPlot1, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, the y-axis is the differences between the mean biological (subject and titration level) and technical variation (sequencing lab and run) (pairwise distance between replicates.) Grey line indicates the mean differences in diversity metrics calculated using raw counts. Higher values indicate better differentiation between technical variability and true biological differences. Points indicate mean differences for diversity metrics calculated using normalized counts with color indicating normalization method.", fig.height=4, fig.width=6, eval = FALSE}
 
 raw_bio_v_tech <- biol_v_tech_variation_summary_higherlevel %>%
     filter(normalization == "RAW") %>%
@@ -71,44 +112,139 @@ biol_v_tech_variation_summary_higherlevel %>%
         labs(x = "Pipeline", y = "Biological - Technical", fill = "Normalization") +
     scale_fill_manual(values = norm_colors)
 
+
+
 ```
 
 
-```{r bioVtechRaw, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = ".Biological vs. Technical Variation,distribution in (A) weighted and (B) unweighted beta-diversity between between technical replicates and biological treatments (subject  and timepoint)."}
+```{r bioVtechRaw, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, distribution in (A) weighted and (B) unweighted beta-diversity between technical replicates and biological treatments (subject  and timepoint)."}
 
 weighted <- bio_v_tech_dat %>%
     filter(weight == "Weighted", normalization == "RAW") %>%
     ggplot(aes(x = variation_label, y = value,
-               color = variation, fill = variation)) +
+               color = variation_label, fill = variation_label)) +
     geom_tufteboxplot() +
-    facet_grid(f_type~pipe, scales = "free_y") +
+    facet_grid(metric~pipe, scales = "free_y") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+    theme(axis.text.x = element_blank(),
           legend.position = "bottom") +
     labs(x = "Variation Type", y = "Beta-Diversity",
-         fill = "Variation Source", color = "Variation Source")
+         fill = "Variation Source", color = "Variation Source")+
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                                "#fdae6b", "#f16913", "#8c2d04"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                               "#fdae6b", "#f16913", "#8c2d04")) +
+    scale_y_continuous(breaks = c(0.00, 0.25, 0.50, 0.75, 1.00))
 
 
 unweighted <- bio_v_tech_dat %>%
     filter(weight == "Unweighted", normalization == "RAW") %>%
     ggplot(aes(x = variation_label, y = value,
-               color = variation, fill = variation)) +
+               color = variation_label, fill = variation_label)) +
     geom_tufteboxplot() +
-    facet_grid(f_type~pipe, scales = "free_y") +
+    facet_grid(metric~pipe, scales = "free_y") +
     theme_bw() +
-    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+    theme(axis.text.x = element_blank(),
           legend.position = "bottom") +
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                                "#fdae6b", "#f16913", "#8c2d04"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                               "#fdae6b", "#f16913", "#8c2d04"))+
     labs(x = "Variation Type", y = "Beta-Diversity",
-         fill = "Variation Source", color = "Variation Source")
+         fill = "Variation Source", color = "Variation Source") +
+    scale_y_continuous(breaks = c(0.00, 0.25, 0.50, 0.75, 1.00))
 
 ggarrange(weighted + rremove("xlab") + rremove("x.text"),
           unweighted,
+          # heights = c(0.4, 0.6),
           ncol = 1, nrow = 2,
           labels = "AUTO", common.legend = TRUE,
-          legend = "bottom", heights = c(0.35,0.65))
+          legend = "bottom")
 ```
 
-```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Biological vs. Technical Variation, y-axis is the adjusted R^2 value, indicating proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Black bars represent values for unnormalized data.", fig.width = 6, fig.height = 8}
+```{r bioVtechRawPresFigMethods, eval = FALSE, echo = FALSE}
+bio_v_tech_dat %>%
+    filter(normalization == "RAW") %>%
+    filter(pipe %in% c("dada")) %>%
+    filter(metric %in% c("bray")) %>%
+    mutate(pipe = fct_recode(pipe, "DADA2" = "dada")) %>%
+    mutate(metric = fct_recode(metric,
+                               "Bray Curtis" = "bray")) %>%
+    mutate(variation_label = fct_recode(variation_label,
+        "between subject within time" = "btw_subj_w/in_time",
+        "within subject between time" = "w/in_subj_btw_time",
+        "between time" = "btw_time",
+        "within lab PCR" = "w/in_lab_pcr",
+        "within lab runs" = "w/in_lab_runs",
+        "between labs" = "btw_labs")) %>%
+    ggplot(aes(x = variation_label, y = value,
+               fill = variation_label)) +
+    geom_boxplot() +
+    facet_grid(metric~pipe, scales = "free_y") +
+    theme_bw() +
+    theme(axis.text.x = element_blank(),
+          legend.position = "right") +
+    labs(x = "Variation Type", y = "Beta-Diversity",
+         fill = "Variation Source", color = "Variation Source")+
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                                "#fdae6b", "#f16913", "#8c2d04"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                               "#fdae6b", "#f16913", "#8c2d04"))
+
+tmp_img <- tempfile(fileext = ".png")
+ggsave(filename = tmp_img, device = "png",width = 6, height = 4)
+img_filename <- "bioVtechRawMethods_plot.png"
+## Add if statement to upload image for first time then update if already present
+# googledrive::drive_upload(media = tmp_img, type = "png",
+#              path =  "defense_presentation",
+#              name = img_filename)
+googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
+
+```{r bioVtechRawPresFig, eval = FALSE, echo = FALSE}
+bio_v_tech_dat %>%
+    filter(normalization == "RAW") %>%
+    filter(pipe %in% c("dada","mothur","q_open")) %>%
+    filter(metric %in% c("jaccard", "bray")) %>%
+    mutate(pipe = fct_recode(pipe, "Mothur" = "mothur",
+                             "DADA2" = "dada",
+                             "QIIME" = "q_open")) %>%
+    mutate(metric = fct_recode(metric,
+                               "Jaccard Dissimilarity" = "jaccard",
+                               "Bray Curtis" = "bray")) %>%
+    mutate(variation_label = fct_recode(variation_label,
+        "between subject within time" = "btw_subj_w/in_time",
+        "within subject between time" = "w/in_subj_btw_time",
+        "between time" = "btw_time",
+        "within lab PCR" = "w/in_lab_pcr",
+        "within lab runs" = "w/in_lab_runs",
+        "between labs" = "btw_labs")) %>%
+    ggplot(aes(x = variation_label, y = value,
+               fill = variation_label)) +
+    geom_boxplot() +
+    facet_grid(metric~pipe, scales = "free_y") +
+    theme_bw() +
+    theme(axis.text.x = element_blank(),
+          legend.position = "right") +
+    labs(x = "Variation Type", y = "Beta-Diversity",
+         fill = "Variation Source", color = "Variation Source") +
+    scale_color_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                                "#fdae6b", "#f16913", "#8c2d04"))+
+    scale_fill_manual(values=c("#a6bddb", "#3690c0", "#034e7b",
+                               "#fdae6b", "#f16913", "#8c2d04"))
+
+tmp_img <- tempfile(fileext = ".png")
+ggsave(filename = tmp_img, device = "png",width = 8, height = 4)
+img_filename <- "bioVtechRaw_plot.png"
+## Add if statement to upload image for first time then update if already present
+# googledrive::drive_upload(media = tmp_img, type = "png",
+#              path =  "defense_presentation",
+#              name = img_filename)
+googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
+```
+
+
+```{r bioVtechVarpart, warning=FALSE, message=FALSE, echo = FALSE, fig.cap = "Impact of different normalization methods on biological and technical sources of variatoin for different pipelines and beta-diversity metrics. y-axis is the adjusted $R^2$, indicating the proportion of variance explained by each biological (subject and titration) and technical (seq run) variable. Normalized adjusted $R^2$ values greater than and less than unnormalized values indicated with upright triangle and upsidedown triangles, respectively. Vertical lines indicate difference between unnormalized and normalized adjusted $R^2$ values.", fig.width = 8, fig.height = 7}
 varpart_stats <- varpart_stats %>%
         mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
                         pipe == "qiimeOpenRef" ~ "q_open",
@@ -117,52 +253,327 @@ varpart_stats <- varpart_stats %>%
                         TRUE ~ pipe),
            pipe = factor(pipe))
 
+varpart_stats <- varpart_stats %>%
+    mutate(normalization = factor(normalization,
+                                 levels = c("RAW", "rare2000",
+                                          "rare5000", "rare10000",
+                                          "rareq15", "CSS",
+                                          "RLE","TMM", "TSS", "UQ"),
+                                 ordered = T))
+
 varpart_weighted <- varpart_stats %>%
     filter(effect == "conditional",
-           metric %in% c("bray", "wunifrac"))
+           metric %in% c("bray", "wunifrac"),
+           normalization != "RAW")
 
-varpart_weighted_raw <- varpart_weighted %>% filter(normalization == "RAW")
-varpart_weighted_norm <- varpart_weighted %>% filter(normalization != "RAW")
+varpart_weighted_raw <- varpart_stats %>%
+    filter(effect == "conditional",
+           metric %in% c("bray", "wunifrac"),
+           normalization == "RAW")
+varpart_weighted_raw <- varpart_weighted_raw[,c("pipe", "feature", "metric", "Adj.R.square")]
+colnames(varpart_weighted_raw) <- c("pipe", "feature", "metric", "Raw.Adj.R.square")
 
-weighted <- ggplot(varpart_weighted_norm) +
-    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
-             stat = "identity", position = "dodge", width = 0.5) +
-    geom_point(data = varpart_weighted_raw,
-               aes(x = feature, y = Adj.R.square),
-               shape = "-", size = 8) +
+varpart_weighted <- varpart_weighted %>% left_join(varpart_weighted_raw)
+
+weighted <- varpart_weighted %>%
+    mutate(norm_shape = if_else(Adj.R.square > Raw.Adj.R.square, "gt", "lt")) %>%
+    ggplot() +
+    geom_linerange(aes(x = normalization,
+                       ymin = Raw.Adj.R.square, ymax = Adj.R.square,
+                       group = feature, color = feature),
+                    position = position_dodge(width = 0.8), size = 1) +
+    # geom_point(aes(x = normalization, y = Raw.Adj.R.square,
+    #                group = feature, fill = feature),
+    #            size = 2, position = position_dodge(width = 0.8), shape = 21) +
+    geom_point(aes(x = normalization, y = Adj.R.square,
+                   group = feature, fill = feature, shape = norm_shape),
+               size = 2, position = position_dodge(width = 0.8),
+               show.legend = FALSE) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
-    xlab("") + ylab("Adjusted R^2") +
+    xlab("") + ylab(expression(Adjusted~R^2)) +
     theme(legend.position = "bottom") +
-    scale_fill_manual(values = norm_colors)
+    scale_fill_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_color_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_shape_manual(values = c(24,25))
+
 
 varpart_unweighted <- varpart_stats %>%
     filter(effect == "conditional",
-           metric %in% c("jaccard", "unifrac"))
+           metric %in% c("jaccard", "unifrac"),
+           normalization != "RAW")
 
-varpart_unweighted_raw <- varpart_unweighted %>% filter(normalization == "RAW")
-varpart_unweighted_norm <- varpart_unweighted %>% filter(normalization != "RAW")
+varpart_unweighted_raw <- varpart_stats %>%
+    filter(effect == "conditional",
+           metric %in% c("jaccard", "unifrac"),
+           normalization == "RAW")
 
-unweighted <- ggplot(varpart_unweighted_norm) +
-    geom_bar(aes(x = feature, y = Adj.R.square, fill = normalization),
-             stat = "identity", position = "dodge", width = 0.5) +
-    geom_point(data = varpart_unweighted_raw,
-               aes(x = feature, y = Adj.R.square),
-               shape = "-", size = 8) +
+varpart_unweighted_raw <- varpart_unweighted_raw[,c("pipe", "feature", "metric", "Adj.R.square")]
+colnames(varpart_unweighted_raw) <- c("pipe", "feature", "metric", "Raw.Adj.R.square")
+
+varpart_unweighted <- varpart_unweighted %>% left_join(varpart_unweighted_raw)
+
+unweighted <- varpart_unweighted %>%
+    mutate(norm_shape = if_else(Adj.R.square > Raw.Adj.R.square, "gt", "lt")) %>%
+    ggplot() +
+    geom_linerange(aes(x = normalization,
+                       ymin = Raw.Adj.R.square, ymax = Adj.R.square,
+                       group = feature, color = feature),
+                    position = position_dodge(width = 0.8), size = 1) +
+    # geom_point(aes(x = normalization, y = Raw.Adj.R.square,
+    #                group = feature, fill = feature),
+    #            size = 2, position = position_dodge(width = 0.8), shape = 21) +
+    geom_point(aes(x = normalization, y = Adj.R.square,
+                   group = feature, fill = feature, shape = norm_shape),
+               size = 2, position = position_dodge(width = 0.8),
+               show.legend = FALSE) +
     facet_grid(metric~pipe, scales = "free_x", space = "free") +
     theme_bw() +
     theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
-    xlab("") + ylab("Adjusted R^2") +
+    xlab("") + ylab(expression(Adjusted~R^2)) +
     theme(legend.position = "bottom") +
-    scale_fill_manual(values = norm_colors)
+    scale_fill_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_color_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_shape_manual(values = c(24,25))
 
 ggarrange(weighted, unweighted,
           ncol = 1, nrow = 2,
-          labels = "AUTO",common.legend = TRUE,
+          labels = "AUTO",
+          common.legend = TRUE,
           legend = "bottom")
 ```
 
+```{r bioVtechNormPresMethod_Fig, eval = FALSE, echo = FALSE}
+weight_norm <- c("rare5000","TMM","TSS")
+varpart_weighted <- varpart_stats %>%
+    filter(effect == "conditional",
+           # metric %in% c("bray", "wunifrac"),
+           metric == "bray",
+           normalization != "RAW") %>%
+    filter(normalization %in% weight_norm,
+           pipe %in% c("dada")) %>%
+    mutate(metric = fct_recode(metric, "Bray Curtis" = "bray"),
+           pipe = fct_recode(pipe, "DADA2" = "dada")) %>%
+    mutate(normalization = factor(normalization, levels = weight_norm))
+
+varpart_weighted_raw <- varpart_stats %>%
+    filter(effect == "conditional",
+           # metric %in% c("bray", "wunifrac"),
+           metric == "bray",
+           normalization == "RAW") %>%
+    filter(pipe %in% c("dada")) %>%
+    mutate(metric = fct_recode(metric, "Bray Curtis" = "bray"),
+           pipe = fct_recode(pipe, "DADA2" = "dada"))
+
+varpart_weighted_raw <- varpart_weighted_raw[,c("pipe", "feature", "metric", "Adj.R.square")]
+colnames(varpart_weighted_raw) <- c("pipe", "feature", "metric", "Raw.Adj.R.square")
+
+varpart_weighted <- varpart_weighted %>% left_join(varpart_weighted_raw)
+
+varpart_weighted %>%
+    mutate(norm_shape = if_else(Adj.R.square > Raw.Adj.R.square, "gt", "lt")) %>%
+    ggplot() +
+    geom_bar(aes(x = normalization, y = Raw.Adj.R.square, group = feature),
+         width = 0.6,
+         fill = "grey", stat = "identity",
+         position = position_dodge(width = 0.8)) +
+    geom_linerange(aes(x = normalization,
+                       ymin = Raw.Adj.R.square, ymax = Adj.R.square,
+                       group = feature, color = feature),
+                    position = position_dodge(width = 0.8), size = 1) +
+    geom_point(aes(x = normalization, y = Adj.R.square,
+                   group = feature, fill = feature, shape = norm_shape),
+               size = 2, position = position_dodge(width = 0.8),
+               show.legend = FALSE) +
+    facet_grid(metric~pipe, scales = "free_x", space = "free") +
+    theme_bw() +
+    labs( x = "", y = expression(Adjusted~R^2), color = "Variation Source") +
+    theme(legend.position = "right") +
+    scale_fill_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_color_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_shape_manual(values = c(24,25))
+
+
+tmp_img <- tempfile(fileext = ".png")
+ggsave(filename = tmp_img, device = "png", width = 6, height = 4)
+img_filename <- "bioVtechNormMethod_plot.png"
+## Add if statement to upload image for first time then update if already present
+googledrive::drive_upload(media = tmp_img, type = "png",
+             path =  "defense_presentation",
+             name = img_filename)
+# googledrive::drive_update(paste0("defense_presentation/", img_filename),
+                          # tmp_img)
+```
+
+
+```{r bioVtechNormPresFig, eval = FALSE, echo = FALSE}
+weight_norm <- c("rare5000","TMM","TSS")
+varpart_weighted <- varpart_stats %>%
+    filter(effect == "conditional",
+           # metric %in% c("bray", "wunifrac"),
+           metric == "bray",
+           normalization != "RAW") %>%
+    filter(normalization %in% weight_norm,
+           pipe %in% c("dada","mothur","qiimeOpenRef")) %>%
+    mutate(metric = fct_recode(metric,
+                           "Jaccard Dissimilarity" = "jaccard",
+                           "Bray Curtis" = "bray"),
+           pipe = fct_recode(pipe,
+                             "DADA2" = "dada",
+                             "Mothur" = "mothur",
+                             "QIIME" = "qiimeOpenRef")) %>%
+    mutate(normalization = factor(normalization, levels = weight_norm))
+
+varpart_weighted_raw <- varpart_stats %>%
+    filter(effect == "conditional",
+           # metric %in% c("bray", "wunifrac"),
+           metric == "bray",
+           normalization == "RAW") %>%
+    filter(pipe %in% c("dada","mothur","qiimeOpenRef")) %>%
+    mutate(metric = fct_recode(metric,
+                           "Jaccard Dissimilarity" = "jaccard",
+                           "Bray Curtis" = "bray"),
+           pipe = fct_recode(pipe,
+                             "DADA2" = "dada",
+                             "Mothur" = "mothur",
+                             "QIIME" = "qiimeOpenRef"))
+
+varpart_weighted_raw <- varpart_weighted_raw[,c("pipe", "feature", "metric", "Adj.R.square")]
+colnames(varpart_weighted_raw) <- c("pipe", "feature", "metric", "Raw.Adj.R.square")
+
+varpart_weighted <- varpart_weighted %>% left_join(varpart_weighted_raw)
+
+weighted <- varpart_weighted %>%
+    mutate(norm_shape = if_else(Adj.R.square > Raw.Adj.R.square, "gt", "lt")) %>%
+    ggplot() +
+    geom_bar(aes(x = normalization, y = Raw.Adj.R.square, group = feature),
+         width = 0.6,
+         fill = "grey", stat = "identity",
+         position = position_dodge(width = 0.8)) +
+    geom_linerange(aes(x = normalization,
+                       ymin = Raw.Adj.R.square, ymax = Adj.R.square,
+                       group = feature, color = feature),
+                    position = position_dodge(width = 0.8), size = 1) +
+    geom_point(aes(x = normalization, y = Adj.R.square,
+                   group = feature, fill = feature, shape = norm_shape),
+               size = 2, position = position_dodge(width = 0.8),
+               show.legend = FALSE) +
+    facet_grid(metric~pipe, scales = "free_x", space = "free") +
+    theme_bw() +
+    labs( x = "", y = expression(Adjusted~R^2), color = "Variation Source") +
+    theme(legend.position = "bottom") +
+    scale_fill_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_color_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_shape_manual(values = c(24,25))
+
+unweight_norm <- c("rare2000","rare5000","rare10000")
+varpart_unweighted <- varpart_stats %>%
+    filter(effect == "conditional",
+           # metric %in% c("jaccard", "unifrac"),
+           metric == "jaccard",
+           normalization != "RAW") %>%
+    filter(normalization %in% unweight_norm,
+           pipe %in% c("dada","mothur","qiimeOpenRef")) %>%
+    mutate(metric = fct_recode(metric,
+                           "Jaccard Dissimilarity" = "jaccard",
+                           "Bray Curtis" = "bray"),
+           pipe = fct_recode(pipe,
+                             "DADA2" = "dada",
+                             "Mothur" = "mothur",
+                             "QIIME" = "qiimeOpenRef")) %>%
+    mutate(normalization = factor(normalization, levels = unweight_norm))
+
+varpart_unweighted_raw <- varpart_stats %>%
+    filter(effect == "conditional",
+           # metric %in% c("jaccard", "unifrac"),
+           metric == "jaccard",
+           normalization == "RAW") %>%
+    filter(pipe %in% c("dada","mothur","qiimeOpenRef")) %>%
+    mutate(metric = fct_recode(metric,
+                           "Jaccard Dissimilarity" = "jaccard",
+                           "Bray Curtis" = "bray"),
+           pipe = fct_recode(pipe,
+                             "DADA2" = "dada",
+                             "Mothur" = "mothur",
+                             "QIIME" = "qiimeOpenRef"))
+
+varpart_unweighted_raw <- varpart_unweighted_raw[,c("pipe", "feature",
+                                                    "metric", "Adj.R.square")]
+colnames(varpart_unweighted_raw) <- c("pipe", "feature",
+                                      "metric", "Raw.Adj.R.square")
+
+varpart_unweighted <- varpart_unweighted %>% left_join(varpart_unweighted_raw)
+
+unweighted <- varpart_unweighted %>%
+    mutate(norm_shape = if_else(Adj.R.square > Raw.Adj.R.square,
+                                "gt", "lt")) %>%
+    ggplot() +
+    geom_bar(aes(x = normalization, y = Raw.Adj.R.square, group = feature),
+             width = 0.6,
+             fill = "grey", stat = "identity",
+             position = position_dodge(width = 0.8)) +
+    geom_linerange(aes(x = normalization,
+                       ymin = Raw.Adj.R.square, ymax = Adj.R.square,
+                       group = feature, color = feature),
+                    position = position_dodge(width = 0.8), size = 1) +
+    geom_point(aes(x = normalization, y = Adj.R.square,
+                   group = feature, fill = feature, shape = norm_shape),
+               size = 2, position = position_dodge(width = 0.8),
+               show.legend = FALSE) +
+    facet_grid(metric~pipe, scales = "free_x", space = "free") +
+    theme_bw() +
+    labs( x = "", y = expression(Adjusted~R^2), color = "Variation Source") +
+    theme(legend.position = "bottom") +
+    scale_fill_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_color_manual(values = c("#fdae6b", "#a6bddb", "#3690c0")) +
+    scale_shape_manual(values = c(24,25))
+
+ggarrange(weighted, unweighted,
+          ncol = 1, nrow = 2,
+          common.legend = TRUE,
+          legend = "right")
+
+tmp_img <- tempfile(fileext = ".png")
+ggsave(filename = tmp_img, device = "png",width = 8, height = 4)
+img_filename <- "bioVtechNorm_plot.png"
+## Add if statement to upload image for first time then update if already present
+# drive_upload(media = tmp_img, type = "png",
+#              path =  "defense_presentation",
+#              name = img_filename)
+googledrive::drive_update(paste0("defense_presentation/", img_filename),
+                          tmp_img)
+```
+
+
+```{r mdsTSSvTMM, fig.height = 6, fig.cap = "Principal coordinate analysis for TMM and TSS normalized (A) DADA2 and (B) Mothur unmixed PRE samples for Bray-Curtis and Weighted UniFrac distance metrics."}
+dada_plot <- ord_plot_dat_df %>%
+    filter(pipe == "DADA2") %>%
+    ggplot() + geom_point(aes(x = Axis.1, y = Axis.2, color = seq_run,
+                              shape = biosample_id)) +
+    # geom_text(aes(x = 0.3, y = -0.25, label = pcoa_percent)) +
+    facet_grid(normalization ~ dist_method) +
+    theme_bw() +
+    theme(legend.box = "vertical") +
+    labs(color = "Sequencing Run", shape = "Subject") +
+    scale_color_manual(values = run_colors) + 
+    guides(shape = guide_legend(nrow = 2))
+
+mothur_plot <- ord_plot_dat_df %>%
+    filter(pipe == "Mothur") %>%
+    ggplot() +
+    geom_point(aes(x = Axis.1, y = Axis.2, color = seq_run, shape = biosample_id)) +
+    # geom_text(aes(x = -0.3, y = 0.2, label = pcoa_percent)) +
+    facet_grid(normalization ~ dist_method) +
+    theme_bw() +
+    labs(color = "Sequencing Run", shape = "Subject") +
+    scale_color_manual(values = run_colors) +
+    guides(shape = guide_legend(nrow = 2))
+
+ggarrange(dada_plot + rremove("xlab"), mothur_plot,
+          ncol = 1,nrow = 2, labels = "AUTO",
+          common.legend = TRUE, legend = "bottom")
+```
 
 Finally, we characterized how different pipelines and normalization methods capture diversity differences between biological factors and technical replicates.
 As expected, the mean diversity observed between biological factors was greater than between technical replicates (Fig. \@ref(fig:bioVtechRaw)).
@@ -171,10 +582,17 @@ Greater differences were observed with the DADA2, Mothur, and Deblur pipelines, 
 
 
 Variation partitioning was used to identify the amount of variation attributable to subject, titration factor (unmixed pre-exposure and unmixed post-exposure), and sequencing run.
+When a normalization method increases the variation in the data (distance matrix) for a biological factor and decreases the variation for a technical factor,
+the beta-diversity between biological samples (i.e. different subjects) increases and beta-diversity between technical replicates (i.e. PCR assays) decreases.
+When beta-diversity between biological factors is equivalent to or smaller than beta-diversity between technical factors the method is no longer able to distinguish between the biological samples.
+Therefore the expectation is that normalization methods should decrease variation attributed to technical factors with either no change or increase the variation due to biological factors.
 Across all pipelines and diversity metrics, the greatest amount of variation is often explained by subject, followed by titration factor (Fig. \@ref(fig:bioVtechVarpart)).
-This is consistent with our observation of greater biological than technical variability. Sequencing run accounts for a greater proportion of the explained variance in the unnormalized runs, highlighting the overall importance of normalizing our datasets.
+The variation partitioning results are consistent with our observation of greater biological than technical variability. Sequencing run accounts for a greater proportion of the explained variance in the unnormalized runs, highlighting the overall importance of normalizing our datasets.
 
 
 Effective normalization methods decrease technical noise in the data without decreasing biological signal.
-For both weighted (Fig. \@ref(fig:bioVtechVarpart)A) and unweighted (Fig. \@ref(fig:bioVtechVarpart)B) metrics, rarefaction normalization methods generally show increased proportion of variation explained by biological factors and decreased proportion of variation explained by technical artifacts.
-Numeric normalization methods were not as effective, especially for the QIIME pipelines. RLE and TMM normalization consistently increased technical variability and often decreased biological variability (Fig. \@ref(fig:bioVtechVarpart)A).
+For both weighted (Fig. \@ref(fig:bioVtechVarpart)A) and unweighted (Fig. \@ref(fig:bioVtechVarpart)B) metrics, rarefaction normalization methods show increased proportion of variation explained by biological factors and decreased the proportion of variation explained by technical artifacts.
+Numeric normalization methods were not as effective, especially for the QIIME pipelines.
+RLE and TMM normalization consistently increased technical variability and often decreased biological variability (Fig. \@ref(fig:bioVtechVarpart)A).
+Principal coordiante analysis plots for the unmixed pre-exposure samples are consistent with variation partitioning results (Fig. \@ref(fig:mdsTSSvTMM)).
+For Mothur and DADA2 the technical replicates group more tightly when TSS is used to normalize count data compared to when TMM.

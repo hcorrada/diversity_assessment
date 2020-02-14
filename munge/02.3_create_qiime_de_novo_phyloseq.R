@@ -3,7 +3,7 @@ require(Biostrings)
 require(ape)
 
 #### QIIME Phyloseq Object
-make_qiime_de_novo_ref_ps <- function(ps_file){
+make_qiime_de_novo_ps <- function(ps_file){
 ## Issue loading biom file convert to json using biom convert
 ## ```
 ## biom convert -i otu_table.biom -o otu_table_json.biom --table-type "OTU table" --to-json
@@ -23,7 +23,8 @@ sample_names(qiime_de_novo_ps) <- sample_names(qiime_de_novo_ps) %>%
 
 
 ## Adding sample metadata
-sample_data(qiime_de_novo_ps) <- column_to_rownames(mgtstMetadata, var = "sample_id")
+sample_data(qiime_de_novo_ps) <- column_to_rownames(mgtstMetadata, 
+                                                    var = "sample_id")
 
 ################ Adding tree data to phyloseq object ###########################
 tree_dat <- read_tree(tree_file)
