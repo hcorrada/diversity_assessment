@@ -79,6 +79,14 @@ normalize_counts <- function(method, ps, pipe) {
         ## EdgeR RLE and TMM normalization methods
         norm_factors <- edgeR::calcNormFactors(count_mat, method = method)
         norm_factors <- norm_factors * colSums(count_mat)
+    } else if (method == "CLR") {
+        ## Based on CLR transformed, set norm factors to be geometric means for each sample
+        norm_factors <- exp( colMeans( log( count_mat + 0.5 )))
+    } else if (method == "WRE") {
+        ## Use Wrench, Kumar et al. 2018
+        condition <- factor( ifelse( sample_data(ps)$t_fctr == 0, "PRE", "NOT_PRE" ))
+        norm_factors <- Wrench::wrench(count_mat, condition)
+        norm_factors <- norm_factors$nf
     } else {
         warning("Normalization method not defined")
     }
@@ -116,7 +124,9 @@ apply_norm_methods_ps <- function(ps_list){
                          TMM = "TMM", ## EdgeR - weighted trim mean of M-values
                          UQ = "UQ",   ## EdgeR - upperquartile
                          CSS = "CSS", ## metagenomeSeq - cumulative sum scaling, with p = 0.75
-                         TSS = "TSS") ## Total sum scaling (proportions)
+                         TSS = "TSS", ## Total sum scaling (proportions)
+                         CLR = "CLR", ## Based on centered log ratio, scale by geometric mean (across sample) of counts + 0.5
+                         WRE = "WRE") ## Wrench's compositional normalization factors
     map(norm_methods, normalize_counts, ps = ps_list$ps, pipe = ps_list$pipe)
 }
 
