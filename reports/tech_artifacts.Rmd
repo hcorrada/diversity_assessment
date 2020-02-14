@@ -25,13 +25,13 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ## Pre-processing data for figure(s)
 qual_df <- seq_qual_comparisons %>%
     mutate(read_dir = paste0(read_dir, "_qual")) %>%
-    select(-sd_quality, -cov_quality) %>%
+    dplyr::select(-sd_quality, -cov_quality) %>%
     spread(read_dir, mean_quality) %>%
     separate(replicate, c("biosample_id","t_fctr","seq_run_id"),
              remove = FALSE, extra = "merge")
 
 tech_art_df <- seq_char_comparisons %>%
-    select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>%
+    dplyr::select(replicate,  pipe, normalization, metric, cov_num_reads, cov_total_abu) %>%
     left_join(qual_df) %>%
     mutate(f_type = if_else(metric %in% c("unifrac","wunifrac"),
                             "Phylogenetic","Taxonomic"),
@@ -46,12 +46,12 @@ tech_art_df <- seq_char_comparisons %>%
 
 tech_info_df <- tech_art_df %>%
     filter(normalization == "RAW") %>%
-    select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>%
+    dplyr::select(biosample_id, t_fctr, seq_run_id, pipe, cov_total_abu, R1_qual, R2_qual) %>%
     distinct()
 
 
 norm_impact <- tech_art_df %>%
-    select(biosample_id, t_fctr, seq_run_id, pipe, normalization, metric, mean_dist) %>%
+    dplyr::select(biosample_id, t_fctr, seq_run_id, pipe, normalization, metric, mean_dist) %>%
     spread(normalization, mean_dist) %>%
     gather(normalization, mean_dist, -biosample_id, -t_fctr, -seq_run_id, -pipe, -metric, -RAW) %>%
     mutate(dist_change = mean_dist - RAW) %>%

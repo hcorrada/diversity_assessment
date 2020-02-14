@@ -103,7 +103,7 @@ auc_summary %>%
 ```{r signalToNoiseNormEffect, echo = FALSE, message = FALSE, warning = FALSE}
 tidy_ne <- function(fit){
     tidy_fit_df <- broom::tidy(fit) %>%
-    rename(normalization = term) %>%
+    dplyr::rename(normalization = term) %>%
     mutate(normalization = if_else(normalization == "(Intercept)",
                                    "RAW",
                                    str_remove(normalization, "method"))) %>%
@@ -116,7 +116,7 @@ tidy_ne <- function(fit){
         filter(!grepl("sig", normalization)) %>%
         gather("conf_int","est", -normalization) %>%
         spread(normalization, est) %>%
-        rename(RAW = `(Intercept)`) %>%
+        dplyr::rename(RAW = `(Intercept)`) %>%
         gather("normalization","est", -conf_int, -RAW) %>%
         mutate(est = RAW + est) %>%
         mutate(normalization = str_remove(normalization, "method")) %>%

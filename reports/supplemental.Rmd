@@ -17,7 +17,7 @@ norm_level_ord=c("rare2000", "rare5000", "rare10000", "rareq15")
 rare_char_df$norm<-factor(rare_char_df$norm, levels=norm_level_ord, ordered = T)
 rare_char_df<-rare_char_df[order(rare_char_df$norm),]
 rare_char_df %>%
-    select(pipe, norm, n_reads, n_taxa, n_samples) %>%
+    dplyr::select(pipe, norm, n_reads, n_taxa, n_samples) %>%
       dplyr::rename(Pipeline = pipe,
                     Normalization = norm,
                     Reads = n_reads,
