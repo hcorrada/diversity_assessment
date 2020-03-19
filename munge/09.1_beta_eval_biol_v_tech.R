@@ -45,11 +45,13 @@ compute_diversity_comparisons <- function(map, metric, variation_tests){
                                                                   "rare5000",
                                                                   "rare10000",
                                                                   "rareq15",
+                                                                  "CLR",
                                                                   "CSS",
                                                                   "RLE",
                                                                   "TMM",
                                                                   "TSS",
-                                                                  "UQ"),
+                                                                  "UQ",
+                                                                  "WRE"),
                                   ordered = T)
     output2$normalization_type <- NA
     output2$normalization_type[which(output2$normalization == "RAW")] <- c("none")
@@ -57,11 +59,13 @@ compute_diversity_comparisons <- function(map, metric, variation_tests){
                                                                   "rare5000",
                                                                   "rare10000",
                                                                   "rareq15"))] <- c("rarefaction")
-    output2$normalization_type[which(output2$normalization %in% c("CSS", 
+    output2$normalization_type[which(output2$normalization %in% c("CLR",
+                                                                  "CSS",
                                                                   "RLE",
                                                                   "TMM",
                                                                   "TSS",
-                                                                  "UQ"))] <- c("abundance_based")
+                                                                  "UQ",
+                                                                  "WRE"))] <- c("abundance_based")
     return(data.frame(output2))
 }
 
@@ -76,11 +80,14 @@ compute_diversity_comparisons <- function(map, metric, variation_tests){
 #'
 #' @examples
 compute_diversity_stats <- function(map, metric){
+    cat("diversity stats ", metric, "\n")
+
     # Generate list of diversity matrices for piplines/norm methods
     data <- make_beta_div_df(metric)
     map$seq_run_merged <- paste0(map$seq_lab,"_", map$seq_run)
     # For each beta div matrix
     beta_div_stats <- lapply(1:length(data$pipe), function(i){
+        cat("getting beta div stats ", i, data$pipe[i], "\n")
         # Extract distance object
         dist_data <- as.matrix(data$dist_results[[i]][[1]])
         # Keep only pre and post titration samples
@@ -93,7 +100,8 @@ compute_diversity_stats <- function(map, metric){
         map_sub <- subset(map, sample_id %in% c(sample_order))
         map_sub$sample_id <- factor(map_sub$sample_id, levels = sample_order, ordered = T)
         map_sub <- map_sub[order(map_sub$sample_id),]
-        
+
+        cat("running vegan ", i, "\n")
         output <- vegan::varpart(Y = dist_data, ~seq_run_merged, ~biosample_id, ~t_fctr, data = map_sub)
         tmp <- as.data.frame(output$part$indfract[c(1:3),])
         
@@ -104,21 +112,29 @@ compute_diversity_stats <- function(map, metric){
         tmp$metric <- metric
 ###GETTING ERRORS WHEN RUNNING WITH JACCARD-- TAKING THIS SECTION OUT FOR NOW, NOT SURE IF WE WANT TO USE THIS OR ANOTHER APPROACH        
         # CONDITIONAL EFFECTS
-        # fraction [a+d+f+g] X1=seq_run:
+        cat("fraction [a+d+f+g] X1=seq_run:\n")
         run_cond <- vegan::dbrda(dist_data ~ seq_run_merged + Condition(biosample_id) + Condition(t_fctr),
                      data = map_sub)
         run_cond.a <- anova(run_cond)
-        # fraction [b+d+e+g] X2=sample:
+        cat("fraction [b+d+e+g] X2=sample:\n")
 # Error in matrix(NA, ncol = ncol(wa)) : data is too long
         sample_cond <- vegan::dbrda(dist_data ~ biosample_id + Condition(seq_run_merged) + Condition(t_fctr),
                         data = map_sub)
         sample_cond.a <- anova(sample_cond)
-        # fractions [c+e+f+g] X3=titration:
+
+        cat("fractions [c+e+f+g] X3=titration:\n")
 # Error in matrix(NA, ncol = ncol(wa)) : data is too long
-        titration_cond <- vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id),
-                           data = map_sub)
+        titration_cond <- tryCatch(
+            vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id),
+                         data = map_sub),
+            error = function(cond) {
+                vegan::dbrda(dist_data ~ t_fctr + Condition(seq_run_merged) + Condition(biosample_id),
+                             data = map_sub, add=TRUE)
+            }
+        )
         titration_cond.a <- anova(titration_cond)
 
+        cat("getting p-values ", i, "\n")
         p_values <- rbind(run_cond.a$`Pr(>F)`[1], sample_cond.a$`Pr(>F)`[1],
                         titration_cond.a$`Pr(>F)`[1])
         tmp <- cbind(tmp, p_values)

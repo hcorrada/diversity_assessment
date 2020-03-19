@@ -84,7 +84,7 @@ normalize_counts <- function(method, ps, pipe) {
         norm_factors <- exp( colMeans( log( count_mat + 0.5 )))
     } else if (method == "WRE") {
         ## Use Wrench, Kumar et al. 2018
-        condition <- factor( ifelse( sample_data(ps)$t_fctr == 0, "PRE", "NOT_PRE" ))
+        condition <- factor( ifelse( sample_data(ps)$t_fctr == 20, "PRE", "NOT_PRE" ))
         norm_factors <- Wrench::wrench(count_mat, condition)
         norm_factors <- norm_factors$nf
     } else {

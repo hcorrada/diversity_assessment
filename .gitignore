@@ -13,3 +13,16 @@ cache/*hash
 .httr-oauth
 
 scratch/*pdf
+data/dada2
+data/deblur
+data/example_seq_data
+data/mothur
+data/norm_data
+data/phyloseq_objects
+data/qa_list.rds
+data/qiime_closed_ref
+data/qiime_de_novo
+data/qiime_open_ref
+data/sav
+diagnostics/
+
