@@ -8,10 +8,10 @@ output:
 ---
 
 
-```{r signalToNoiseSetup, message = FALSE, warning = FALSE, echo = FALSE}
-library(ProjectTemplate)
-load.project()
-source("src/plot_color_definitions.R")
+```{r signalToNoiseSetup, message = FALSE, warning = FALSE, echo = FALSE, cache=FALSE}
+#library(ProjectTemplate)
+#load.project()
+source("../src/plot_color_definitions.R")
 library(lme4)
 library(ggpubr)
 ```
@@ -55,7 +55,8 @@ norm_effect_auc_df <- sig_noise_df %>%
     summarise(auc = -pracma::trapz(x = t_eval, y = median_sig_noise))
 
 unweighted_levels <- c("RAW", "rare2000", "rare5000", "rare10000", "rareq15")
-weighted_levels <- c(unweighted_levels, "CSS","TSS","UQ","RLE","TMM")
+weighted_levels <- c(unweighted_levels, "CSS","TMM","CLR","WRE","TSS")
+
 
 norm_effect_auc_fit <- norm_effect_auc_df %>%
     ungroup() %>%
@@ -148,6 +149,7 @@ sig_to_noise_ne_df <- norm_effect_auc_fit %>%
 sig_to_noise_ne_df <- sig_to_noise_ne_df %>%
     mutate(metric = str_remove(dist_method, "_dist")) %>%
     mutate(t_stat = if_else(abs(statistic) > 2, ">2","<2")) %>%
+  ungroup() %>%
     mutate(pipe = case_when(pipe == "deblur" ~ "q_deblur",
                     pipe == "qiimeOpenRef" ~ "q_open",
                     pipe == "qiimeClosedRef" ~ "q_closed",

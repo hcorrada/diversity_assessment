@@ -8,9 +8,9 @@ output:
 ---
 
 ```{r bioVtechSetup, warning=FALSE, message=FALSE, echo = FALSE}
-library(ProjectTemplate)
-load.project()
-source("src/plot_color_definitions.R")
+#library(ProjectTemplate)
+#load.project()
+source("../src/plot_color_definitions.R")
 library(ggthemes)
 library(ggpubr)
 ```

@@ -16,9 +16,14 @@ documentclass: "amsart"
 bibliography: [bibliography.bib]
 ---
 
-```{r include = FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, fig.path = "img/", fig.width = 5)
+```{r include = FALSE, cache=FALSE}
+knitr::opts_chunk$set(cache=TRUE, warning = FALSE, message = FALSE, echo = FALSE, fig.path = "img/", fig.width = 5)
 source("src/plot_color_definitions.R")
+```
+
+```{r include=FALSE, cache=FALSE}
+library(ProjectTemplate)
+load.project()
 ```
 
 <!--
@@ -49,32 +54,32 @@ We sequenced the bacterial communities in stool samples collected from five vacc
 
 ## Dataset Characteristics
 
-```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd", eval = FALSE}
+```{r seqPipeChar, child="reports/seq_and_pipe_characterization.Rmd", eval = TRUE}
 ```
 
+<!-- Excluding for now, not sure how it fits into the narrative -->
 ```{r sampleChar, child="reports/sample_characterization.Rmd", eval = FALSE}
-## Excluding for now, not sure how it fits into the narrative
 ```
 
 ## PCR Repeatability
-```{r techArt, child="reports/tech_artifacts.Rmd"}
+```{r techArt, child="reports/tech_artifacts.Rmd", eval=TRUE}
 ```
 
 
 ## Signal to Noise
 
-```{r compToExp, child="reports/signal_to_noise.Rmd"}
+```{r compToExp, child="reports/signal_to_noise.Rmd", eval=TRUE}
 ```
 
 
 ## Biological v. Technical Variation
 
-```{r bioVtech, child="reports/biological_v_technical.Rmd"}
+```{r bioVtech, child="reports/biological_v_technical.Rmd", eval=TRUE}
 ```
 
 
 # Discussion
-```{r discussion, child="docs/discussion.Rmd", warning=FALSE, message=FALSE, echo = FALSE}
+```{r discussion, child="docs/discussion.Rmd", warning=FALSE, message=FALSE, echo = FALSE, eval=FALSE}
 ```
 
 # References

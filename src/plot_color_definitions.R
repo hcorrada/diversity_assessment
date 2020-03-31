@@ -39,10 +39,12 @@ norm_colors <- c(
     rare10000 = "#9b6ba3",
     RAW = "black",
     rareq15 = "#FFA100",
-    RLE = "#DB728C",
+#    RLE = "#DB728C",
+    CLR = "#DB728C",
     CSS = "#B75F49",
     TMM = "#526E9F",
-    UQ = "#f2d51a",
+#    UQ = "#f2d51a",
+    WRE = "#f2d51a",
     TSS = "#66ad85"
 )
 

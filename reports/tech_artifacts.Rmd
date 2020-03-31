@@ -9,10 +9,10 @@ output:
 
 <!-- differences between beta diversity metrics  -->
 
-```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE}
-library(ProjectTemplate)
-load.project()
-source("src/plot_color_definitions.R")
+```{r techArtSetup, warning=FALSE, message=FALSE, echo = FALSE, cache=FALSE}
+#library(ProjectTemplate)
+#load.project()
+source("../src/plot_color_definitions.R")
 
 # library(ggridges)
 library(ggpubr)
@@ -138,9 +138,12 @@ img_filename <- "pcrRepRaw_plot.png"
 googledrive::drive_update(paste0("defense_presentation/", img_filename), tmp_img)
 ```
 
-```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted (A) and unweighted (B) PCR replicates beta-diversity, for the sequencing run with higher quality and total abundance variability, NIST1. Data are presented as minimal-ink boxplots, where points indicate median value, the gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between PCR replicates.", fig.height=8, fig.width=7}
-norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15",
-                    "CSS", "RLE", "TMM", "TSS", "UQ")
+```{r techNormImpactWeighted, fig.cap = "Impact of normalization method on mean weighted (A) and unweighted (B) PCR replicates beta-diversity, for the sequencing run with higher quality and total abundance variability, NIST1. Data are presented as minimal-ink boxplots, where points indicate median value, the gap between point and lines the interquartile range, and lines the boxplot whiskers. Solid black lines represent median value and dashed lines indicate the first and third quartiles of the raw (un-normalized) mean pairwise distances between PCR replicates.", fig.height=8, fig.width=7, cache=FALSE}
+#norm_level_ord <- c("RAW","rare2000", "rare5000", "rare10000", "rareq15",
+ #                   "CSS", "RLE", "TMM", "TSS", "UQ")
+
+norm_level_ord <- c("RAW", "rare2000", "rare5000", "rare10000", "rereq15", 
+                    "CSS", "TMM", "CLR", "WRE", "TSS")
 
 tech_art_df_for_plot_RAW <- tech_art_df %>%
     ungroup() %>%
@@ -151,6 +154,7 @@ tech_art_df_for_plot_RAW <- tech_art_df %>%
               RAW_third_quartile = quantile(mean_dist, probs = 0.75))
 
 tech_art_df_for_plot <- tech_art_df %>% ungroup() %>%
+    filter(normalization %in% norm_level_ord) %>%
     filter(normalization != "RAW", seq_run_id == "nist_run1")
 
 tech_art_df_for_plot <- merge(tech_art_df_for_plot, tech_art_df_for_plot_RAW,
